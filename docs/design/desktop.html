@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Coffeenotes Web PC 版</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Manrope:wght@400..800&display=swap">
+<link rel="stylesheet" href="design.css">
+</head>
+<body>
+<nav class="nav"><div class="wrap">
+  <a class="wm" href="index.html">Coffeenotes</a>
+  <ul>
+    <li><a href="index.html#direction">方向性</a></li>
+    <li><a href="index.html#tokens">色と書体</a></li>
+    <li><a href="index.html#components">部品</a></li>
+    <li class="sep"></li>
+    <li><a href="mobile.html">Web スマホ</a></li>
+    <li><a href="desktop.html" class="on">Web PC</a></li>
+    <li><a href="ios.html">iOS アプリ</a></li>
+  </ul>
+</div></nav>
+<header class="phead wrap">
+  <div class="secno">WEB · DESKTOP</div>
+  <h1>Web PC 版</h1>
+  <p class="lead">PC は「振り返る場所」。撮影は無いので、検索・比較・地図・統計に画面幅を使う。左にナビ、中央に一覧、右に詳細の 3 列で、タイムラインを眺めながら豆の詳細を開ける。スマホ版と同じコード・同じトークンで、レイアウトだけが幅に応じて変わる。</p>
+  <dl class="facts">
+    <div><dt>基準幅</dt><dd>1,440 px</dd></div>
+    <div><dt>3 列になる幅</dt><dd>1,280 px 以上</dd></div>
+    <div><dt>2 列（ナビ + 1 面）</dt><dd>768〜1,279 px</dd></div>
+    <div><dt>スマホ版に切り替わる幅</dt><dd>767 px 以下</dd></div>
+    <div><dt>本文の最大幅</dt><dd>詳細 820 px</dd></div>
+  </dl>
+</header>
+
+<section id="breakpoints"><div class="wrap">
+  <div class="secno">BREAKPOINTS</div>
+  <h2>幅で変わるもの、変わらないもの</h2>
+  <p class="lead">変わるのはナビの位置と列数だけ。部品・色・書体・文言はすべて共通。下タブは 768px でサイドバーになり、1,280px で詳細ペインが常時開く。</p>
+  <div class="bps">
+    <div class="bp"><div class="w">〜767<small>スマホ</small></div>
+      <div class="wire" style="grid-template-rows:1fr 14px"><i></i><i class="cu"></i></div>
+      <p>1 面。下タブ。詳細は画面遷移で開く。撮影・入力の主戦場。</p></div>
+    <div class="bp"><div class="w">768〜1279<small>タブレット・小さい PC</small></div>
+      <div class="wire" style="grid-template-columns:22px 1fr"><i class="cu"></i><i></i></div>
+      <p>ナビが左のアイコンレールになる（72px、ラベル無し）。一覧と詳細は 1 面ずつ遷移。</p></div>
+    <div class="bp"><div class="w">1280〜<small>PC</small></div>
+      <div class="wire" style="grid-template-columns:40px 60px 1fr"><i class="cu"></i><i></i><i></i></div>
+      <p>ラベル付きサイドバー（236px）+ 一覧（400px）+ 詳細。一覧の行を選ぶと右に詳細が出る。記録の追加はモーダル。</p></div>
+  </div>
+</div></section>
+
+<section id="dscreens"><div class="wrap">
+  <div class="secno">SCREENS</div>
+  <h2>画面設計</h2>
+  <p class="lead">1,440 × 900 の設計をこのページの幅に合わせて縮小表示している。</p>
+
+  <!-- D1 -->
+  <div class="dshot">
+  <div class="dt"><div class="dtin">
+    <div class="dtbar"><div class="dots"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></div><div class="url"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>coffeenotes.app</div></div>
+    <div class="dtapp home">
+      <aside class="side">
+        <div class="wm">Coffeenotes</div>
+        <a class="on" href="#dscreens"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"/></svg>記録</a>
+        <a href="#dscreens"><svg viewBox="0 0 24 24"><path d="M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z"/><circle cx="12" cy="11" r="2.2"/></svg>地図</a>
+        <a href="#dscreens"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>統計</a>
+        <a href="#dscreens"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>設定</a>
+        <a class="btn" href="#dscreens"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>記録を追加</a>
+        <div class="me"><span class="av k">K</span><div><b>Kota</b>42 杯 · 27 豆 · 8 店</div></div>
+      </aside>
+      <section class="pane list">
+        <div class="ph-h"><h1>記録<small>9 月 · 12 杯</small></h1></div>
+        <div style="padding:0 20px 10px"><div class="inp" id="d-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>豆名・フレーバー・メモで探す</div></div>
+        <div class="chips" style="margin:0;padding:0 20px 8px"><span class="chip cu"><svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg>絞り込み</span><span class="chip on">すべて</span><span class="chip">星 4 以上</span><span class="chip">自宅</span><span class="chip">Colombia</span></div>
+        <div class="scroll">
+          <div class="dg" style="margin-top:8px">今日 · 9月21日（日）</div>
+          <div class="lg on"><div class="cardimg" style="font-size:9px"><small>KIELO</small><b>Lusitania Lime Geisha</b><em>Colombia</em></div><div><div class="nm">Lusitania Lime Geisha</div><div class="ro">KIELO COFFEE</div><div class="mt"><span class="st" data-v="4.5"></span><b>4.5</b><span>KIELO COFFEE 蔵前</span></div></div></div>
+          <div class="dg">9月19日（金）</div>
+          <div class="lg"><div class="cardimg" style="font-size:9px;background:#EDE3D2"><small>NAGARE</small><b>Guji Anaerobic</b><em>Ethiopia</em></div><div><div class="nm">Ethiopia Guji Anaerobic</div><div class="ro">Nagare Roastery</div><div class="mt"><span class="st" data-v="4"></span><b>4.0</b><span class="pill home">自宅</span><span>V60 · 1:15</span></div></div></div>
+          <div class="dg">9月14日（日）</div>
+          <div class="lg"><div class="cardimg" style="font-size:9px;background:#E4E9E3"><small>SONAR</small><b>Kiambu AA</b><em>Kenya</em></div><div><div class="nm">Kenya Kiambu AA</div><div class="ro">Sonar Coffee Stand</div><div class="mt"><span class="st" data-v="3.5"></span><b>3.5</b><span>Sonar Coffee Stand 神保町</span></div></div></div>
+          <div class="dg">9月7日（日）</div>
+          <div class="lg"><div class="cardimg" style="font-size:9px;background:#F1E4E4"><small>GLINT</small><b>El Paraiso Lychee</b><em>Colombia</em></div><div><div class="nm">El Paraiso Lychee</div><div class="ro">Glint Coffee</div><div class="mt"><span class="st" data-v="5"></span><b>5.0</b><span>Glint Coffee 表参道</span></div></div></div>
+          <div class="dg">8月30日（土）</div>
+          <div class="lg"><div class="cardimg" style="font-size:9px;background:#2C231C;color:#F1E8DA"><small style="color:#D48C4E">HOME</small><b>Cerrado #2</b><em style="color:#A39181">Brazil</em></div><div><div class="nm">Brazil Cerrado</div><div class="ro">自家焙煎 · バッチ #2</div><div class="mt"><span class="st" data-v="3.5"></span><b>3.5</b><span class="pill home">自宅</span></div></div></div>
+          <div class="dg">8月24日（日）</div>
+          <div class="lg"><div class="cardimg" style="font-size:9px;background:#E9E4F1"><small>HAZEL</small><b>Gesha Village</b><em>Ethiopia</em></div><div><div class="nm">Gesha Village Natural</div><div class="ro">Hazel &amp; Ash</div><div class="mt"><span class="st" data-v="4.5"></span><b>4.5</b><span>Hazel &amp; Ash 中目黒</span></div></div></div>
+        </div>
+      </section>
+      <section class="pane detail">
+        <div class="scroll">
+          <div class="dcols">
+            <div>
+              <div class="cardimg" style="font-size:24px"><small>KIELO COFFEE</small><div class="dots"><i></i><i></i><i></i><i class="o"></i><i class="o"></i></div><b>Lusitania Lime Geisha</b><em>Colombia · Caicedonia</em></div>
+              <div style="display:flex;gap:8px;margin-top:8px"><div class="cardimg" style="font-size:8px;color:#5a4c3f;width:72px;padding:8%"><small>NOTE</small><b style="font-size:1.2em">¥3,800</b></div><div style="font-size:12px;color:var(--a-mute);align-self:end">表 · 裏<br>2026-09-21 撮影</div></div>
+              <div class="sh" style="margin-top:14px"><span>味覚チャート</span></div>
+              <svg class="radar" viewBox="0 0 200 190" style="margin:0">
+                <g class="g"><polygon points="100,20 176.1,75.3 147,164.7 53,164.7 23.9,75.3"/><polygon points="100,20 176.1,75.3 147,164.7 53,164.7 23.9,75.3" transform="translate(100 100) scale(.6) translate(-100 -100)"/><polygon points="100,20 176.1,75.3 147,164.7 53,164.7 23.9,75.3" transform="translate(100 100) scale(.2) translate(-100 -100)"/></g>
+                <g class="ax"><line x1="100" y1="100" x2="100" y2="20"/><line x1="100" y1="100" x2="176.1" y2="75.3"/><line x1="100" y1="100" x2="147" y2="164.7"/><line x1="100" y1="100" x2="53" y2="164.7"/><line x1="100" y1="100" x2="23.9" y2="75.3"/></g>
+                <polygon class="v" points="100,20 145.6,85.2 147,164.7 71.8,138.8 54.4,85.2"/>
+                <text x="100" y="11" text-anchor="middle">Flavor 5</text><text x="181" y="72">Sweet 3</text><text x="150" y="180" text-anchor="middle">Acidity 5</text><text x="50" y="180" text-anchor="middle">After 3</text><text x="19" y="72" text-anchor="end">Body 3</text>
+              </svg>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;align-items:center"><div style="font-family:var(--f-num),sans-serif;font-weight:600;font-size:12px;letter-spacing:.14em;color:var(--a-cu)">KIELO COFFEE</div><div style="display:flex;gap:8px"><span class="ib"><svg viewBox="0 0 24 24"><path d="M4 20h4l11-11-4-4L4 16z"/></svg></span><span class="ib"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg></span></div></div>
+              <div class="disp" style="font-size:44px;margin-top:8px">Lusitania Lime Geisha</div>
+              <div style="display:flex;align-items:center;gap:10px;margin-top:14px"><span class="st mid" data-v="4.5"></span><span class="rv" style="font-size:24px">4.5</span><span style="font-size:13px;color:var(--a-mute)">2 回 · 最終 9月21日</span></div>
+              <div class="dg2" style="margin-top:18px">
+                <div><small>生産国</small><b>Colombia</b></div><div><small>地域</small><b>Caicedonia, Valle del Cauca</b></div>
+                <div><small>品種</small><b>Geisha</b></div><div><small>精製</small><b>Lime infused</b></div>
+                <div><small>標高</small><b>1,650 m</b></div><div><small>価格</small><b>¥3,800 / 100 g</b></div>
+              </div>
+              <div class="fl"><i>Lime</i><i>Bergamot</i><i>Laurier</i></div>
+              <p style="font-size:13px;color:var(--a-mute);margin:12px 0 0;line-height:1.7">ライムを思わせるシトラス系の香りと、ベルガモットの華やかさ。冷めるとローリエのようなハーブ感が出てくる。</p>
+              <div class="sh"><span>この豆の記録</span><a href="#dscreens">すべて</a></div>
+              <div class="row"><div class="t"><b>9月21日 · KIELO COFFEE 蔵前</b><span>ハンドドリップ · 冷めてからのローリエ感が良い。ライムというよりベルガモット寄り。</span></div><div class="r"><span class="st" data-v="4.5"></span><b>4.5</b></div></div>
+              <div class="row"><div class="t"><b>9月11日 · 自宅</b><span>V60 · 1:15 · 92 ℃ · 2:45 · 前回より 2 クリック細かく</span></div><div class="r"><span class="st" data-v="4"></span><b>4.0</b></div></div>
+              <div style="height:16px"></div>
+              <a class="btn" href="#dscreens" style="max-width:280px">この豆をもう一度記録する</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div></div>
+  <div class="cap dcap"><div class="id">D1</div><h3>ホーム — 一覧と詳細</h3><p>中央の一覧で行を選ぶと、ページ遷移せずに右へ豆詳細が出る。詳細は 2 列で、カード原本とレーダーを左、データと記録履歴を右に。PC での主な仕事はここで「あの店で飲んだライム系の豆」を探すこと。フリーワード検索を一覧の上に常設する。</p><div class="ids">F-LIST-1〜5 / F-LIST-4</div></div>
+  </div>
+
+  <!-- D2 -->
+  <div class="dshot">
+  <div class="dt"><div class="dtin">
+    <div class="dtbar"><div class="dots"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></div><div class="url"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>coffeenotes.app/map</div></div>
+    <div class="dtapp map">
+      <aside class="side">
+        <div class="wm">Coffeenotes</div>
+        <a href="#dscreens"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"/></svg>記録</a>
+        <a class="on" href="#dscreens"><svg viewBox="0 0 24 24"><path d="M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z"/><circle cx="12" cy="11" r="2.2"/></svg>地図</a>
+        <a href="#dscreens"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>統計</a>
+        <a href="#dscreens"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>設定</a>
+        <a class="btn" href="#dscreens"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>記録を追加</a>
+        <div class="me"><span class="av k">K</span><div><b>Kota</b>42 杯 · 27 豆 · 8 店</div></div>
+      </aside>
+      <section class="pane list">
+        <div class="ph-h"><h1>店<small>8 店 · 座標なし 1</small></h1></div>
+        <div style="padding:0 20px 10px"><div class="inp" id="d-shop-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>店名で探す</div></div>
+        <div class="chips" style="margin:0;padding:0 20px 8px"><span class="chip on">すべて</span><span class="chip">カフェ</span><span class="chip">ロースター</span><span class="chip">生豆</span><span class="chip">評価順</span></div>
+        <div class="scroll">
+          <div class="row" style="background:var(--a-sf);margin:0 -12px;padding:14px 12px;border-radius:12px;border-bottom-color:transparent"><span class="av">K</span><div class="t"><b>KIELO COFFEE 蔵前</b><span>カフェ · 台東区蔵前 · 3 回</span></div><div class="r"><span class="st" data-v="4.5"></span><b>4.5</b></div></div>
+          <div class="row"><span class="av">G</span><div class="t"><b>Glint Coffee 表参道</b><span>カフェ · 渋谷区神宮前 · 2 回</span></div><div class="r"><span class="st" data-v="5"></span><b>4.8</b></div></div>
+          <div class="row"><span class="av">N</span><div class="t"><b>Nagare Roastery</b><span>ロースター · 江東区白河 · 5 回</span></div><div class="r"><span class="st" data-v="4"></span><b>4.1</b></div></div>
+          <div class="row"><span class="av">S</span><div class="t"><b>Sonar Coffee Stand 神保町</b><span>カフェ · 千代田区 · 1 回</span></div><div class="r"><span class="st" data-v="3.5"></span><b>3.5</b></div></div>
+          <div class="row"><span class="av">H</span><div class="t"><b>Hazel &amp; Ash</b><span>カフェ · 目黒区中目黒 · 2 回</span></div><div class="r"><span class="st" data-v="4"></span><b>4.0</b></div></div>
+          <div class="row"><span class="av">M</span><div class="t"><b>Mornings 高円寺</b><span>カフェ · 杉並区 · 1 回</span></div><div class="r"><span class="st" data-v="3"></span><b>3.0</b></div></div>
+          <div class="row"><span class="av">W</span><div class="t"><b>生豆本舗ワイルド</b><span>生豆販売店 · 通販 <span class="pill">座標なし</span></span></div><div class="r"><b>—</b></div></div>
+        </div>
+      </section>
+      <section class="mapwide">
+        <svg viewBox="0 0 844 856" preserveAspectRatio="xMidYMid slice">
+          <rect width="844" height="856" fill="#1C1611"/>
+          <path d="M60 520 q120 -90 260 -20 t180 120 q-140 110 -300 60 q-120 -40 -140 -160z" fill="#222A1C"/>
+          <path d="M700 0 q-90 200 20 380 t-60 476" stroke="#1A2530" stroke-width="44" fill="none"/>
+          <g stroke="#2D251E" stroke-width="9" fill="none" stroke-linecap="round"><path d="M0 200 H844"/><path d="M0 470 H844"/><path d="M230 0 V856"/><path d="M520 0 V856"/><path d="M0 720 Q420 660 844 740"/></g>
+          <g stroke="#27201A" stroke-width="3" fill="none"><path d="M0 100 H844"/><path d="M0 300 H844"/><path d="M0 380 H844"/><path d="M0 580 H844"/><path d="M0 800 H844"/><path d="M110 0 V856"/><path d="M370 0 V856"/><path d="M650 0 V856"/><path d="M0 60 L844 180"/><path d="M0 640 L844 540"/></g>
+          <g font-size="12" fill="#6E5F50"><text x="250" y="192">蔵前橋通り</text><text x="120" y="560">隅田公園</text><text x="716" y="260" transform="rotate(84 716 260)">隅田川</text></g>
+          <g><circle cx="150" cy="240" r="13" fill="#C27F49" stroke="#17120F" stroke-width="3"/><text x="150" y="245" text-anchor="middle" font-weight="700" font-size="11" fill="#17120F">5</text></g>
+          <g><circle cx="430" cy="150" r="13" fill="#E8A968" stroke="#17120F" stroke-width="3"/><text x="430" y="155" text-anchor="middle" font-weight="700" font-size="11" fill="#17120F">2</text></g>
+          <g><circle cx="330" cy="400" r="26" fill="#D48C4E" opacity=".18"/><circle cx="330" cy="400" r="15" fill="#D48C4E" stroke="#17120F" stroke-width="3"/><text x="330" y="405" text-anchor="middle" font-weight="700" font-size="11" fill="#17120F">3</text></g>
+          <g><circle cx="600" cy="620" r="13" fill="#8C6A4E" stroke="#17120F" stroke-width="3"/><text x="600" y="625" text-anchor="middle" font-weight="700" font-size="11" fill="#F1E8DA">1</text></g>
+          <g><circle cx="120" cy="700" r="13" fill="#6E5A4A" stroke="#17120F" stroke-width="3"/><text x="120" y="705" text-anchor="middle" font-weight="700" font-size="11" fill="#F1E8DA">1</text></g>
+          <g><circle cx="560" cy="330" r="13" fill="#C27F49" stroke="#17120F" stroke-width="3"/><text x="560" y="335" text-anchor="middle" font-weight="700" font-size="11" fill="#17120F">2</text></g>
+          <g><circle cx="470" cy="500" r="18" fill="#5B8DD6" opacity=".25"/><circle cx="470" cy="500" r="7" fill="#5B8DD6" stroke="#fff" stroke-width="2"/></g>
+        </svg>
+        <span class="mapbtn" style="top:16px"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+        <span class="mapbtn" style="top:68px"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+        <span class="mapbtn" style="top:120px"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="8"/></svg></span>
+        <div class="leg" style="bottom:16px"><span><i style="background:#E8A968"></i>4.5+</span><span><i style="background:#C27F49"></i>4.0</span><span><i style="background:#8C6A4E"></i>3.5</span><span><i style="background:#6E5A4A"></i>3.0-</span></div>
+        <div class="popcard" style="left:352px;top:290px">
+          <div style="display:flex;align-items:center;gap:12px"><span class="av">K</span><div class="t" style="flex:1;min-width:0"><b style="display:block">KIELO COFFEE 蔵前</b><span style="font-size:12px;color:var(--a-mute)">カフェ · 台東区蔵前 3-1-2 · 3 回</span></div><div style="text-align:right"><span class="st" data-v="4.5"></span><b class="rv" style="display:block;font-size:18px">4.5</b></div></div>
+          <div class="fl" style="margin-top:12px"><i>Lusitania Lime Geisha 4.5</i><i>Kenya Kiambu AA 4.0</i><i>Guji Natural 4.5</i></div>
+          <div style="display:flex;gap:8px;margin-top:12px"><a class="btn sec" href="#dscreens" style="height:40px;font-size:13px">店の詳細</a><a class="btn ghost" href="#dscreens" style="height:40px;font-size:13px">ここで記録</a></div>
+        </div>
+      </section>
+    </div>
+  </div></div>
+  <div class="cap dcap"><div class="id">D2</div><h3>地図 — 店の一覧と地図を並べる</h3><p>スマホではボトムシートだった店の情報を、ピンの横のカードに出す。左の一覧とピンは連動し、どちらを選んでも相手が光る。右上の＋は「地図をクリックして店を置く」（F-SHOP-7 の PC 版）。</p><div class="ids">F-MAP-1〜4 / F-SHOP-1/5/7</div></div>
+  </div>
+
+  <!-- D3 -->
+  <div class="dshot">
+  <div class="dt"><div class="dtin">
+    <div class="dtbar"><div class="dots"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></div><div class="url"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>coffeenotes.app/stats</div></div>
+    <div class="dtapp stats">
+      <aside class="side">
+        <div class="wm">Coffeenotes</div>
+        <a href="#dscreens"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"/></svg>記録</a>
+        <a href="#dscreens"><svg viewBox="0 0 24 24"><path d="M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z"/><circle cx="12" cy="11" r="2.2"/></svg>地図</a>
+        <a class="on" href="#dscreens"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>統計</a>
+        <a href="#dscreens"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>設定</a>
+        <a class="btn" href="#dscreens"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>記録を追加</a>
+        <div class="me"><span class="av k">K</span><div><b>Kota</b>42 杯 · 27 豆 · 8 店</div></div>
+      </aside>
+      <section class="dstats">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:22px"><div><h1 style="font-size:26px;font-weight:700;margin:0;line-height:1.2">好み</h1><small style="font-size:12px;color:var(--a-mute)">2026 年 · 全期間</small></div><div class="chips" style="margin:0;padding:0"><span class="chip on">全期間</span><span class="chip">今年</span><span class="chip">3 か月</span><span class="chip">1 か月</span></div></div>
+        <div class="tiles"><div><b>42</b><small>記録</small></div><div><b>27</b><small>豆</small></div><div><b>8</b><small>店</small></div><div><b>4.1</b><small>平均星</small></div></div>
+        <div class="dgrid">
+          <div>
+            <div class="sh"><span>星 4 以上に多い生産国</span></div>
+            <div class="bar"><span>Colombia</span><div class="b"><i style="width:100%"></i></div><b>9</b></div>
+            <div class="bar"><span>Ethiopia</span><div class="b"><i style="width:78%"></i></div><b>7</b></div>
+            <div class="bar"><span>Kenya</span><div class="b"><i style="width:33%"></i></div><b>3</b></div>
+            <div class="bar"><span>Panama</span><div class="b"><i style="width:22%"></i></div><b>2</b></div>
+            <div class="bar"><span>Brazil</span><div class="b"><i style="width:11%"></i></div><b>1</b></div>
+            <div class="sh"><span>精製方法</span></div>
+            <div class="bar"><span>Washed</span><div class="b"><i style="width:100%"></i></div><b>8</b></div>
+            <div class="bar"><span>Anaerobic</span><div class="b"><i style="width:75%"></i></div><b>6</b></div>
+            <div class="bar"><span>Infused</span><div class="b"><i style="width:50%"></i></div><b>4</b></div>
+            <div class="bar"><span>Natural</span><div class="b"><i style="width:38%"></i></div><b>3</b></div>
+          </div>
+          <div>
+            <div class="sh"><span>好みの形（星 4 以上の平均）</span></div>
+            <svg class="radar" viewBox="0 0 200 190" style="max-width:300px;margin:0">
+              <g class="g"><polygon points="100,20 176.1,75.3 147,164.7 53,164.7 23.9,75.3"/><polygon points="100,20 176.1,75.3 147,164.7 53,164.7 23.9,75.3" transform="translate(100 100) scale(.6) translate(-100 -100)"/><polygon points="100,20 176.1,75.3 147,164.7 53,164.7 23.9,75.3" transform="translate(100 100) scale(.2) translate(-100 -100)"/></g>
+              <g class="ax"><line x1="100" y1="100" x2="100" y2="20"/><line x1="100" y1="100" x2="176.1" y2="75.3"/><line x1="100" y1="100" x2="147" y2="164.7"/><line x1="100" y1="100" x2="53" y2="164.7"/><line x1="100" y1="100" x2="23.9" y2="75.3"/></g>
+              <polygon class="v2" points="100,52 130.4,90.1 128.2,138.8 71.8,138.8 69.6,90.1"/>
+              <polygon class="v" points="100,29.6 148.7,84.2 138.6,153.1 68,144 54.4,85.2"/>
+              <text x="100" y="11" text-anchor="middle">Flavor 4.4</text><text x="181" y="72">Sweet 3.2</text><text x="150" y="180" text-anchor="middle">Acidity 4.1</text><text x="50" y="180" text-anchor="middle">After 3.4</text><text x="19" y="72" text-anchor="end">Body 3.0</text>
+            </svg>
+            <div style="display:flex;gap:14px;font-size:11px;color:var(--a-mute);margin-top:6px"><span><i style="display:inline-block;width:14px;height:2px;background:var(--a-cu);vertical-align:middle;margin-right:4px"></i>星 4 以上</span><span><i style="display:inline-block;width:14px;border-top:1.5px dashed var(--a-mute);vertical-align:middle;margin-right:4px"></i>全体</span></div>
+            <div class="sh"><span>よく出るフレーバー</span></div>
+            <div class="fl"><i>Bergamot ×6</i><i>Jasmine ×5</i><i>Lime ×4</i><i>Blueberry ×4</i><i>Rose ×3</i><i>Peach ×3</i><i>Cacao ×3</i><i>Lychee ×2</i></div>
+          </div>
+          <div>
+            <div class="sh"><span>月別の記録数と平均星</span></div>
+            <svg viewBox="0 0 320 170" style="width:100%;max-width:360px;display:block">
+              <g fill="var(--a-sf2)"><rect x="14" y="120" width="16" height="30" rx="3"/><rect x="38" y="105" width="16" height="45" rx="3"/><rect x="62" y="130" width="16" height="20" rx="3"/><rect x="86" y="95" width="16" height="55" rx="3"/><rect x="110" y="110" width="16" height="40" rx="3"/><rect x="134" y="85" width="16" height="65" rx="3"/><rect x="158" y="100" width="16" height="50" rx="3"/><rect x="182" y="70" width="16" height="80" rx="3"/><rect x="206" y="90" width="16" height="60" rx="3"/><rect x="230" y="60" width="16" height="90" rx="3"/><rect x="254" y="75" width="16" height="75" rx="3"/></g>
+              <rect x="278" y="45" width="16" height="105" rx="3" fill="var(--a-cu)"/>
+              <polyline points="22,88 46,80 70,96 94,72 118,78 142,66 166,70 190,58 214,62 238,50 262,56 286,44" fill="none" stroke="var(--a-cu2)" stroke-width="2" stroke-linejoin="round"/>
+              <g fill="var(--a-cu2)"><circle cx="286" cy="44" r="3.5"/></g>
+              <g font-family="var(--f-num),sans-serif" font-size="9" fill="var(--a-mute)"><text x="22" y="164" text-anchor="middle">10</text><text x="70" y="164" text-anchor="middle">12</text><text x="118" y="164" text-anchor="middle">2</text><text x="166" y="164" text-anchor="middle">4</text><text x="214" y="164" text-anchor="middle">6</text><text x="262" y="164" text-anchor="middle">8</text><text x="300" y="48" fill="var(--a-cu2)">4.5</text><text x="300" y="150">12</text></g>
+            </svg>
+            <div style="display:flex;gap:14px;font-size:11px;color:var(--a-mute);margin-top:4px"><span><i style="display:inline-block;width:10px;height:10px;background:var(--a-sf2);border-radius:2px;vertical-align:middle;margin-right:4px"></i>記録数</span><span><i style="display:inline-block;width:14px;height:2px;background:var(--a-cu2);vertical-align:middle;margin-right:4px"></i>平均星</span></div>
+            <div class="sh"><span>星 4.5 以上の豆</span></div>
+            <div class="row"><div class="t"><b>El Paraiso Lychee</b><span>Glint Coffee · Colombia · Anaerobic</span></div><div class="r"><b>5.0</b></div></div>
+            <div class="row"><div class="t"><b>Lusitania Lime Geisha</b><span>KIELO COFFEE · Colombia · Infused</span></div><div class="r"><b>4.5</b></div></div>
+            <div class="row"><div class="t"><b>Gesha Village Natural</b><span>Hazel &amp; Ash · Ethiopia · Natural</span></div><div class="r"><b>4.5</b></div></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div></div>
+  <div class="cap dcap"><div class="id">D3</div><h3>統計 — 一画面で全部見える</h3><p>スマホでは縦に並んでいたものを 3 列に。生産国と精製の棒、好みの形と頻出フレーバー、月別推移と高評価の豆。期間の切り替えは右上のチップで、全部のグラフが一緒に変わる。</p><div class="ids">F-STAT-1〜4</div></div>
+  </div>
+
+  <!-- D4 -->
+  <div class="dshot">
+  <div class="dt"><div class="dtin" style="position:relative">
+    <div class="dtbar"><div class="dots"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i></div><div class="url"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>coffeenotes.app/logs/new</div></div>
+    <div class="dtapp home">
+      <aside class="side">
+        <div class="wm">Coffeenotes</div>
+        <a class="on" href="#dscreens"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"/></svg>記録</a>
+        <a href="#dscreens"><svg viewBox="0 0 24 24"><path d="M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z"/><circle cx="12" cy="11" r="2.2"/></svg>地図</a>
+        <a href="#dscreens"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>統計</a>
+        <a href="#dscreens"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>設定</a>
+        <a class="btn" href="#dscreens"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>記録を追加</a>
+      </aside>
+      <section class="pane list"><div class="ph-h"><h1>記録</h1></div></section>
+      <section class="pane detail"></section>
+    </div>
+    <div class="modal-bg"><div class="modal">
+      <div>
+        <div class="mh"><h2>記録を追加</h2><span class="step">1 / 2 · 豆</span></div>
+        <div class="drop"><svg viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 16v4h16v-4"/></svg><b>カードの写真をここにドロップ</b><span>またはクリックして選ぶ。表・裏の 2 枚まで。読み取りは自動で始まる</span></div>
+        <div style="display:flex;gap:10px;margin:14px 0 6px;align-items:center"><span class="chip on">手で入力する</span><span class="chip">登録済みの豆から</span><span style="font-size:12px;color:var(--a-mute);margin-left:auto">読み取りは 1 日 50 回まで · 今日 3 回</span></div>
+        <div class="fd"><label>豆名</label><div class="v">Lusitania Lime Geisha</div></div>
+        <div class="fd"><label>ロースター</label><div class="v">KIELO COFFEE</div></div>
+        <div class="fd2"><div class="fd"><label>生産国</label><div class="v">Colombia</div></div><div class="fd low"><label>標高</label><div class="v">1650<span class="u">m</span></div></div></div>
+        <div class="fd2"><div class="fd"><label>品種</label><div class="v">Geisha</div></div><div class="fd low"><label>精製</label><div class="v">Lime infused</div></div></div>
+        <div class="fd" style="border:0"><label>フレーバー</label><div class="fl" style="margin-top:4px"><i>Lime</i><i>Bergamot</i><i>Laurier</i><i style="background:transparent;border:1px dashed var(--a-line);color:var(--a-mute)">+ 追加</i></div></div>
+      </div>
+      <div style="display:flex;flex-direction:column">
+        <div class="mh"><h2>どこで、どうだった？</h2><span class="ib" style="width:32px;height:32px"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></span></div>
+        <div class="seg" style="margin-top:0"><span class="on">店で</span><span>自宅で</span></div>
+        <div class="sel cu"><span class="av">K</span><div class="t"><b>KIELO COFFEE 蔵前</b><span>台東区蔵前 3-1-2 · 3 回目</span></div><svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+        <div class="fd2"><div class="fd"><label>日付</label><div class="v">2026-09-21</div></div><div class="fd"><label>飲み方</label><div class="v ja">ハンドドリップ</div></div></div>
+        <div class="fd" style="border:0"><label>評価</label><div style="display:flex;align-items:center;gap:14px;margin-top:6px"><span class="st big" data-v="4.5"></span><span class="rv" style="font-size:36px">4.5</span></div></div>
+        <div class="fd" style="border:0;padding-top:0"><label>メモ</label><div class="inp ta" style="min-height:72px">冷めてからのローリエ感が良い。ライムというよりベルガモット寄り。</div></div>
+        <div class="fd" style="border:0;padding-top:0"><label>タグ</label><div class="fl" style="margin-top:4px"><i>#ゲイシャ</i><i>#インフューズド</i><i style="background:transparent;border:1px dashed var(--a-line);color:var(--a-mute)">#蔵前</i></div></div>
+        <div style="margin-top:auto;display:flex;gap:10px;justify-content:flex-end"><a class="btn ghost" href="#dscreens" style="width:auto;padding:0 20px;height:46px">キャンセル</a><a class="btn" href="#dscreens" style="width:auto;padding:0 28px;height:46px">保存する</a></div>
+      </div>
+    </div></div>
+  </div></div>
+  <div class="cap dcap"><div class="id">D4</div><h3>記録を追加 — モーダルで 2 列</h3><p>PC にカメラは無いので、入口は「写真をドロップ」「手入力」「登録済みから」。スマホの 3 ステップを 2 列に畳み、左で豆、右で場所と評価を同時に見ながら書ける。ドロップした写真は同じ OCR を通り、要確認の琥珀もそのまま出る。</p><div class="ids">F-LOG-1 / F-OCR-2 / F-BEAN-1〜11</div></div>
+  </div>
+
+</div></section>
+
+<footer><div class="wrap">Coffeenotes 画面設計モック · 2026-09-22 · 表示中のデータはすべてサンプル · <a href="index.html">方針</a> · <a href="mobile.html">Web スマホ</a> · <a href="desktop.html">Web PC</a> · <a href="ios.html">iOS アプリ</a></div></footer>
+<script src="design.js"></script>
+</body>
+</html>

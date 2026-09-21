@@ -206,7 +206,8 @@ GOOGLE_MAPS_API_KEY=              # GEO_PROVIDER=google のとき
 - [x] Phase 0: 認証（メールリンク + Google のログイン画面・コールバック）と `(app)` レイアウトの下タブ（2026-09-21）
 - [x] Phase 0: `docs/decisions/` に ADR 0001〜0005 を作成（2026-09-21）
 - [x] Q1〜Q5 の決定（REQUIREMENTS.md §8.3、2026-09-21）
-- [x] 画面設計: モック `docs/design/index.html`・基本設計書 `docs/DESIGN.md`・ADR 0006（ダーク専用・銅アクセント・Bodoni Moda + Manrope）（2026-09-21）
+- [x] 画面設計: モック `docs/design/`・基本設計書 `docs/DESIGN.md`・ADR 0006（ダーク専用・銅アクセント・Bodoni Moda + Manrope）（2026-09-21）
+- [x] 画面設計: Web PC 版（3 列、D1〜D4）と iOS アプリ版（I1〜I7）を追加、ADR 0007。モックを 4 ページに分割（2026-09-22）
 - [x] Phase 0: Supabase プロジェクト作成（`ohagi-0's coffee`、ref `gayhfwmvlxwyuzrvmkoy`、ap-northeast-1）、`0001_init.sql` を SQL Editor で適用、`.env.local` 設定、`src/types/database.ts` 生成（2026-09-21）
 - [ ] Phase 0: Google OAuth のクライアント登録（Google Cloud）と Supabase Auth での有効化 — **ユーザー作業**。メールリンクの動作確認後でよい
 - [ ] Phase 0: Supabase Auth の URL 設定（Site URL `http://localhost:3100` / Redirect URLs に `http://localhost:3100/auth/callback` と本番 URL、`coffeelog://auth/callback`）— **ユーザー作業**
@@ -233,4 +234,4 @@ GOOGLE_MAPS_API_KEY=              # GEO_PROVIDER=google のとき
 - クラウド Supabase の Auth 設定は Management API で変更できる（トークンは macOS キーチェーンの `Supabase CLI`）。`GET/PATCH https://api.supabase.com/v1/projects/gayhfwmvlxwyuzrvmkoy/config/auth`。
 - マジックリンクの戻り先は要求元の `NEXT_PUBLIC_API_BASE_URL` で決まる。ローカルで要求したリンクをスマホで開いても `localhost` には繋がらない。スマホで試すときは本番 URL から要求する。
 - Supabase Free の一時停止対策として `.github/workflows/supabase-keepalive.yml` が週 2 回 REST を叩く（Secrets: `SUPABASE_URL` / `SUPABASE_ANON_KEY`）。
-- 画面設計は `docs/DESIGN.md` を正とする（トークン、書体、部品仕様、画面ごとの要素・状態・遷移）。見た目の参照はモック `docs/design/index.html`（単一 HTML、サンプルデータ。GitHub Pages で https://ohagi-0.github.io/coffeenotes/design/ に公開、push で更新）。リポジトリは Pages のため public（2026-09-21）。画面や部品を変えるときはモックと DESIGN.md を同じ PR で更新する。
+- 画面設計は `docs/DESIGN.md` を正とする（トークン、書体、部品仕様、画面ごとの要素・状態・遷移）。見た目の参照はモック `docs/design/`（index = 方針・色・書体・部品、mobile = Web スマホ、desktop = Web PC、ios = iOS アプリ。共通の design.css / design.js。GitHub Pages で https://ohagi-0.github.io/coffeenotes/design/ に公開、push で更新）。リポジトリは Pages のため public（2026-09-21）。画面や部品を変えるときはモックと DESIGN.md を同じ PR で更新する。

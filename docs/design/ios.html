@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Coffeenotes iOS アプリ版</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Manrope:wght@400..800&display=swap">
+<link rel="stylesheet" href="design.css">
+</head>
+<body>
+<nav class="nav"><div class="wrap">
+  <a class="wm" href="index.html">Coffeenotes</a>
+  <ul>
+    <li><a href="index.html#direction">方向性</a></li>
+    <li><a href="index.html#tokens">色と書体</a></li>
+    <li><a href="index.html#components">部品</a></li>
+    <li class="sep"></li>
+    <li><a href="mobile.html">Web スマホ</a></li>
+    <li><a href="desktop.html">Web PC</a></li>
+    <li><a href="ios.html" class="on">iOS アプリ</a></li>
+  </ul>
+</div></nav>
+<header class="phead wrap">
+  <div class="secno">iOS · APP</div>
+  <h1>iOS アプリ版</h1>
+  <p class="lead">Capacitor で同じコードを包む。画面・部品・色・書体はスマホ版と同じで、変えるのは「iOS でしかできないこと」と「iOS の作法」だけ。写真アプリの共有シートから直接登録できること、アプリ内カメラで表と裏を続けて撮れることが、ストア版を入れる理由になる。</p>
+  <dl class="facts">
+    <div><dt>基準機</dt><dd>iPhone 15 / 16（393 × 852 pt）</dd></div>
+    <div><dt>最小対応</dt><dd>iOS 17</dd></div>
+    <div><dt>包む方法</dt><dd>Capacitor 6</dd></div>
+    <div><dt>認証の戻り先</dt><dd>coffeelog://auth/callback</dd></div>
+    <div><dt>配信</dt><dd>App Store（Phase 6）</dd></div>
+  </dl>
+</header>
+
+<section id="diff"><div class="wrap">
+  <div class="secno">WHAT CHANGES</div>
+  <h2>PWA と同じもの、変わるもの</h2>
+  <p class="lead">見た目の 9 割は同じ。表の銅色の行だけが iOS 版で変わる。すべて `src/lib/platform/` のラッパーで切り替え、UI 側は分岐を持たない（REQUIREMENTS.md §13.2 N-4）。</p>
+  <div class="tblwrap"><table class="cmp">
+    <tr><th>要素</th><th>Web スマホ（PWA）</th><th>iOS アプリ</th></tr>
+    <tr><td>画面・部品・色・書体</td><td class="same">—</td><td class="same">同じ。同じコードを包むだけ</td></tr>
+    <tr><td>ナビゲーション</td><td class="same">画面タイトル 24px、戻るボタン</td><td class="diff">iOS の大タイトル（34pt、スクロールで縮む）。戻るは画面左端からのスワイプ。下タブは同じ</td></tr>
+    <tr><td>カード撮影</td><td class="same">OS の標準カメラを起動、1 枚ずつ</td><td class="diff">アプリ内カメラ。ガイド枠、カード検出、表 → 裏を続けて撮る</td></tr>
+    <tr><td>写真からの登録</td><td class="same">アプリを開いてギャラリーから選ぶ</td><td class="diff">写真アプリの共有シートに coffeenotes が出る。選ぶとウィザードの②へ直行</td></tr>
+    <tr><td>行の操作</td><td class="same">タップで開く</td><td class="diff">長押しでコンテキストメニュー（開く / もう一度記録 / 編集 / 削除）</td></tr>
+    <tr><td>削除の確認</td><td class="same">ダイアログ</td><td class="diff">アクションシート。削除は赤</td></tr>
+    <tr><td>星の入力</td><td class="same">タップ</td><td class="diff">タップ + 軽いハプティクス（0.5 ごと）</td></tr>
+    <tr><td>アイコン</td><td class="same">ホーム画面に手動で追加</td><td class="diff">App Store から。アイコンと起動画面を持つ</td></tr>
+    <tr><td>API の呼び先</td><td class="same">NEXT_PUBLIC_API_BASE_URL の絶対 URL</td><td class="same">同じ（相対パスは届かない）</td></tr>
+    <tr><td>認証の戻り先</td><td class="same">https://coffeenotes.app/auth/callback</td><td class="diff">coffeelog://auth/callback を Supabase に追加登録</td></tr>
+    <tr><td>オフライン</td><td class="same">閲覧のみ（Service Worker）</td><td class="same">同じ</td></tr>
+  </table></div>
+</div></section>
+
+<section id="iscreens"><div class="wrap">
+  <div class="secno">SCREENS</div>
+  <h2>画面設計</h2>
+  <p class="lead">iOS 版で変わる 7 場面。それ以外の画面は Web スマホ版と同じ。</p>
+  <div class="shots">
+
+    <!-- I1 icon on springboard -->
+    <div class="shot"><div class="ph ios">
+      <div class="springboard">
+        <div class="a-status" style="position:absolute;left:0;right:0;top:0;height:54px;padding:16px 34px 0;color:#fff"></div>
+        <div class="grid-icons">
+          <div class="appic"><i></i>カレンダー</div><div class="appic"><i></i>メモ</div><div class="appic"><i></i>天気</div><div class="appic"><i></i>時計</div>
+          <div class="appic cn"><i><span class="icon-card"></span><span class="icon-dots"><i></i><i></i><i></i><i class="o"></i><i class="o"></i></span></i>Coffeenotes</div><div class="appic"><i></i>地図</div><div class="appic"><i></i>ファイル</div><div class="appic"><i></i>設定</div>
+          <div class="appic"><i></i>音楽</div><div class="appic"><i></i>ヘルスケア</div><div class="appic"><i></i>翻訳</div><div class="appic"><i></i>計算機</div>
+        </div>
+        <div class="dock"><i></i><i></i><i></i><i></i></div>
+        <div class="homeind" style="background:#fff"></div>
+      </div>
+    </div><div class="cap"><div class="id">I1</div><h3>アプリアイコン</h3><p>エスプレッソの地に、傾けたクリーム色のテイスティングカードと銅のドット 5 つ。ドットは味覚チャートの記号で、このアプリにしか無い形。60px でも 5 つのドットが数えられる太さにする。1024px の原本は Phase 6 で作る。</p><div class="ids">§13.3</div></div></div>
+
+    <!-- I1b launch -->
+    <div class="shot"><div class="ph ios">
+      <div class="a-status" style="position:relative;z-index:3"></div>
+      <div class="a-body" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px">
+        <div class="icon-big"><span class="icon-card"></span><span class="icon-dots"><i></i><i></i><i></i><i class="o"></i><i class="o"></i></span></div>
+        <div class="disp" style="font-size:40px">Coffeenotes</div>
+      </div>
+      <div class="homeind"></div>
+    </div><div class="cap"><div class="id">I1'</div><h3>起動画面</h3><p>アイコンとワードマークだけ。0.5 秒で S2 に切り替わる。ログイン済みならタイムライン、未ログインなら S1。</p></div></div>
+
+    <!-- I2 home large title -->
+    <div class="shot"><div class="ph ios">
+      <div class="a-status" style="position:relative;z-index:3"></div>
+      <div class="ios-nav">
+        <div class="row1"><span></span><span class="ib" style="width:34px;height:34px;border-radius:50%"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></span></div>
+        <div class="lt">記録<small>9 月 · 12 杯</small></div>
+        <div class="ios-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>豆名・フレーバー・メモ</div>
+      </div>
+      <div class="a-body">
+        <div class="chips" style="margin-top:2px"><span class="chip cu"><svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg>絞り込み</span><span class="chip on">すべて</span><span class="chip">星 4 以上</span><span class="chip">自宅</span><span class="chip">Colombia</span></div>
+        <div class="dg">今日 · 9月21日（日）</div>
+        <div class="lg"><div class="cardimg" style="font-size:11px"><small>KIELO</small><b>Lusitania Lime Geisha</b><em>Colombia</em></div><div><div class="nm">Lusitania Lime Geisha</div><div class="ro">KIELO COFFEE</div><div class="mt"><span class="st" data-v="4.5"></span><b>4.5</b><span>KIELO COFFEE 蔵前</span></div><div class="fl"><i>Lime</i><i>Bergamot</i><i>Laurier</i></div></div></div>
+        <div class="dg">9月19日（金）</div>
+        <div class="lg"><div class="cardimg" style="font-size:11px;background:#EDE3D2"><small>NAGARE</small><b>Guji Anaerobic</b><em>Ethiopia</em></div><div><div class="nm">Ethiopia Guji Anaerobic</div><div class="ro">Nagare Roastery</div><div class="mt"><span class="st" data-v="4"></span><b>4.0</b><span class="pill home">自宅</span><span>V60 · 1:15 · 92 ℃</span></div><div class="fl"><i>Blueberry</i><i>Cacao</i><i>Winey</i></div></div></div>
+        <div class="dg">9月14日（日）</div>
+        <div class="lg"><div class="cardimg" style="font-size:11px;background:#E4E9E3"><small>SONAR</small><b>Kiambu AA</b><em>Kenya</em></div><div><div class="nm">Kenya Kiambu AA</div><div class="ro">Sonar Coffee Stand</div><div class="mt"><span class="st" data-v="3.5"></span><b>3.5</b><span>Sonar Coffee Stand 神保町</span></div><div class="fl"><i>Blackcurrant</i><i>Tomato</i></div></div></div>
+        <div class="dg">9月7日（日）</div>
+        <div class="lg"><div class="cardimg" style="font-size:11px;background:#F1E4E4"><small>GLINT</small><b>El Paraiso Lychee</b><em>Colombia</em></div><div><div class="nm">El Paraiso Lychee</div><div class="ro">Glint Coffee</div><div class="mt"><span class="st" data-v="5"></span><b>5.0</b><span>Glint Coffee 表参道</span></div><div class="fl"><i>Lychee</i><i>Rose</i><i>Jasmine</i></div></div></div>
+      </div>
+      <nav class="ios-tab" data-active="home"></nav>
+      <div class="homeind"></div>
+    </div><div class="cap"><div class="id">I2</div><h3>ホーム — iOS の大タイトル</h3><p>タイトルは 34pt で、スクロールすると上の細いバーに縮む。検索欄はタイトルの下に常設。下タブは PWA と同じ配置で、素材だけ iOS の半透明ブラーにする。戻る操作は画面左端からのスワイプ。</p><div class="ids">F-LIST-1〜3</div></div></div>
+
+    <!-- I3 share sheet -->
+    <div class="shot"><div class="ph ios">
+      <div class="photos-bg">
+        <i></i><i></i><i></i><i style="background:var(--cardpaper);position:relative;overflow:hidden"><span style="position:absolute;inset:14%;background:#fff;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.08)"></span></i><i></i><i></i><i></i><i></i><i></i>
+      </div>
+      <div class="a-status" style="position:absolute;left:0;right:0;top:0;height:54px;padding:16px 34px 0;z-index:3;color:#fff"></div>
+      <div class="dim"></div>
+      <div class="sharesheet">
+        <div class="who"><div class="thumb"><div class="cardimg" style="font-size:8px;border-radius:0"><small>KIELO</small><b>Lusitania Lime Geisha</b></div></div><div><b style="display:block;font-size:15px;color:#fff">写真 1 枚</b><span style="font-size:13px;color:#8E8E93">2026年9月21日 14:02</span></div></div>
+        <div class="apps">
+          <div class="app"><i style="background:#2C5F8D"></i>AirDrop</div>
+          <div class="app"><i style="background:#34A853"></i>メッセージ</div>
+          <div class="app cn"><i><span class="icon-card"></span><span class="icon-dots"><i></i><i></i><i></i><i class="o"></i><i class="o"></i></span></i><span style="color:#fff;font-weight:600">Coffeenotes</span></div>
+          <div class="app"><i></i>メモ</div>
+          <div class="app"><i></i>メール</div>
+          <div class="app"><i></i>その他</div>
+        </div>
+        <div class="acts"><div>コピー</div><div>アルバムに追加</div><div>複製</div><div style="border:0">スライドショー</div></div>
+      </div>
+    </div><div class="cap"><div class="id">I3</div><h3>写真アプリの共有シートから登録</h3><p>店でカードを撮った後、写真アプリで選んで共有 → Coffeenotes。アプリを開いて＋を押す手順が丸ごと消える。ネイティブ版だけの入口で、これが App Store 版を出す一番の理由（§13.1）。2 枚選んで共有すれば表と裏として受け取る。</p><div class="ids">§13.3 共有シート対応</div></div></div>
+
+    <!-- I4 import -->
+    <div class="shot"><div class="ph ios">
+      <div class="a-status" style="position:relative;z-index:3"></div>
+      <div class="ios-nav">
+        <div class="row1"><span class="act">キャンセル</span><span style="font-size:17px;font-weight:600">写真を取り込む</span><span class="act" style="opacity:.35">次へ</span></div>
+      </div>
+      <div class="a-body">
+        <p style="font-size:13px;color:var(--a-mute);margin:6px 0 14px">共有された写真をカードの表と裏に割り当てます。1 枚だけなら表として読み取ります。</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div><div class="cardimg" style="font-size:18px;box-shadow:0 0 0 2px var(--a-cu)"><small>KIELO COFFEE</small><div class="dots"><i></i><i></i><i></i><i class="o"></i><i class="o"></i></div><b>Lusitania Lime Geisha</b><em>Colombia</em></div><div style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:13px;font-weight:700"><span class="pill" style="background:var(--a-cu);color:var(--a-oncu)">表</span>1 枚目</div></div>
+          <div><div class="cardimg" style="font-size:9px;color:#5a4c3f;padding:10%"><small>TASTING NOTE</small><span style="margin-top:8px;line-height:1.5;font-size:1em">ライムを思わせるシトラス系の香りと、ベルガモットの華やかさ。</span><b style="font-size:1.3em">¥3,800 / 100g</b></div><div style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:13px;font-weight:700"><span class="pill">裏</span>2 枚目 <a class="lnk" href="#iscreens" style="margin-left:auto;font-weight:500">入れ替え</a></div></div>
+        </div>
+        <div class="sh" style="margin-top:22px"><span>この写真を</span></div>
+        <div class="stack">
+          <a class="opt pri" href="#iscreens"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span><span><b>新しい豆として読み取る</b><span>OCR → 確認 → 店・評価</span></span></a>
+          <a class="opt" href="#iscreens"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span><span><b>登録済みの豆に追加する</b><span>カード画像だけ差し替える</span></span></a>
+        </div>
+      </div>
+      <div class="homeind"></div>
+    </div><div class="cap"><div class="id">I4</div><h3>取り込み — 表と裏の割り当て</h3><p>共有された写真がどちらの面か、アプリには分からない。1 枚目を表、2 枚目を裏として仮置きし、入れ替えられる。「読み取る」で S3 の②へ。既存の豆に画像だけ足す道も用意する。</p><div class="ids">F-OCR-1 / F-BEAN-12</div></div></div>
+
+    <!-- I5 in-app camera -->
+    <div class="shot"><div class="ph ios">
+      <div class="a-status" style="position:relative;z-index:3"></div>
+      <div class="a-body nopad"><div class="cam">
+        <div class="vf">
+          <div class="cardimg paper" style="transform:translate(-50%,-52%) rotate(1deg)"><small>TASTING NOTE</small><span style="margin-top:10%;font-size:.5em;line-height:1.5;color:#5a4c3f">ライムを思わせるシトラス系の香りと、ベルガモットの華やかさ。冷めるとローリエのようなハーブ感が出てくる。</span><b style="font-size:.9em">¥3,800 / 100g</b></div>
+          <div class="frame detected"><i></i><i></i><i></i><i></i></div>
+          <div class="hint"><b style="background:var(--a-cu);color:var(--a-oncu)">カードを検出 · 裏面</b></div>
+          <div class="thumbs"><div class="th done"><div class="cardimg" style="font-size:6px"><small>KIELO</small><b>Lusitania</b></div><span>表</span></div><div class="th now"><span>裏</span></div></div>
+        </div>
+        <div class="ctl">
+          <span class="side" style="justify-self:start"><b>2 / 2</b>裏面</span>
+          <span class="shut"><i></i></span>
+          <span class="act" style="color:var(--a-cu);font-size:15px;font-weight:600;justify-self:end">裏は省略</span>
+        </div>
+      </div></div>
+      <div class="homeind"></div>
+    </div><div class="cap"><div class="id">I5</div><h3>アプリ内カメラ — 表から裏へ続けて</h3><p>PWA は OS のカメラを 2 回起動するが、iOS 版はアプリ内で表 → 裏を続けて撮る。カードの四辺を検出すると枠が銅で塗りつぶされ、自動で切り抜く。左上に撮った面のサムネイル。「裏は省略」でそのまま読み取りへ。</p><div class="ids">F-OCR-1 / §13.1</div></div></div>
+
+    <!-- I6 context menu -->
+    <div class="shot"><div class="ph ios">
+      <div class="a-status" style="position:relative;z-index:3"></div>
+      <div class="ios-nav" style="filter:blur(3px);opacity:.6"><div class="row1"><span></span></div><div class="lt">記録<small>9 月 · 12 杯</small></div></div>
+      <div class="a-body" style="position:relative">
+        <div style="filter:blur(3px);opacity:.5">
+          <div class="dg">今日 · 9月21日（日）</div>
+          <div class="lg"><div class="cardimg" style="font-size:11px"><small>KIELO</small><b>Lusitania Lime Geisha</b></div><div><div class="nm">Lusitania Lime Geisha</div><div class="ro">KIELO COFFEE</div></div></div>
+          <div class="dg">9月19日（金）</div>
+          <div style="height:90px"></div>
+          <div class="dg">9月14日（日）</div>
+          <div class="lg"><div class="cardimg" style="font-size:11px;background:#E4E9E3"><small>SONAR</small><b>Kiambu AA</b></div><div><div class="nm">Kenya Kiambu AA</div><div class="ro">Sonar Coffee Stand</div></div></div>
+          <div class="dg">9月7日（日）</div>
+          <div class="lg"><div class="cardimg" style="font-size:11px;background:#F1E4E4"><small>GLINT</small><b>El Paraiso Lychee</b></div><div><div class="nm">El Paraiso Lychee</div><div class="ro">Glint Coffee</div></div></div>
+        </div>
+        <div class="lifted">
+          <div class="lg" style="border:0;padding:14px 16px"><div class="cardimg" style="font-size:11px;background:#EDE3D2"><small>NAGARE</small><b>Guji Anaerobic</b><em>Ethiopia</em></div><div><div class="nm">Ethiopia Guji Anaerobic</div><div class="ro">Nagare Roastery</div><div class="mt"><span class="st" data-v="4"></span><b>4.0</b><span class="pill home">自宅</span><span>V60 · 1:15 · 92 ℃</span></div></div></div>
+        </div>
+        <div class="ctxmenu">
+          <div>開く<svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+          <div>この豆をもう一度記録<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></div>
+          <div>前回のレシピで記録<svg viewBox="0 0 24 24"><path d="M4 7h11a4 4 0 0 1 0 8H8M8 11l-4 4 4 4"/></svg></div>
+          <div>編集<svg viewBox="0 0 24 24"><path d="M4 20h4l11-11-4-4L4 16z"/></svg></div>
+          <div class="bad">削除<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></div>
+        </div>
+      </div>
+      <div class="homeind"></div>
+    </div><div class="cap"><div class="id">I6</div><h3>長押しでコンテキストメニュー</h3><p>一覧の行を長押しすると、行が浮いて背景がぼける。「この豆をもう一度記録」「前回のレシピで記録」を一覧から直接出せるのが UC6・UC7 の近道。削除は赤で最下段。</p><div class="ids">UC6 / F-BREW-7 / F-LOG-7</div></div></div>
+
+    <!-- I7 action sheet -->
+    <div class="shot"><div class="ph ios">
+      <div class="a-status" style="position:relative;z-index:3"></div>
+      <div class="ios-nav"><div class="row1"><span class="bk"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>記録</span><span class="act">編集</span></div></div>
+      <div class="a-body">
+        <div class="dg" style="margin-top:0">2026年9月21日（日）</div>
+        <div class="lg" style="border:0;padding-top:8px"><div class="cardimg" style="font-size:11px"><small>KIELO</small><b>Lusitania Lime Geisha</b><em>Colombia</em></div><div><div class="nm">Lusitania Lime Geisha</div><div class="ro">KIELO COFFEE · Colombia · Lime infused</div></div></div>
+        <div class="dg2" style="margin-top:6px"><div><small>場所</small><b>KIELO COFFEE 蔵前</b></div><div><small>飲み方</small><b>ハンドドリップ</b></div></div>
+        <div class="fd" style="border:0"><label>評価</label><div style="display:flex;align-items:center;gap:14px;margin-top:4px"><span class="st big" data-v="4.5"></span><span class="rv" style="font-size:36px">4.5</span></div></div>
+        <div class="fd" style="border:0;padding-top:4px"><label>メモ</label><p style="margin:2px 0 0;font-size:15px">冷めてからのローリエ感が良い。ライムというよりベルガモット寄り。</p></div>
+        <div style="height:60px"></div>
+        <a class="btn bad" href="#iscreens">この記録を削除</a>
+      </div>
+      <div class="dim"></div>
+      <div class="actionsheet">
+        <div class="grp"><div class="t"><b style="color:#fff;font-size:13px">この記録を削除しますか？</b>豆「Lusitania Lime Geisha」の情報とカード画像は残ります。</div><div class="bad">記録を削除</div></div>
+        <div class="cancel">キャンセル</div>
+      </div>
+      <div class="homeind"></div>
+    </div><div class="cap"><div class="id">I7</div><h3>削除はアクションシート</h3><p>破壊的な操作の確認は iOS のアクションシートで、削除だけを赤に。何が消えて何が残るかを 1 文で書く。星入力のハプティクスと同じく、OS の作法に乗る方が説明が要らない。</p><div class="ids">F-LOG-7</div></div></div>
+
+  </div>
+</div></section>
+
+<section id="inext"><div class="wrap">
+  <div class="secno">PHASE 6</div>
+  <h2>ネイティブ化のときに作るもの</h2>
+  <div class="next">
+    <div><h3>共有シート受け口</h3><p>Capacitor の share-target 相当プラグインで画像を受け取り、I4 の取り込み画面へ渡す。受け取りは Blob で、`src/lib/platform/share.ts` に閉じる。</p></div>
+    <div><h3>アプリ内カメラ</h3><p>`@capacitor/camera` では連続撮影ができないので、カメラプレビュー系のプラグインでガイド枠と検出を実装する。PWA 側のラッパーは `getUserMedia` のまま。</p></div>
+    <div><h3>アイコンと起動画面</h3><p>1024px のアイコン原本、ダークの起動画面、App Store のスクリーンショット 6.7 インチ × 5 枚。ストアの説明文とプライバシーポリシーページ。</p></div>
+    <div><h3>認証の戻り先</h3><p>Supabase に `coffeelog://auth/callback` を追加登録し、`@capacitor/app` の URL イベントでセッションを受け取る。</p></div>
+  </div>
+</div></section>
+
+<footer><div class="wrap">Coffeenotes 画面設計モック · 2026-09-22 · 表示中のデータはすべてサンプル · <a href="index.html">方針</a> · <a href="mobile.html">Web スマホ</a> · <a href="desktop.html">Web PC</a> · <a href="ios.html">iOS アプリ</a></div></footer>
+<script src="design.js"></script>
+</body>
+</html>

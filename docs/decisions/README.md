@@ -31,3 +31,4 @@
 | [0004](0004-rating-half-star.md) | 星評価は 0.5 刻み | 決定 |
 | [0005](0005-roaster-shared-master.md) | ロースター名は全ユーザー共通マスタ | 決定 |
 | [0006](0006-visual-design-dark-copper-bodoni.md) | ビジュアルデザインはダーク専用・銅アクセント・Bodoni Moda + Manrope | 決定 |
+| [0007](0007-desktop-layout-and-ios-adaptation.md) | PC は 3 列レイアウトで「振り返る」、iOS は同じ UI に OS の作法だけ足す | 決定 |
