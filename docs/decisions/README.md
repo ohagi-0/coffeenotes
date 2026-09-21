@@ -32,3 +32,4 @@
 | [0005](0005-roaster-shared-master.md) | ロースター名は全ユーザー共通マスタ | 決定 |
 | [0006](0006-visual-design-dark-copper-bodoni.md) | ビジュアルデザインはダーク専用・銅アクセント・Bodoni Moda + Manrope | 決定 |
 | [0007](0007-desktop-layout-and-ios-adaptation.md) | PC は 3 列レイアウトで「振り返る」、iOS は同じ UI に OS の作法だけ足す | 決定 |
+| [0008](0008-detail-page-url-query-string.md) | 詳細ページの URL はクエリ文字列（`/beans?id=…`）。静的出力で `[id]` が使えないため | 決定 |

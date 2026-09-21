@@ -42,10 +42,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 星の刻み | 0.5 刻み（1.0〜5.0） | DB `numeric(2,1)`。UI は星の左右半分タップ |
 | ロースター名 | 全ユーザー共通マスタ | `roasters` は RLS で読み取り全員可・INSERT は認証ユーザー可・UPDATE/DELETE は作成者のみ |
 | 配信形態 | PWA 先行、後に Capacitor | §2.2 |
+| 詳細ページの URL | クエリ文字列（`/beans?id=…` `/logs?id=…` `/shops/detail?id=…`）。ADR 0008 | `src/app/` に `[id]` などの動的セグメントを置かない（静的出力で落ちる）。URL は `src/lib/routes.ts` 経由で組み立て、詳細ページは `useSearchParams` を `Suspense` の中で読む |
 
 新しい未確定項目が出たら、**仮実装で進めずにユーザーに確認し、REQUIREMENTS.md §8.3 に追記する**。
-
-**判断待ち（2026-09-22）**: Q6 = 豆詳細・記録詳細の URL の形。`/beans/[id]` は静的出力（Capacitor 化に必須）でビルドが落ちることを検証済み。推奨は `/beans?id=…` のクエリ形式。決まるまで S4 / S5 のルートを作らない。
 
 ### 2.2 ネイティブ化（Capacitor）のために守る制約
 
@@ -70,9 +69,9 @@ REQUIREMENTS.md §13.2 の N-1〜N-5。要点:
 │   │   ├── (app)/             # ログイン後。layout に認証ガード + ナビ（Web はサイトヘッダー + ドロワー。現状の bottom-nav.tsx は Phase 0 の暫定で、DESIGN.md §3 に置き換える）
 │   │   │   ├── page.tsx       # ホーム（タイムライン）
 │   │   │   ├── logs/new/      # 記録作成ウィザード
-│   │   │   ├── logs/[id]/
-│   │   │   ├── beans/[id]/        # ← Q6 でクエリ形式に変わる可能性あり
-│   │   │   ├── shops/
+│   │   │   ├── logs/              # 記録詳細・編集 `/logs?id=…`（ADR 0008。[id] は使わない）
+│   │   │   ├── beans/             # 豆詳細 `/beans?id=…`
+│   │   │   ├── shops/             # 一覧。詳細は shops/detail/ `/shops/detail?id=…`
 │   │   │   ├── map/
 │   │   │   ├── stats/
 │   │   │   └── settings/
@@ -115,7 +114,7 @@ REQUIREMENTS.md §13.2 の N-1〜N-5。要点:
 - **TanStack Query のキー**: `src/features/<domain>/queries.ts` に `logKeys` のようなキー生成オブジェクトを置き、`useXxx` フックはそれを使う。無効化もこのキー経由。
 - **Next.js の `typedRoutes: true`**: `<Link href>` の文字列は存在するルートしか受け付けない。ルートを増やす前に `href` を書くと typecheck で落ちる。
 - **RLS の前提**: ユーザー所有テーブルへの INSERT は `user_id` をセッションから明示的に入れる（DB 側に既定値は無い）。`log_tags.user_id` も NOT NULL。`roasters` の INSERT は `created_by = auth.uid()` が条件。ロースター名は生成列 `name_normalized` に一意制約があり、同名登録は Postgres の `23505` になる。
-- **静的出力との関係**（2026-09-22 検証）: 現状のコードは `output: 'export'` でビルドが通る。`/api/*` は自動で除外される（Vercel 側が配信し、アプリは本番 URL 経由で呼ぶ）。動的ルート `[id]` だけが落ちる（Q6）。
+- **静的出力との関係**（2026-09-22 検証）: 現状のコードは `output: 'export'` でビルドが通る。`/api/*` は自動で除外される（Vercel 側が配信し、アプリは本番 URL 経由で呼ぶ）。動的ルート `[id]` は落ちるので使わない（ADR 0008。URL は `src/lib/routes.ts` で組み立てる）。
 - **Prettier の対象外**: Markdown と `docs/design/` は整形しない。`pnpm format` を打っても要件書やモックは変わらない。
 - **並行作業の注意**: UI ウィンドウと同じワーキングツリーを共有している。`git add -A` や `git commit -a` は相手の作業途中ファイルを巻き込むので、**自分が触ったパスだけを `git add` する**。UI 側の担当は `src/app/**`、`src/components/**`、`public/manifest.json`、`docs/DESIGN.md`、`docs/design/**`。非 UI 側は `src/lib/**`、`src/features/**`、`supabase/**`、`scripts/**`、`tests/**`。
 
@@ -246,7 +245,7 @@ SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=
 - [x] Supabase Auth の URL 設定（Site URL = 本番、Redirect URLs に localhost:3100 / 127.0.0.1:3100 / 本番 / `coffeelog://` の 4 つ）（2026-09-21）
 - [ ] スマホで本番 URL からログイン確認
 - [ ] Google ログインを有効化（Google Cloud で OAuth クライアント作成 → Supabase の Providers で設定）— F-AUTH-1 の Must
-- [ ] Q6（URL の形）の決定 → CLAUDE.md §3、DESIGN.md S4/S5、Issue #5/#6 に反映
+- [x] Q6（URL の形）をクエリ文字列に決定。ADR 0008、`src/lib/routes.ts`（2026-09-22）
 - [x] Phase 1: 非 UI — #4 Zod スキーマ、#5 豆・ロースター・店・タグのデータ層、#6 記録のデータ層（2026-09-22）
 - [x] Phase 1: 非 UI — #8 画像圧縮・Storage 保存・platform ラッパー（`src/lib/image/compress.ts`、`src/lib/storage/bean-images.ts`、`src/lib/platform/{camera,geolocation,share}.ts`。F-OCR-1 / F-BEAN-12 / F-SHOP-3、N-4 / N-5）（2026-09-22）
 - [x] Phase 1: 非 UI — #7 開発用シードデータ投入（`scripts/seed-dev.mjs` + `pnpm seed:dev -- --email <アドレス> --reset`。記録 15 / 豆 6 / 店 4 / 焙煎 1 / タグ 5。行の ID はユーザー ID を名前空間にした UUID v5 なので再実行しても増えない。`SUPABASE_SERVICE_ROLE_KEY` が要る）（2026-09-22）。**実行はユーザー作業**: キーを `.env.local` に入れて 1 回流す
