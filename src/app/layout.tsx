@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Bodoni_Moda, Manrope } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/providers';
+import { DevTestHooks } from '@/components/dev-test-hooks';
 
 // 書体（ADR 0006 / DESIGN.md §2.3）: 豆名とワードマークは Bodoni Moda、数字は Manrope、日本語は端末フォント。
 // next/font は self-host されるので PWA のオフライン閲覧でも崩れない。日本語の Web フォントは読み込まない。
@@ -38,6 +39,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="ja" className={`${bodoni.variable} ${manrope.variable}`}>
       <body className="min-h-dvh antialiased">
         <Providers>{children}</Providers>
+        {/* E2E 用の seam。本番では何もしない */}
+        <DevTestHooks />
       </body>
     </html>
   );

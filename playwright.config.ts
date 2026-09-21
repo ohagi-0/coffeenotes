@@ -1,8 +1,13 @@
 import { defineConfig, devices } from '@playwright/test';
+import { loadEnvLocal } from './tests/e2e/env';
+
+// .env.local の E2E_TEST_EMAIL / E2E_TEST_PASSWORD（と任意で SUPABASE_SERVICE_ROLE_KEY）を読む
+loadEnvLocal();
 
 // E2E は主要フロー 1 本のみ維持する（CLAUDE.md §5.4）。スマホ幅（375px）を基準にする。
 export default defineConfig({
   testDir: 'tests/e2e',
+  globalSetup: './tests/e2e/global-setup.ts',
   timeout: 30_000,
   fullyParallel: true,
   retries: process.env.CI ? 1 : 0,

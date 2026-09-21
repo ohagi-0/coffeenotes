@@ -26,8 +26,8 @@ UI ウィンドウの進捗記録。**別ウィンドウ（非 UI）が作業前
 | #20 UI-12 詳細の部品 | ⏸ 非 UI ウィンドウが次に取る予定（未着手。先に始めるならこの行を書き換えてください） | | |
 | #21 UI-13 記録したお店 | ⏸ | | |
 | #22 UI-14 設定 | ✅ A | (次の commit) | `src/app/(app)/settings/page.tsx` `src/components/settings/{setting-row,settings-view}.tsx` `src/features/settings/use-preferences.ts` `tests/unit/components/settings.test.tsx` |
-| #23 UI-15 PC レイアウト | ⏸ | | |
-| #24 UI-16 E2E | ⏸ | | |
+| #23 UI-15 PC レイアウト | 🔧 **A が担当中**（段階 1: ナビ。xl の一覧 + 詳細は #20 の後） | | `src/app/(app)/layout.tsx` `src/components/site-nav.tsx` `tests/unit/components/site-nav.test.tsx` |
+| #24 UI-16 E2E | ✅ A（資格情報があれば実行。無ければ skip） | (次の commit) | `tests/e2e/{env,global-setup,create-log.spec}.ts` `playwright.config.ts` `src/components/dev-test-hooks.tsx` `src/app/layout.tsx` `.env.example` |
 
 ---
 
@@ -194,3 +194,23 @@ B の #14（ログ行・日付見出し・空状態・失敗表示・スケル�
 
 - 保存後の遷移先を `router.replace(routes.home)` にしてあります。`/beans?id=` のページができたら `page.tsx` の `PlaceStep` 内 `router.replace(routes.home)` を `routes.bean(result.beanId)` に変えてください（`result` は既に取ってあります）。
 - `useShops({ search })` は店名の部分一致なので、そのまま候補に使っています。
+
+## #24 UI-16 E2E: ログイン → 手入力で記録作成 → 入力記録一覧に表示 — ✅ A 2026-09-22
+
+**やったこと**
+
+- `tests/e2e/create-log.spec.ts`: ログイン → 「記録する」→ 手で入力する → 豆名・ロースター → 次へ → 自宅で・星 4.5・メモ → 保存する → 「保存しました」→ 一覧に豆名・4.5・自宅が出る。`afterEach` で作った記録・豆・ロースターを消す（RLS で自分の行だけ）。
+- ログインの方法: マジックリンクは自動化できないので、`src/components/dev-test-hooks.tsx` が **開発ビルドだけ** `window.__coffeenotes.supabase` にブラウザクライアントを公開し、テストは `page.evaluate` で `signInWithPassword` を呼ぶ。`NODE_ENV=production` では何もしない。
+- `tests/e2e/global-setup.ts`: `SUPABASE_SERVICE_ROLE_KEY` があれば `auth.admin.createUser`（メール確認済み）でテスト用ユーザーを用意（既にあれば何もしない）。無ければ既にある前提。
+- `tests/e2e/env.ts`: `.env.local` の最小ローダー（seed-dev.mjs と同じ方式）。`playwright.config.ts` の先頭で読む。
+- `.env.example` に `E2E_TEST_EMAIL` / `E2E_TEST_PASSWORD` を追記。
+
+**実行に必要なもの（ユーザー作業）**
+
+- `.env.local` に `E2E_TEST_EMAIL` と `E2E_TEST_PASSWORD` を設定する。あわせて `SUPABASE_SERVICE_ROLE_KEY` があれば global-setup がユーザーを自動で作る。無ければ Supabase ダッシュボード（Authentication → Users → Add user、Auto Confirm）で同じメール・パスワードのユーザーを作る。
+- Supabase の Email プロバイダで「パスワードでのログイン」が無効になっていないこと（既定は有効）。
+- この環境には service role キーもテスト用ユーザーも無いため、**主要フローのテストは未実行（skip）**。`login.spec.ts` の 2 件と B の `image-compress.spec.ts` は通過。
+
+**他ウィンドウへの連絡**
+
+- `window.__coffeenotes` は E2E 専用。アプリのコードから参照しないでください。
