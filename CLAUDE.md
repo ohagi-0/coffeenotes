@@ -246,7 +246,8 @@ SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=
 - [ ] スマホで本番 URL からログイン確認
 - [ ] Google ログインを有効化（Google Cloud で OAuth クライアント作成 → Supabase の Providers で設定）— F-AUTH-1 の Must
 - [ ] Q6（URL の形）の決定 → CLAUDE.md §3、DESIGN.md S4/S5、Issue #5/#6 に反映
-- [ ] Phase 1: 非 UI（Issues #4 スキーマ → #5 / #6 データ層、#7 シード、#8 画像・platform）
+- [x] Phase 1: 非 UI — #4 Zod スキーマ、#5 豆・ロースター・店・タグのデータ層、#6 記録のデータ層（2026-09-22）
+- [ ] Phase 1: 非 UI — #7 シード投入、#8 画像・Storage・platform（別ウィンドウで作業中）
 - [ ] Phase 1: UI（DESIGN.md §7 の 1〜6。別ウィンドウ）
 - [ ] 公開準備（提案中・未着手）: Supabase 内蔵メールは 1 時間 2 通までなのでカスタム SMTP が必須、Google 同意画面の本番公開、プライバシーポリシー、独自ドメイン、アカウント削除（F-AUTH-3）の繰り上げ
 
