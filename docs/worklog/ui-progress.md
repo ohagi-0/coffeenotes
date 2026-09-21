@@ -26,7 +26,7 @@ UI ウィンドウの進捗記録。**別ウィンドウ（非 UI）が作業前
 | #20 UI-12 詳細の部品 | ⏸ 非 UI ウィンドウが次に取る予定（未着手。先に始めるならこの行を書き換えてください） | | |
 | #21 UI-13 記録したお店 | ⏸ | | |
 | #22 UI-14 設定 | ✅ A | (次の commit) | `src/app/(app)/settings/page.tsx` `src/components/settings/{setting-row,settings-view}.tsx` `src/features/settings/use-preferences.ts` `tests/unit/components/settings.test.tsx` |
-| #23 UI-15 PC レイアウト | 🔧 **A が担当中**（段階 1: ナビ。xl の一覧 + 詳細は #20 の後） | | `src/app/(app)/layout.tsx` `src/components/site-nav.tsx` `tests/unit/components/site-nav.test.tsx` |
+| #23 UI-15 PC レイアウト | ✅ 段階 1（A）/ ⏸ 段階 2 は #20 の後 | (次の commit) | `src/app/(app)/layout.tsx` `src/components/site-nav.tsx` `tests/unit/components/site-nav.test.tsx` |
 | #24 UI-16 E2E | ✅ A（資格情報があれば実行。無ければ skip） | (次の commit) | `tests/e2e/{env,global-setup,create-log.spec}.ts` `playwright.config.ts` `src/components/dev-test-hooks.tsx` `src/app/layout.tsx` `.env.example` |
 
 ---
@@ -214,3 +214,20 @@ B の #14（ログ行・日付見出し・空状態・失敗表示・スケル�
 **他ウィンドウへの連絡**
 
 - `window.__coffeenotes` は E2E 専用。アプリのコードから参照しないでください。
+
+## #23 UI-15 PC レイアウト — 段階 1 ✅ A 2026-09-22 / 段階 2 ⏸
+
+**やったこと（段階 1: ナビとコンテナ）**
+
+- `src/components/site-nav.tsx` `SiteNav`: `nav.ts` から描く 3 形態目。768〜1279px はアイコンレール 72px（`title` / `aria-label` で名前）、1280px〜 はラベル付きサイドバー 236px（ワードマーク、5 項目、「記録を追加」、下にアカウントとログアウト）。`sticky top-0 h-dvh`。
+- `src/app/(app)/layout.tsx`: 768px 以上でヘッダー・フッター・ドロワーを隠し、左に `SiteNav`。本文コンテナは 375: `max-w-md px-5` → md: `max-w-[680px] px-8` → xl: `max-w-[920px] px-10`。
+- 375 / 768 / 1280 でスクリーンショット確認、横スクロールなし。テスト 2 件。
+
+**段階 2（#20 の後）**
+
+- 1280px 以上のホームで `grid-cols-[400px_1fr]` にし、一覧の行クリックで右に `BeanDetail`（#20）を出す（選択は `?bean=` クエリ）。B の `BeanDetail` に `layout="wide"`（左 224px にカードとレーダー）が要る。#20 が終わったら A が続きを取ります。
+
+**他ウィンドウへの連絡（#20 / #21 担当へ）**
+
+- 画面側は `px` を付けない（layout が持つ）ルールは PC でも同じ。ページ内で幅を広げたいときは `md:` / `xl:` の grid をページに書く。
+- `.a-body` 相当の `-mx-5`（ヘッダー・フッター・チップの突き抜け）は `md:` 以上では効かせないようにしてあるので、`FilterChips` の `-mx-5 px-5` は md でも見た目上問題ありません（余白 32px の内側で 20px 分だけ突き抜ける）。気になれば `md:mx-0 md:px-0` を足してください。
