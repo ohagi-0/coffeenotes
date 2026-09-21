@@ -16,7 +16,8 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      <Toaster position="top-center" />
+      {/* ダーク専用なので OS 設定に関係なく dark を固定する（sonner.tsx は生成物なので触らない） */}
+      <Toaster theme="dark" position="top-center" />
     </QueryClientProvider>
   );
 }

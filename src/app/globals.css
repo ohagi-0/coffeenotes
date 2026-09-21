@@ -2,8 +2,6 @@
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 
-@custom-variant dark (&:is(.dark *));
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -23,6 +21,16 @@
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
+  --color-primary-hover: var(--primary-hover);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-card-paper: var(--card-paper);
+  --color-card-ink: var(--card-ink);
+  --color-pin-45: var(--pin-45);
+  --color-pin-40: var(--pin-40);
+  --color-pin-35: var(--pin-35);
+  --color-pin-30: var(--pin-30);
+  --color-map-me: var(--map-me);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -48,73 +56,57 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* ---------------------------------------------------------------------------
+ * デザイントークン（docs/DESIGN.md §2.1）。ダーク専用（ADR 0006）。
+ * 色はここでだけ定義し、コンポーネントは Tailwind のトークンクラス経由で使う。
+ * ------------------------------------------------------------------------- */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* 地・面 */
+  --background: #17120f; /* Espresso: 画面の地 */
+  --foreground: #f1e8da; /* Crema: 本文 */
+  --card: #211a15; /* Roast: カード・リスト行・入力欄 */
+  --card-foreground: #f1e8da;
+  --popover: #211a15;
+  --popover-foreground: #f1e8da;
+  --secondary: #2c231c; /* Bean: セグメント地・チップ塗り・二次ボタン */
+  --secondary-foreground: #f1e8da;
+  --muted: #2c231c;
+  --muted-foreground: #a39181; /* Chaff: 補助文字・ラベル */
+  --accent: #2c231c;
+  --accent-foreground: #f1e8da;
+  --border: #3b2f26;
+  --input: #211a15;
+  /* 操作 */
+  --primary: #d48c4e; /* Copper: 触れる場所だけに使う（P2） */
+  --primary-foreground: #17120f;
+  --primary-hover: #f0b57a;
+  --ring: #d48c4e;
+  /* 意味色（アクセントとは分ける） */
+  --destructive: #d96a57; /* Rust: 削除・失敗・必須未入力 */
+  --ok: #8db36e; /* 保存完了 */
+  --warn: #e3a94d; /* Amber: OCR 要確認 */
+  /* 固有 */
+  --card-paper: #f6f1e8; /* カード画像プレースホルダの用紙 */
+  --card-ink: #2a2118;
+  --pin-45: #e8a968; /* 地図ピン: 平均星 4.5 以上 */
+  --pin-40: #c27f49;
+  --pin-35: #8c6a4e;
+  --pin-30: #6e5a4a;
+  --map-me: #5b8dd6; /* 現在地（地図でだけ使う） */
+  --chart-1: #d48c4e;
+  --chart-2: #f0b57a;
+  --chart-3: #a39181;
+  --chart-4: #8c6a4e;
+  --chart-5: #3b2f26;
+  --radius: 0.875rem; /* 14px。ボタン・入力・カード */
+  --sidebar: #17120f;
+  --sidebar-foreground: #f1e8da;
+  --sidebar-primary: #d48c4e;
+  --sidebar-primary-foreground: #17120f;
+  --sidebar-accent: #2c231c;
+  --sidebar-accent-foreground: #f1e8da;
+  --sidebar-border: #3b2f26;
+  --sidebar-ring: #d48c4e;
 }
 
 @layer base {
@@ -126,5 +118,6 @@
   }
   html {
     @apply font-sans;
+    color-scheme: dark; /* ライトテーマは提供しない（ADR 0006） */
   }
 }

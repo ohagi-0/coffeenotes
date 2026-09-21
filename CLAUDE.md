@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 開発者: 個人（Kota）。レビュー相手は Claude Code。
 - 規模目標: 個人〜数十ユーザー。ランニングコストは月 0〜数百円。
 - 現在のフェーズ: **Phase 1（手入力 MVP）**。Phase 0 は 2026-09-21 完了。フェーズ定義は REQUIREMENTS.md §10。
-- 作業の分担: UI は GitHub Issues の `ui` ラベル（#9〜#24、UI-1〜UI-16。着手順は番号順）、それ以外は `non-ui` ラベル（#4〜#8）で管理。UI と非 UI は別の Claude Code ウィンドウが担当。UI の Issue は「見た目（props 駆動）→ データ接続」の 2 段階に分けてあり、段階 1 は非 UI の完了を待たずに進める。**同じワーキングツリーを共有している**ので §3.1 の注意を守る。
+- 作業の分担: UI は GitHub Issues の `ui` ラベル（#9〜#24、UI-1〜UI-16。着手順は番号順）、それ以外は `non-ui` ラベル（#4〜#8）で管理。UI と非 UI は別の Claude Code ウィンドウが担当。UI の Issue は「見た目（props 駆動）→ データ接続」の 2 段階に分けてあり、段階 1 は非 UI の完了を待たずに進める。 **UI 側の進捗と触ったパスは `docs/worklog/ui-progress.md` に記録する。非 UI 側は作業前にそれを読み、書かれたパスを触らない。****同じワーキングツリーを共有している**ので §3.1 の注意を守る。
 
 ## 2. 技術スタック（確定分）
 
