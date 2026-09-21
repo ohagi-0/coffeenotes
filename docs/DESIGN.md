@@ -107,7 +107,7 @@ shadcn/ui の生成物（`src/components/ui/`）は手で編集せず、以下�
 | 星評価 `RatingStars` | `components/logs/rating-stars.tsx` | 5 つの星。表示は 15 / 22 / 44px の 3 サイズ。入力モードでは各星の左半分タップで `.5`、右半分で `.0`。値は `numeric(2,1)`、1.0〜5.0。隣に数値（num 800）を常に表示。`role="slider"` と `aria-valuenow` を付け、左右キーで 0.5 ずつ動く（スライダー入力の要件） |
 | 味覚チャート `TasteDots` | `components/beans/taste-dots.tsx` | 5 軸固定（Flavor / Sweetness / Acidity / After taste / Body）。各軸 5 つの 20px 円。塗りは銅。タップで入力、同じ値をもう一度タップで未入力（NULL）に戻す。右端に値（num）または `—` |
 | 味覚レーダー `TasteRadar` | `components/beans/taste-radar.tsx` | SVG 200×190。5 段のグリッド、値のポリゴン（塗り銅 28%、線銅 2px）、頂点に 3px の円。統計では全体平均を `--mute` の点線で重ねる |
-| 要確認フィールド | `components/logs/ocr-field.tsx` | `confidence < 0.7` の項目に琥珀の点線下線（2px、offset 5px）とラベル横の「要確認」タグ（琥珀地、10px、700）。ユーザーが編集したら解除 |
+| 要確認フィールド | `components/logs/ocr-field.tsx` | `confidence < LOW_CONFIDENCE_THRESHOLD`（`src/lib/schemas/bean-card.ts`、現在 0.6）の項目に琥珀の点線下線（2px、offset 5px）とラベル横の「要確認」タグ（琥珀地、10px、700）。ユーザーが編集したら解除 |
 | 絞り込みチップ | `components/filter-chips.tsx` | 高さ 34px、角丸 999、枠 `--line`。選択中は文字色反転（地 `--text`、文字 `--bg`）。先頭の「絞り込み」だけ銅の枠線（操作を開く）。横スクロール、画面端まで余白を突き抜ける |
 | セグメント | `components/logs/place-segment.tsx` | 店で / 自宅で。地 `--sf2`、選択側は `--text` の塗り |
 | 入力欄 | shadcn `Input` をトークンで上書き | 高さ 48px、角丸 12px、地 `--sf`、枠 `--line`。プレースホルダは `--mute` |

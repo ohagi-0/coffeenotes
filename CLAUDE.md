@@ -67,7 +67,7 @@ REQUIREMENTS.md §13.2 の N-1〜N-5。要点:
 ├── src/
 │   ├── app/                   # App Router（route ごとにフォルダ）
 │   │   ├── (auth)/login/
-│   │   ├── (app)/             # ログイン後。layout に下タブナビ
+│   │   ├── (app)/             # ログイン後。layout に認証ガード + ナビ（Web はサイトヘッダー + ドロワー。現状の bottom-nav.tsx は Phase 0 の暫定で、DESIGN.md §3 に置き換える）
 │   │   │   ├── page.tsx       # ホーム（タイムライン）
 │   │   │   ├── logs/new/      # 記録作成ウィザード
 │   │   │   ├── logs/[id]/
@@ -110,6 +110,9 @@ REQUIREMENTS.md §13.2 の N-1〜N-5。要点:
 - **認証の流れ**: `src/app/page.tsx` がセッションの有無で `/`（`(app)`）か `/login` に振り分ける。`(app)/layout.tsx` が `useSession()`（`src/features/auth/use-session.ts`）でクライアント側にガードし、未ログインなら `/login` へ。ミドルウェアは使わない（静的出力のため）。`src/app/auth/callback/page.tsx` はガードの外にあり、マジックリンクの `?code=`（ブラウザクライアントが自動交換）と `token_hash`（`verifyOtp`）の両方を処理する。
 - **環境変数**: `src/lib/env.ts` の `getPublicEnv()` / `getServerEnv()` は呼び出し時に Zod 検証する（モジュール直下で読むとビルド時のプリレンダーで落ちる）。`/api/*` の URL は `apiUrl('/api/…')`、認証の戻り先は `authCallbackUrl()` で組み立て、どちらも `NEXT_PUBLIC_API_BASE_URL` 基点の絶対 URL になる。
 - **Supabase クライアント**: ブラウザは `getSupabaseBrowserClient()` の 1 つだけ。Route Handler は `createRouteClient(request)` が `Authorization: Bearer` を優先し（ネイティブ版は Cookie を送れない）、無ければ Cookie を使う。`createServiceClient()` は RLS を無視するのでアカウント削除など限定用途のみ。
+- **Zod スキーマの二層構造**（`src/lib/schemas/`）: 各エンティティに `xxxFormSchema`（フォーム入力用。空文字・数値文字列を `common.ts` の `emptyToNull` / `numberOrNull` / `textOrNull` で null か値に寄せる）と `xxxInsertSchema`（= Form + `user_id`。DB 投入用）がある。DB の CHECK 制約（座標は対、自宅は店 NULL、星 0.5 刻み、味覚 1〜5）は同じ規則をクライアント側でも `refine` で検証する。末尾の `type _XxxInsertCompat = Expect<Extends<XxxInsert, Database[...]['Insert']>>` は `database.ts` の Insert 型に代入できることをコンパイル時に保証するので、`pnpm db:types` で型を再生成したら `pnpm typecheck` でここが最初に落ちる。`index.ts` から一括 export。
+- **TanStack Query のキー**: `src/features/<domain>/queries.ts` に `logKeys` のようなキー生成オブジェクトを置き、`useXxx` フックはそれを使う。無効化もこのキー経由。
+- **Next.js の `typedRoutes: true`**: `<Link href>` の文字列は存在するルートしか受け付けない。ルートを増やす前に `href` を書くと typecheck で落ちる。
 - **RLS の前提**: ユーザー所有テーブルへの INSERT は `user_id` をセッションから明示的に入れる（DB 側に既定値は無い）。`log_tags.user_id` も NOT NULL。`roasters` の INSERT は `created_by = auth.uid()` が条件。ロースター名は生成列 `name_normalized` に一意制約があり、同名登録は Postgres の `23505` になる。
 - **静的出力との関係**（2026-09-22 検証）: 現状のコードは `output: 'export'` でビルドが通る。`/api/*` は自動で除外される（Vercel 側が配信し、アプリは本番 URL 経由で呼ぶ）。動的ルート `[id]` だけが落ちる（Q6）。
 - **Prettier の対象外**: Markdown と `docs/design/` は整形しない。`pnpm format` を打っても要件書やモックは変わらない。
@@ -155,6 +158,7 @@ export interface OcrProvider {
 - プロバイダは `src/lib/ocr/providers/claude.ts` を実装する（`OCR_PROVIDER=claude`）。他方式は将来の差し替え用にディレクトリだけ想定しておく。
 - Claude 実装の要点: モデル `claude-haiku-4-5`、表・裏を 1 リクエスト、`tool_use` で Zod スキーマ相当の JSON を強制、`max_tokens` 1,024、タイムアウト 15 秒。1 ユーザー 1 日 50 回のレート制限を `/api/ocr` に入れる。
 - **アプリ本体は `OcrProvider` 以外を import しない**。
+- 低信頼度の判定は `LOW_CONFIDENCE_THRESHOLD`（`src/lib/schemas/bean-card.ts`、現在 0.6）を使い、UI や設計書に数値を直書きしない。
 - OCR 失敗時は例外を握りつぶさず、UI は「手入力に切り替える」導線を出す。
 - `beans.ocr_raw` にプロバイダの生出力を保存する（再抽出・方式比較用）。
 - geo も同じ構造（`GeoProvider.searchNearby` / `geocode`）。
@@ -162,6 +166,7 @@ export interface OcrProvider {
 ### 5.3 UI
 
 - 色・書体・部品・画面仕様は `docs/DESIGN.md` に従う（ダーク専用、銅は操作要素だけ、豆名は Bodoni Moda、数字は Manrope、日本語は端末フォント）。
+- ナビは Web ではサイトヘッダー（ワードマーク、「＋ 記録する」、メニュー）+ 右からのドロワー + フッター。下タブは iOS アプリ版だけ（ADR 0007 追記）。ナビとページ名は略称を使わず「入力記録一覧 / 記録したお店 / 記録したお店のマップ / 好みの分析 / 設定」で統一する（DESIGN.md §3）。
 - モバイルファースト。ボタン・タップ領域は 44px 以上。
 - フォームは react-hook-form + Zod resolver。OCR 結果はフォームの `defaultValues` に流し込むだけにし、確定は必ずユーザー操作。
 - 画像は保存前に `src/lib/image/compress.ts` で長辺 1,600px・JPEG 品質 0.8 に圧縮する。
@@ -183,6 +188,7 @@ pnpm lint && pnpm typecheck
 pnpm test                                   # Vitest 全部
 pnpm vitest run tests/unit/rating.test.ts   # ファイル 1 つ
 pnpm vitest run -t '0.5 刻み'               # テスト名で絞る
+# 単体テストの既定環境は jsdom。Node 専用のテストは先頭に `// @vitest-environment node` を書く（env.test.ts が例）
 pnpm test:e2e            # Playwright。3100 で dev サーバーを自分で起動する（起動済みなら再利用）
 pnpm build
 pnpm format              # Prettier（Markdown と docs/design は対象外）
