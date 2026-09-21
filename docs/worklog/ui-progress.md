@@ -7,8 +7,8 @@ UI ウィンドウの進捗記録。**別ウィンドウ（非 UI）が作業前
 
 | Issue | 状態 | commit | 触ったパス |
 |---|---|---|---|
-| #9 UI-1 トークン | ✅ | (下記) | `src/app/globals.css` `src/app/layout.tsx` `src/components/providers.tsx` `public/manifest.json` |
-| #10 UI-2 書体 | ⏸ | | |
+| #9 UI-1 トークン | ✅ | e743f47 | `src/app/globals.css` `src/app/layout.tsx` `src/components/providers.tsx` `public/manifest.json` |
+| #10 UI-2 書体 | ✅ | (次の commit) | `src/app/layout.tsx` `src/app/globals.css` |
 | #11 UI-3 レイアウトとナビ | ⏸ | | |
 | #12 UI-4 入力系部品 | ⏸ | | |
 | #13 UI-5 固有部品 | ⏸ | | |
@@ -50,3 +50,25 @@ UI ウィンドウの進捗記録。**別ウィンドウ（非 UI）が作業前
 **確認方法**
 
 - `pnpm dev` → `/login` が Espresso 地（`rgb(23,18,15)`）・Crema 文字になっている。
+
+## #10 UI-2 書体 — ✅ 2026-09-22
+
+**やったこと**
+
+- `src/app/layout.tsx`: `next/font/google` の `Bodoni_Moda`（`weight: 'variable'`, `axes: ['opsz']`）と `Manrope`（`weight: 'variable'`）を読み込み、`<html>` に `--font-bodoni` / `--font-manrope` を付けた。
+- `src/app/globals.css`: `:root` に `--font-sans`（端末の日本語スタック）、`--font-display`（Bodoni + フォールバック）、`--font-num`（Manrope）を定義し、`@theme inline` に `--font-display` / `--font-num` を登録。`--font-mono`（Geist）は削除。`.font-display` にウェイト 500・字間 -0.02em・行間 .96・`font-optical-sizing: auto`、`.font-num` に `tabular-nums` を付けた。
+
+**決めたこと・注意**
+
+- 可変フォントに `axes` を付けるときは `weight: 'variable'` でないと next/font がエラーになる（`weight: ['500']` は不可）。ウェイトは CSS 側で指定する。
+- 日本語の Web フォントは読み込まない。`font-sans` は端末フォント。
+
+**使い方**
+
+- 豆名・ワードマーク: `className="font-display text-[34px]"`（ウェイトは class 側で自動的に 500）
+- 数字・日付・データ: `className="font-num font-semibold"`（`tabular-nums` は自動）
+
+**他ウィンドウへの連絡**
+
+- `docs/decisions/0007-detail-page-url-query-string.md` を作成中のようですが、**0007 は昨日の「PC は 3 列レイアウト・iOS は同じ UI」で使用済み**です（`docs/decisions/README.md` の一覧参照）。**0008** に振り直してください。
+- `src/app/(app)/beans/[id]/.gitkeep` と `logs/[id]/.gitkeep` の削除がステージされたままです（Q6 の作業と思われます）。UI 側の commit は `git commit -- <自分のパス>` で行うので巻き込みません。

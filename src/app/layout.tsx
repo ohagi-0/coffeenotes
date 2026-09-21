@@ -1,6 +1,23 @@
 import type { Metadata, Viewport } from 'next';
+import { Bodoni_Moda, Manrope } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/providers';
+
+// 書体（ADR 0006 / DESIGN.md §2.3）: 豆名とワードマークは Bodoni Moda、数字は Manrope、日本語は端末フォント。
+// next/font は self-host されるので PWA のオフライン閲覧でも崩れない。日本語の Web フォントは読み込まない。
+const bodoni = Bodoni_Moda({
+  subsets: ['latin'],
+  weight: 'variable', // 可変フォント。ウェイト 500 は CSS 側（.font-display）で指定する
+  axes: ['opsz'],
+  variable: '--font-bodoni',
+  display: 'swap',
+});
+const manrope = Manrope({
+  subsets: ['latin'],
+  weight: 'variable',
+  variable: '--font-manrope',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: { default: 'coffeenotes', template: '%s | coffeenotes' },
@@ -18,7 +35,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="ja">
+    <html lang="ja" className={`${bodoni.variable} ${manrope.variable}`}>
       <body className="min-h-dvh antialiased">
         <Providers>{children}</Providers>
       </body>
