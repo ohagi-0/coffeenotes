@@ -89,6 +89,7 @@ REQUIREMENTS.md §13.2 の N-1〜N-5。要点:
 │   │   ├── ocr/               # index.ts(インターフェース) + providers/
 │   │   ├── geo/               # index.ts(インターフェース) + providers/
 │   │   ├── image/             # ブラウザ側圧縮・リサイズ
+│   │   ├── storage/           # Supabase Storage（カード画像の保存・署名付き URL）
 │   │   ├── platform/          # camera.ts / geolocation.ts / share.ts（Web と Capacitor の差を吸収）
 │   │   └── schemas/           # Zod スキーマ（DB 型と対応）
 │   └── types/
@@ -247,11 +248,16 @@ SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=
 - [ ] Google ログインを有効化（Google Cloud で OAuth クライアント作成 → Supabase の Providers で設定）— F-AUTH-1 の Must
 - [ ] Q6（URL の形）の決定 → CLAUDE.md §3、DESIGN.md S4/S5、Issue #5/#6 に反映
 - [x] Phase 1: 非 UI — #4 Zod スキーマ、#5 豆・ロースター・店・タグのデータ層、#6 記録のデータ層（2026-09-22）
-- [ ] Phase 1: 非 UI — #7 シード投入、#8 画像・Storage・platform（別ウィンドウで作業中）
+- [x] Phase 1: 非 UI — #8 画像圧縮・Storage 保存・platform ラッパー（`src/lib/image/compress.ts`、`src/lib/storage/bean-images.ts`、`src/lib/platform/{camera,geolocation,share}.ts`。F-OCR-1 / F-BEAN-12 / F-SHOP-3、N-4 / N-5）（2026-09-22）
+- [ ] Phase 1: 非 UI — #7 シード投入（別ウィンドウで作業中）
 - [ ] Phase 1: UI（Issues #9〜#24。今すぐ着手できるのは #9 #10 #12 #13 #14、次いで #11 #15 #16 #17〜#22 の段階 1。#23 PC レイアウト、#24 E2E は最後）
 - [ ] 公開準備（提案中・未着手）: Supabase 内蔵メールは 1 時間 2 通までなのでカスタム SMTP が必須、Google 同意画面の本番公開、プライバシーポリシー、独自ドメイン、アカウント削除（F-AUTH-3）の繰り上げ
 
 進捗はこのチェックリストを更新して管理する。
+
+- ブラウザ API（カメラ、位置情報、共有）に触れてよいのは `src/lib/platform/` の 3 ファイルだけ。UI から `navigator.*` を直接呼ばない（N-4）。違反は `grep -rn 'navigator\.' src --include='*.ts' --include='*.tsx' | grep -v '^src/lib/platform/'` が空になることで確認する。
+- 画像圧縮は Canvas 系 API を使うため jsdom では検証できない。寸法計算 `fitWithin` を純粋関数として単体テストし、実ブラウザでの挙動は `tests/e2e/image-compress.spec.ts` で確認する（compress.ts の関数を `toString()` でページに流し込んで実行する）。
+- `uploadBeanImage` は Storage への保存だけを行い、`bean_images` 行の作成は features 層の責務にしている。バケットは非公開なので表示は `getBeanImageUrl` の署名付き URL を使う。
 
 ### 8.1 実装上のメモ（Phase 0 で決めた細部）
 
