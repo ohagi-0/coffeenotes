@@ -46,3 +46,15 @@ export function enumOrNull<T extends z.ZodEnum>(schema: T) {
 // 型レベルの整合チェック用。`Expect<Extends<A, B>>` は A が B に代入できないとコンパイルエラーになる。
 export type Extends<A, B> = [A] extends [B] ? true : false;
 export type Expect<T extends true> = T;
+
+/**
+ * 部分更新用。`schema.partial().parse(patch)` の結果から、呼び出し側が実際に渡したキーだけを残す。
+ * `.default(null)` を持つ項目は省略時に null が入るため、そのまま送ると既存値を消してしまう。
+ */
+export function pickProvided<T extends object>(parsed: Partial<T>, provided: object): Partial<T> {
+  const out: Partial<T> = {};
+  for (const key of Object.keys(parsed) as (keyof T)[]) {
+    if (key in provided && (provided as Record<keyof T, unknown>)[key] !== undefined) out[key] = parsed[key];
+  }
+  return out;
+}
