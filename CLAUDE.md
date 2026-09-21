@@ -249,7 +249,7 @@ SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=
 - [x] Phase 1: 非 UI — #4 Zod スキーマ、#5 豆・ロースター・店・タグのデータ層、#6 記録のデータ層（2026-09-22）
 - [x] Phase 1: 非 UI — #8 画像圧縮・Storage 保存・platform ラッパー（`src/lib/image/compress.ts`、`src/lib/storage/bean-images.ts`、`src/lib/platform/{camera,geolocation,share}.ts`。F-OCR-1 / F-BEAN-12 / F-SHOP-3、N-4 / N-5）（2026-09-22）
 - [x] Phase 1: 非 UI — #7 開発用シードデータ投入（`scripts/seed-dev.mjs` + `pnpm seed:dev -- --email <アドレス> --reset`。記録 15 / 豆 6 / 店 4 / 焙煎 1 / タグ 5。行の ID はユーザー ID を名前空間にした UUID v5 なので再実行しても増えない。`SUPABASE_SERVICE_ROLE_KEY` が要る）（2026-09-22）。**実行はユーザー作業**: キーを `.env.local` に入れて 1 回流す
-- [ ] Phase 1: UI（Issues #9〜#24）。完了: #9〜#14 #16〜#19 #22 #24、#23 は段階 1（ナビ）まで。#15 #20 #21 も完了（/beans?id= と /logs?id= のルートあり）。残り: #23 段階 2（xl の一覧 + 詳細）のみ。進捗と分担は `docs/worklog/ui-progress.md`（2026-09-22）
+- [x] Phase 1: UI（Issues #9〜#24）すべて完了（2026-09-22）。E2E の主要フロー（#24）は `E2E_TEST_EMAIL` / `E2E_TEST_PASSWORD` を設定すると実行される。詳細は `docs/worklog/ui-progress.md`
 - [x] 公開準備: 独自ドメイン coffee-notes.app を取得し本番に設定（Vercel・Supabase Auth・config.toml）（2026-09-22）
 - [ ] 公開準備（未着手）: カスタム SMTP（Supabase 内蔵メールは 1 時間 2 通まで）、Google 同意画面の本番公開、プライバシーポリシー、アカウント削除（F-AUTH-3）の繰り上げ
 

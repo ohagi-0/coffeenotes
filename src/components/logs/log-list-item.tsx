@@ -22,6 +22,10 @@ export type LogListItemProps = {
   detail?: string | null;
   flavorNotes?: string[];
   imageSrc?: string | null;
+  /** 遷移先を差し替える（PC の 2 ペインでは ?bean= にする）。既定は記録詳細 */
+  href?: Route;
+  /** 選択中（PC の 2 ペインで右に出している行） */
+  selected?: boolean;
   className?: string;
 };
 
@@ -36,18 +40,21 @@ export function LogListItem({
   detail,
   flavorNotes = [],
   imageSrc,
+  href: hrefOverride,
+  selected,
   className,
 }: LogListItemProps) {
   const flavors = flavorNotes.slice(0, LOG_LIST_ITEM_MAX_FLAVORS);
-  // S5 のルート（/logs?id=）は #20 段階 2 で作る。それまで typedRoutes には無いので Route にキャストする
-  const href = routes.log(id) as Route;
+  const href = hrefOverride ?? (routes.log(id) as Route);
 
   return (
     <Link
       href={href}
+      aria-current={selected ? 'true' : undefined}
       className={cn(
         'border-border grid grid-cols-[62px_1fr] items-start gap-3.5 border-b py-3.5',
         'focus-visible:outline-primary rounded-md focus-visible:outline-2 focus-visible:outline-offset-2',
+        selected && 'bg-card -mx-3 rounded-xl border-b-transparent px-3',
         className,
       )}
     >

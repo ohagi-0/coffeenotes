@@ -70,4 +70,21 @@ describe('LogTimeline', () => {
     expect(screen.getAllByText('Lusitania Lime Geisha').length).toBeGreaterThan(0);
     expect(screen.getByText('自宅')).toBeInTheDocument();
   });
+
+  it('hrefFor で行の遷移先を差し替え、selectedId の行に aria-current が付く', () => {
+    render(
+      <LogTimeline
+        items={items}
+        isPending={false}
+        error={null}
+        now={now}
+        hrefFor={(item) => `/?bean=${item.id}` as never}
+        selectedId="b"
+      />,
+    );
+    const links = screen.getAllByRole('link');
+    expect(links[0]).toHaveAttribute('href', '/?bean=a');
+    expect(links[1]).toHaveAttribute('aria-current', 'true');
+    expect(links[0]).not.toHaveAttribute('aria-current');
+  });
 });

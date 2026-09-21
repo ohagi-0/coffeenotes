@@ -7,6 +7,8 @@ import type { LogFilters, LogWithRelations } from './queries';
 export type TimelineItem = Omit<LogListItemProps, 'className'> & {
   /** YYYY-MM-DD。日付見出しでのグループ化に使う */
   loggedOn: string;
+  /** PC の 2 ペインで右に出す豆（テストの手作りデータでは省略可） */
+  beanId?: string;
 };
 
 /** 豆量と湯量から「1:15」の形を作る。どちらか無ければ null */
@@ -33,6 +35,7 @@ export function toTimelineItem(log: LogWithRelations): TimelineItem {
   return {
     id: log.id,
     loggedOn: log.logged_on,
+    beanId: log.bean.id,
     beanName: log.bean.name,
     roasterName: log.bean.roaster?.name ?? null,
     country: log.bean.country,

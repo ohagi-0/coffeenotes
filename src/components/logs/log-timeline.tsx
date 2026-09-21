@@ -1,5 +1,6 @@
 'use client';
 
+import type { Route } from 'next';
 import { AppButton } from '@/components/app-button';
 import { DateGroup } from '@/components/date-group';
 import { EmptyState } from '@/components/empty-state';
@@ -19,6 +20,10 @@ export type LogTimelineProps = {
   onClearFilter?: () => void;
   /** テスト用。日付見出しの「今日」判定 */
   now?: Date;
+  /** 行の遷移先を差し替える（PC の 2 ペイン用）。省略時は記録詳細 */
+  hrefFor?: (item: TimelineItem) => Route;
+  /** 選択中の記録 ID（PC の 2 ペイン用） */
+  selectedId?: string | null;
 };
 
 // タイムライン（DESIGN.md S2）。読み込み・失敗・空・絞り込み 0 件・一覧の 5 状態を持つ。
@@ -30,6 +35,8 @@ export function LogTimeline({
   filtered,
   onClearFilter,
   now,
+  hrefFor,
+  selectedId,
 }: LogTimelineProps) {
   if (isPending) return <LogListSkeleton />;
 
@@ -82,8 +89,13 @@ export function LogTimeline({
       {groupByDate(items).map((group) => (
         <DateGroup key={group.date} date={group.date} now={now}>
           {group.items.map((item) => (
-            // loggedOn は LogListItem では使わない（受け取っても DOM には流れない）
-            <LogListItem key={item.id} {...item} />
+            // loggedOn / beanId は LogListItem では使わない（受け取っても DOM には流れない）
+            <LogListItem
+              key={item.id}
+              {...item}
+              href={hrefFor?.(item)}
+              selected={selectedId !== undefined && selectedId === item.id}
+            />
           ))}
         </DateGroup>
       ))}

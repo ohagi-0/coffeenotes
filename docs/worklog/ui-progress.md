@@ -26,7 +26,7 @@ UI ウィンドウの進捗記録。**別ウィンドウ（非 UI）が作業前
 | #20 UI-12 詳細の部品 | ✅ A（段階 1 + 2、ルート化まで） | (次の commit) | `src/app/(app)/beans/page.tsx` `src/app/(app)/logs/page.tsx` `src/components/beans/bean-detail.tsx` `src/components/logs/log-detail.tsx` `src/features/beans/presenters.ts` `src/app/(app)/logs/new/page.tsx`（保存後の遷移先） `tests/unit/components/detail.test.tsx` |
 | #21 UI-13 記録したお店 | ✅ A（段階 1 + 2） | (次の commit) | `src/app/(app)/shops/page.tsx` `src/app/(app)/shops/detail/page.tsx` `src/components/shops/{shop-form,shop-list}.tsx` `src/features/shops/presenters.ts` `tests/unit/components/shop-form.test.tsx` `tests/unit/shops/presenters.test.ts` |
 | #22 UI-14 設定 | ✅ A | (次の commit) | `src/app/(app)/settings/page.tsx` `src/components/settings/{setting-row,settings-view}.tsx` `src/features/settings/use-preferences.ts` `tests/unit/components/settings.test.tsx` |
-| #23 UI-15 PC レイアウト | ✅ 段階 1（A）/ ⏸ 段階 2 は #20 の後 | (次の commit) | `src/app/(app)/layout.tsx` `src/components/site-nav.tsx` `tests/unit/components/site-nav.test.tsx` |
+| #23 UI-15 PC レイアウト | ✅ 段階 1（A、5a8f90a）/ ✅ 段階 2（A） | (次の commit) | `src/app/(app)/layout.tsx` `src/components/site-nav.tsx` `tests/unit/components/site-nav.test.tsx` |
 | #24 UI-16 E2E | ✅ A（資格情報があれば実行。無ければ skip） | (次の commit) | `tests/e2e/{env,global-setup,create-log.spec}.ts` `playwright.config.ts` `src/components/dev-test-hooks.tsx` `src/app/layout.tsx` `.env.example` |
 
 ---
@@ -276,3 +276,19 @@ B の #14（ログ行・日付見出し・空状態・失敗表示・スケル�
 
 - これで Phase 1 の UI Issue は #23 段階 2（xl の一覧 + 詳細）を残してすべて完了。`BeanDetail layout="wide"` は用意済みなので、A が続けて #23 段階 2 を取る。
 - カード画像の URL（`imageSrc`）は Phase 2 で署名付き URL を渡す。`BeanDetail` / `LogDetail` / `LogListItem` すべて `imageSrc` を受ける。
+
+## #23 UI-15 PC レイアウト — 段階 2 ✅ A 2026-09-22（xl の一覧 + 豆詳細の 2 ペイン）
+
+**やったこと**
+
+- `src/app/(app)/page.tsx`: 1280px 以上で `grid-cols-[400px_minmax(0,1fr)]`。左は従来の一覧、右は `BeanDetailPane`。行の遷移先は `useMediaQuery('(min-width: 1280px)')` で切り替え（xl: `?bean=<豆ID>&log=<記録ID>` を同じページに、未満: 記録詳細 `/logs?id=`）。選択中の行は `aria-current` + `bg-card` で光る。絞り込み `?f=` は選択と共存。
+- `src/components/beans/bean-detail-pane.tsx`: `?bean=` の豆を `useBean` / `useLogsByBean` / `useRatingStats` で出す。未選択なら「一覧の記録を選ぶと、ここに豆の詳細が出ます」。`BeanDetail layout="wide"`（左 224px にカードとレーダー、右にデータ・記録・主ボタン）。
+- `src/components/use-media-query.ts`: `useSyncExternalStore` の最小 hook。サーバーでは false。
+- B の `LogListItem` に `href`（遷移先の差し替え）と `selected` を足した。`LogTimeline` に `hrefFor` / `selectedId`。`TimelineItem` に `beanId`（任意）。
+- `(app)/layout.tsx`: ホームだけ `xl:max-w-[1320px]`、他ページは 920px のまま。
+- 1440px でスクリーンショット確認、横スクロールなし。テスト 1 件追加（hrefFor / selected）。
+
+**注意**
+
+- 2 ペインは「ホーム」だけ。店・設定などは 1 面のまま（DESIGN.md §9.2 の D2〜D4 はそれぞれのフェーズで）。
+- サーバー描画時は `twoPane = false` なので、xl でも初回描画の一瞬だけリンク先が記録詳細になる。クリック前に hydration が終わるので実害はない。
