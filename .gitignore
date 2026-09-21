@@ -1,0 +1,50 @@
+# 依存関係
+node_modules/
+.pnpm-store/
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# 環境変数（.env.example のみコミットする）
+.env
+.env.*
+!.env.example
+
+# テスト
+coverage/
+playwright-report/
+test-results/
+blob-report/
+playwright/.cache/
+
+# Supabase ローカル
+supabase/.branches/
+supabase/.temp/
+supabase/.env
+
+# PWA（serwist の生成物）
+public/sw.js
+public/sw.js.map
+public/swe-worker-*.js
+
+# Capacitor（将来）
+ios/
+android/
+
+# Vercel
+.vercel/
+
+# エディタ・OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Claude Code ローカル設定
+.claude/settings.local.json

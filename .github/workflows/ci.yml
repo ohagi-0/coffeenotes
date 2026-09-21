@@ -1,0 +1,56 @@
+# CI: lint / typecheck / 単体テスト
+# package.json が無い間（Phase 0 の初期）はスキップし、Next.js 初期化後に自動で有効になる。
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: package.json の有無を確認
+        id: detect
+        run: |
+          if [ -f package.json ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::package.json が無いため CI をスキップします"
+          fi
+
+      - uses: pnpm/action-setup@v4
+        if: steps.detect.outputs.present == 'true'
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        if: steps.detect.outputs.present == 'true'
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: 依存関係をインストール
+        if: steps.detect.outputs.present == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        if: steps.detect.outputs.present == 'true'
+        run: pnpm lint
+
+      - name: Typecheck
+        if: steps.detect.outputs.present == 'true'
+        run: pnpm typecheck
+
+      - name: 単体テスト
+        if: steps.detect.outputs.present == 'true'
+        run: pnpm test
