@@ -251,7 +251,10 @@ SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=
 - [x] Phase 1: 非 UI — #7 開発用シードデータ投入（`scripts/seed-dev.mjs` + `pnpm seed:dev -- --email <アドレス> --reset`。記録 15 / 豆 6 / 店 4 / 焙煎 1 / タグ 5。行の ID はユーザー ID を名前空間にした UUID v5 なので再実行しても増えない。`SUPABASE_SERVICE_ROLE_KEY` が要る）（2026-09-22）。**実行はユーザー作業**: キーを `.env.local` に入れて 1 回流す
 - [x] Phase 1: UI（Issues #9〜#24）すべて完了（2026-09-22）。E2E の主要フロー（#24）は `E2E_TEST_EMAIL` / `E2E_TEST_PASSWORD` を設定すると実行される。詳細は `docs/worklog/ui-progress.md`
 - [x] 公開準備: 独自ドメイン coffee-notes.app を取得し本番に設定（Vercel・Supabase Auth・config.toml）（2026-09-22）
-- [ ] 公開準備（未着手）: カスタム SMTP（Supabase 内蔵メールは 1 時間 2 通まで）、Google 同意画面の本番公開、プライバシーポリシー、アカウント削除（F-AUTH-3）の繰り上げ
+- [x] 公開準備: カスタム SMTP — Resend（ap-northeast-1、coffee-notes.app を DKIM/SPF 検証済み）を Supabase の SMTP に設定。送信元 `coffeenotes <login@coffee-notes.app>`、上限 30 通/時。ログインメールは日本語化し `{{ .RedirectTo }}?token_hash=…` 形式（送信時と別のブラウザで開いても通る）（2026-09-22）
+- [x] Phase 1 を本番 https://coffee-notes.app にデプロイ（UI-7〜16 + データ層 + SMTP）。品質ゲート（typecheck / lint / unit 229 / E2E 7 / build）通過（2026-09-22）
+- [ ] Phase 1: 実機（スマホ）で本番からログイン → 手入力で記録作成 → 一覧表示を確認して Phase 1 完了
+- [ ] 公開準備（未着手）: Google 同意画面の本番公開、プライバシーポリシー、アカウント削除（F-AUTH-3）の繰り上げ
 
 進捗はこのチェックリストを更新して管理する。
 
@@ -272,5 +275,7 @@ SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=
 - コミット前フック（simple-git-hooks + lint-staged）で staged ファイルの ESLint / Prettier チェックと `pnpm typecheck` が走る。緊急時は `git commit --no-verify`。
 - クラウド Supabase の Auth 設定は Management API で変更できる（トークンは macOS キーチェーンの `Supabase CLI`）。`GET/PATCH https://api.supabase.com/v1/projects/gayhfwmvlxwyuzrvmkoy/config/auth`。
 - マジックリンクの戻り先は要求元の `NEXT_PUBLIC_API_BASE_URL` で決まる。ローカルで要求したリンクをスマホで開いても `localhost` には繋がらない。スマホで試すときは本番 URL から要求する。
+- メール送信は Resend の SMTP 経由。Resend の API キーは Supabase の SMTP パスワードとして保存されているので、**Resend 側でそのキーを削除するとログインメールが止まる**。差し替えるときは新キーを作ってから Supabase の SMTP 設定を更新する。Cloudflare の DNS レコード（`resend._domainkey`、`send`、`rsend`）も消さない。
+- Supabase Free では、カスタム SMTP を設定して初めてメール文面を変更できる（内蔵メールのままだと Management API が 400 を返す）。
 - Supabase Free の一時停止対策として `.github/workflows/supabase-keepalive.yml` が週 2 回 REST を叩く（Secrets: `SUPABASE_URL` / `SUPABASE_ANON_KEY`）。
 - 画面設計は `docs/DESIGN.md` を正とする（トークン、書体、部品仕様、画面ごとの要素・状態・遷移）。見た目の参照はモック `docs/design/`（index = 方針・色・書体・部品、mobile = Web スマホ、desktop = Web PC、ios = iOS アプリ。共通の design.css / design.js。GitHub Pages で https://ohagi-0.github.io/coffeenotes/design/ に公開、push で更新）。リポジトリは Pages のため public（2026-09-21）。画面や部品を変えるときはモックと DESIGN.md を同じ PR で更新する。
