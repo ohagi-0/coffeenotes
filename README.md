@@ -14,11 +14,16 @@ Next.js 15 (App Router) + TypeScript / Tailwind CSS + shadcn/ui / Supabase / Cla
 
 ```bash
 pnpm install
-cp .env.example .env.local   # 値を埋める
-pnpm supabase start           # ローカル Supabase（Docker）
+cp .env.example .env.local   # Supabase の URL / anon key などを埋める
+pnpm supabase start           # ローカル Supabase（Docker Desktop が必要）
+pnpm db:migrate               # マイグレーション適用
+pnpm db:types                 # src/types/database.ts を生成
 pnpm dev                      # http://localhost:3000
 pnpm lint && pnpm typecheck && pnpm test
 ```
+
+Docker が無い場合はクラウドの Supabase プロジェクトを使う: ダッシュボードの SQL Editor で `supabase/migrations/0001_init.sql` を実行し、
+`pnpm supabase gen types typescript --project-id <ref> > src/types/database.ts` で型を生成する。
 
 ## 現在のフェーズ
 

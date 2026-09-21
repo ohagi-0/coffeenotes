@@ -1,0 +1,11 @@
+{
+  "name": "coffeenotes",
+  "short_name": "coffeenotes",
+  "description": "飲んだコーヒー豆をカード写真から記録し、店・評価と紐づけて振り返るアプリ",
+  "lang": "ja",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f0e8",
+  "theme_color": "#f5f0e8",
+  "icons": []
+}

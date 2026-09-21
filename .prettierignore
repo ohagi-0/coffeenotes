@@ -1,0 +1,12 @@
+node_modules
+.next
+out
+pnpm-lock.yaml
+src/components/ui
+src/types/database.ts
+supabase/.temp
+playwright-report
+test-results
+
+# Markdown は手で書いたまま保つ（要件定義書・ADR の表を崩さない）
+*.md
