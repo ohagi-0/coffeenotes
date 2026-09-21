@@ -28,10 +28,9 @@ jobs:
             echo "::notice::package.json が無いため CI をスキップします"
           fi
 
+      # pnpm のバージョンは package.json の packageManager に従う
       - uses: pnpm/action-setup@v4
         if: steps.detect.outputs.present == 'true'
-        with:
-          version: 10
 
       - uses: actions/setup-node@v4
         if: steps.detect.outputs.present == 'true'
