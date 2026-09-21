@@ -4,7 +4,8 @@
 
 | Issue | 状態 | commit | 触ったパス |
 |---|---|---|---|
-| #13 UI-5 固有部品 | ✅ | (この commit) | `src/components/logs/rating-stars.tsx` `src/components/logs/ocr-field.tsx` `src/components/beans/taste-dots.tsx` `src/components/beans/taste-radar.tsx` `tests/unit/components/{rating-stars,taste-dots,taste-radar,ocr-field}.test.tsx` |
+| #13 UI-5 固有部品 | ✅ | 1f1863f | `src/components/logs/rating-stars.tsx` `src/components/logs/ocr-field.tsx` `src/components/beans/taste-dots.tsx` `src/components/beans/taste-radar.tsx` `tests/unit/components/{rating-stars,taste-dots,taste-radar,ocr-field}.test.tsx` |
+| #14 UI-6 表示系部品 | ✅ | (この commit) | `src/components/{empty-state,error-callout,row,date-group}.tsx` `src/components/beans/{card-image,bean-spec-grid,bean-detail-skeleton}.tsx` `src/components/logs/{log-list-item,log-list-item-skeleton}.tsx` `tests/unit/components/display-parts.test.tsx` |
 
 ---
 
@@ -31,4 +32,30 @@ UI ウィンドウが #11 を作業中だったので、依存の無い #13 を�
 
 - #15 の部品ページからは、`RatingStars`（3 サイズ + 入力）、`TasteDots`（表示 + 入力）、`TasteRadar`（単体 + `compare`）、`OcrField`（低信頼 / 高信頼 / error）を並べれば全バリアントが出ます。
 - #20 の `BeanDetail` / `LogDetail` はこの 4 つをそのまま使えます。`TasteValues` は `beans` の `taste_*` 列をそのまま詰める形（`{ flavor: bean.taste_flavor, … }`）。
-- 次は **#14 UI-6 表示系部品** を取る予定です（#12 は UI ウィンドウの番号順に近いので触りません）。被る場合は `ui-progress.md` の表で止めてください。
+- 続けて #14 を取った（下記）。
+
+## #14 UI-6 表示系部品 — ✅ 2026-09-22
+
+**やったこと**
+
+- `EmptyState`（`src/components/empty-state.tsx`）: 96px の丸（`bg-secondary`）に銅の線画アイコン（lucide、既定は `Coffee`、`icon` で差し替え）、見出し 17px、説明 13px。主ボタンは `action` に 1 つだけ ReactNode で渡す（ボタンのバリアントは #12 の担当なので、ここでは作らない）。
+- `ErrorCallout`（`src/components/error-callout.tsx`）: `role="alert"`、枠 `--destructive`、地 10%、角丸 14px、余白 14px。`title` + `what`（何が起きたか）+ `next`（次にできること）。`onRetry` を渡すと二次ボタン（44px）。
+- `Row`（`src/components/row.tsx`）: 40px の丸アバター（頭文字 `initial` か `avatar`）、`title` / `subtitle`（truncate）、右に `value` / `valueSub` か chevron。`href` で `Link`、`onClick` で `button`、どちらも無ければ `div`。
+- `DateGroup`（`src/components/date-group.tsx`）: 「今日 · 9月22日（火）」「昨日 · …」「9月19日（土）」、年が違えば「2025年12月3日（水）」。`formatDateGroupLabel(date, now)` を export（`now` はテスト用）。見出しは `<h2><time dateTime>`。
+- `BeanSpecGrid`（`src/components/beans/bean-spec-grid.tsx`）: `<dl>` の 2 列、`gap-px bg-border` で 1px 区切り、角丸 14px、セルは `bg-card`。`value` が null / undefined / 空文字の項目は省く。奇数個なら最後を 2 列にして穴を作らない。`unit` と `ja`（日本語の値は num 書体にしない）。
+- `CardImage`（`src/components/beans/card-image.tsx`）: 3:4、`size` は `sm`（62px）/ `md`（104px）/ `full`。`src` があれば `next/image`（`fill`、読み込み完了までスケルトン）。無ければ `bg-card-paper` に Helvetica でロースター（.5em 字間 .14em）・豆名（1em）・生産国（.5em）。`data-card-image="photo|placeholder"`。
+- `LogListItem`（`src/components/logs/log-list-item.tsx`）: 62px の `CardImage` + 豆名 `font-display` 21px + ロースター + `RatingStars` sm + 店名 or 「自宅」ピル + `detail` + フレーバー最大 3 つ。props は平らな型（`LogListItemProps`）。行全体が `routes.log(id)` への `Link`。
+- `LogListItemSkeleton` / `LogListSkeleton`（既定 4 件）と `BeanDetailSkeleton`。`role="status" aria-busy`。`motion-reduce:animate-none`。
+- テスト 15 件（`tests/unit/components/display-parts.test.tsx`）。
+
+**決めたこと・注意**
+
+- スケルトンは shadcn `Skeleton`（`animate-pulse`）のまま。DESIGN.md のグラデーション流し（1.4s）は `@keyframes` が要り `globals.css`（UI ウィンドウ担当）を触るため入れていない。必要なら UI 側で `.skeleton-sweep` を足してください。
+- `LogListItem` の `href` は `routes.log(id) as Route` にキャストしている。`/logs` のページ（S5、#20 段階 2）ができるまで typedRoutes に無いため。ページができたらキャストを外す。
+- `CardImage` のプレースホルダは `line-clamp-3` + `break-words`。104px 幅で "Lusitania" のような長い単語が横に切れていたので、`md` の基準文字は 12px にした。
+
+**他ウィンドウへの連絡**
+
+- #17（S2 ホーム）は `DateGroup` の中に `LogListItem` を並べ、読み込みは `LogListSkeleton`、空は `EmptyState`、失敗は `ErrorCallout` で 3 状態が揃います。`LogListItemProps` はデータ層の `logs` + `beans` + `shops` から平らに詰め替えてください。
+- #15 の部品ページには、この 2 コミット分（#13 + #14）の部品を並べれば足ります。
+- 私（非 UI ウィンドウ）は次に **#20 UI-12 豆詳細 / 記録詳細の表示部品** を取ります（依存の #13 #14 が揃ったため）。#12 #15 #16 #17 は触りません。
