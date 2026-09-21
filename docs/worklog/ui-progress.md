@@ -5,16 +5,21 @@ UI ウィンドウの進捗記録。**別ウィンドウ（非 UI）が作業前
 
 凡例: ✅ 完了（push 済み） / 🔧 作業中 / ⏸ 待ち
 
+**分担（2026-09-22 02:20 に UI ウィンドウ A が提案。B は `ui-progress-b.md` の主）**: 同じ Issue に二重着手しないよう、着手前に必ずこの表を見て 🔧 と担当を書く。
+- **A（UI ウィンドウ、`src/app/**` の画面）**: #16 ログイン → #17 入力記録一覧 → #18 入口と豆フォーム → #19 店・評価・保存 → #22 設定 → #23 PC レイアウト
+- **B（非 UI ウィンドウ、`src/components/**` の部品）**: #14 表示系部品 → #15 部品ページ → #20 詳細の部品 → #21 記録したお店
+- #24 E2E は最後に A。空いた方が次の番号を取るときは表に書いてから。
+
 | Issue | 状態 | commit | 触ったパス |
 |---|---|---|---|
 | #9 UI-1 トークン | ✅ | e743f47 | `src/app/globals.css` `src/app/layout.tsx` `src/components/providers.tsx` `public/manifest.json` |
 | #10 UI-2 書体 | ✅ | 4dc1e97 | `src/app/layout.tsx` `src/app/globals.css` |
 | #11 UI-3 レイアウトとナビ | ✅ | (次の commit) | `src/app/(app)/layout.tsx` `src/app/(app)/*/page.tsx`（タイトルのみ） `src/components/nav.ts` `site-header.tsx` `nav-drawer.tsx` `site-footer.tsx` `coming-soon.tsx` `bottom-nav.tsx`（削除） `tests/unit/components/nav.test.tsx` |
 | #12 UI-4 入力系部品 | ✅ | (次の commit) | `src/components/app-button.tsx` `form/field.tsx` `filter-chips.tsx` `logs/place-segment.tsx` `wizard-stepper.tsx` `providers.tsx` `tests/unit/components/inputs.test.tsx` |
-| #13 UI-5 固有部品 | 🔧 **非 UI ウィンドウが担当中**（詳細は `ui-progress-b.md`） | | `src/components/logs/rating-stars.tsx` `src/components/logs/ocr-field.tsx` `src/components/beans/taste-dots.tsx` `src/components/beans/taste-radar.tsx` `tests/unit/components/{rating-stars,taste-dots,taste-radar,ocr-field}.test.tsx` |
-| #14 UI-6 表示系部品 | ⏸ | | |
+| #13 UI-5 固有部品 | ✅ 非 UI ウィンドウ（詳細は `ui-progress-b.md`） | 1f1863f | `src/components/logs/rating-stars.tsx` `src/components/logs/ocr-field.tsx` `src/components/beans/taste-dots.tsx` `src/components/beans/taste-radar.tsx` `tests/unit/components/{rating-stars,taste-dots,taste-radar,ocr-field}.test.tsx` |
+| #14 UI-6 表示系部品 | 🔧 **非 UI ウィンドウが担当中**（詳細は `ui-progress-b.md`） | | `src/components/{empty-state,error-callout,row,date-group}.tsx` `src/components/beans/{card-image,bean-spec-grid,bean-detail-skeleton}.tsx` `src/components/logs/{log-list-item,log-list-item-skeleton}.tsx` `tests/unit/components/*` |
 | #15 UI-7 部品ページ | ⏸ | | |
-| #16 UI-8 ログイン | ⏸ | | |
+| #16 UI-8 ログイン | 🔧 **A が担当中** | | `src/app/(auth)/login/page.tsx` `tests/e2e/login.spec.ts` |
 | #17 UI-9 入力記録一覧 | ⏸ | | |
 | #18 UI-10 入口と豆フォーム | ⏸ | | |
 | #19 UI-11 店・評価・保存 | ⏸ | | |
