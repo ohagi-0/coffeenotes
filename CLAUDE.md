@@ -268,6 +268,7 @@ SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=
 - `pnpm db:types` はクラウドのプロジェクト（`--project-id gayhfwmvlxwyuzrvmkoy`）から生成する。Docker でローカル Supabase を動かす場合は `pnpm db:types:local`。
 - 0001 は SQL Editor で手動適用したため `supabase_migrations` に記録が無い。`supabase link` して `db push` を使い始めるときは、先に `supabase migration repair --status applied 0001` で整合を取る。
 - Prettier は Markdown と `docs/design/` を対象外（`.prettierignore`）。要件定義書・ADR の表と画面設計モックを手書きのまま保つため。
+- **dev サーバー（3100）が動いている間に `pnpm build` をしない。** 両方が `.next/` を使うため、build が dev の開発用チャンクを消して全ページの JS が 404 になる（2026-09-22 に発生）。build が要るときは dev を止めるか、`vercel deploy --prod` に任せる。
 - コミット前フック（simple-git-hooks + lint-staged）で staged ファイルの ESLint / Prettier チェックと `pnpm typecheck` が走る。緊急時は `git commit --no-verify`。
 - クラウド Supabase の Auth 設定は Management API で変更できる（トークンは macOS キーチェーンの `Supabase CLI`）。`GET/PATCH https://api.supabase.com/v1/projects/gayhfwmvlxwyuzrvmkoy/config/auth`。
 - マジックリンクの戻り先は要求元の `NEXT_PUBLIC_API_BASE_URL` で決まる。ローカルで要求したリンクをスマホで開いても `localhost` には繋がらない。スマホで試すときは本番 URL から要求する。

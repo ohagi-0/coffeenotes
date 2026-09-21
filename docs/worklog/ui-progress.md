@@ -27,7 +27,7 @@ UI ウィンドウの進捗記録。**別ウィンドウ（非 UI）が作業前
 | #21 UI-13 記録したお店 | ✅ A（段階 1 + 2） | (次の commit) | `src/app/(app)/shops/page.tsx` `src/app/(app)/shops/detail/page.tsx` `src/components/shops/{shop-form,shop-list}.tsx` `src/features/shops/presenters.ts` `tests/unit/components/shop-form.test.tsx` `tests/unit/shops/presenters.test.ts` |
 | #22 UI-14 設定 | ✅ A | (次の commit) | `src/app/(app)/settings/page.tsx` `src/components/settings/{setting-row,settings-view}.tsx` `src/features/settings/use-preferences.ts` `tests/unit/components/settings.test.tsx` |
 | #23 UI-15 PC レイアウト | ✅ 段階 1（A、5a8f90a）/ ✅ 段階 2（A） | (次の commit) | `src/app/(app)/layout.tsx` `src/components/site-nav.tsx` `tests/unit/components/site-nav.test.tsx` |
-| #24 UI-16 E2E | ✅ A（資格情報があれば実行。無ければ skip） | (次の commit) | `tests/e2e/{env,global-setup,create-log.spec}.ts` `playwright.config.ts` `src/components/dev-test-hooks.tsx` `src/app/layout.tsx` `.env.example` |
+| #24 UI-16 E2E | ✅ A（主要フロー実行済み・7 件通過） | c1b0ebe + (次の commit) | `tests/e2e/{env,global-setup,create-log.spec}.ts` `playwright.config.ts` `src/components/dev-test-hooks.tsx` `src/app/layout.tsx` `.env.example` |
 
 ---
 
@@ -292,3 +292,10 @@ B の #14（ログ行・日付見出し・空状態・失敗表示・スケル�
 
 - 2 ペインは「ホーム」だけ。店・設定などは 1 面のまま（DESIGN.md §9.2 の D2〜D4 はそれぞれのフェーズで）。
 - サーバー描画時は `twoPane = false` なので、xl でも初回描画の一瞬だけリンク先が記録詳細になる。クリック前に hydration が終わるので実害はない。
+
+## #24 追記 — 主要フローの E2E を実行して通過（2026-09-22 08:5x）
+
+- ユーザーが `.env.local` に `E2E_TEST_EMAIL` / `E2E_TEST_PASSWORD` / `SUPABASE_SERVICE_ROLE_KEY` を設定。global-setup がテスト用ユーザー `e2e@coffeenotes.test` を自動作成した。
+- 最初の実行でログインのスモークまで落ちた原因は **dev サーバーの `.next` が本番ビルドで上書きされていた**こと（08:48 に誰かが `next build` を実行し、11 時間動いていた dev サーバーの開発用チャンクが消えて全ページの JS が 404）。dev サーバーを再起動して解消。**dev サーバーが動いている間に `pnpm build` をしない**（CLAUDE.md にも追記）。
+- 主要フローは保存後に豆詳細（`/beans?id=`）へ行くよう #20 で変えたので、テストの期待を「豆詳細に豆名と 1 回 → 一覧にも出る」に更新。7 件すべて通過。
+- dev サーバー（3100）は UI ウィンドウ A が `pnpm dev`（バックグラウンド、ログは `/tmp/cn-dev.log`）で起動し直した。

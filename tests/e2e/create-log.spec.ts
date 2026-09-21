@@ -3,7 +3,7 @@ import { e2eCredentials } from './env';
 
 // Phase 1 の完了条件（CLAUDE.md §5.4、Issue #24）:
 //   ログイン → 「＋ 記録する」→ 手で入力する → 豆名・ロースター → 次へ → 自宅で・星・メモ → 保存する
-//   → 「保存しました」→ 入力記録一覧に豆名が出る。
+//   → 「保存しました」→ 豆詳細 → 入力記録一覧に豆名が出る。
 // ログインはマジックリンクを自動化できないので、開発ビルドだけが持つ window.__coffeenotes.supabase で
 // signInWithPassword を呼ぶ（src/components/dev-test-hooks.tsx）。資格情報が無ければ skip。
 
@@ -74,7 +74,13 @@ test.describe('記録作成の主要フロー', () => {
     await page.getByRole('button', { name: '保存する' }).click();
 
     await expect(page.getByText('保存しました')).toBeVisible();
-    await expect(page).toHaveURL(/\/$/);
+    // 保存後は豆詳細（/beans?id=）へ（#20）。豆名と 1 回目の記録が出る
+    await expect(page).toHaveURL(/\/beans\?id=/);
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(beanName);
+    await expect(page.getByText('1 回')).toBeVisible();
+
+    // 入力記録一覧にも出る
+    await page.goto('/');
     await expect(page.getByRole('heading', { name: '入力記録一覧' })).toBeVisible();
     const row = page.getByRole('link', { name: new RegExp(beanName) });
     await expect(row).toBeVisible();
