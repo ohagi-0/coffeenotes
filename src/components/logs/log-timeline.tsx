@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { AppButton } from '@/components/app-button';
 import { DateGroup } from '@/components/date-group';
 import { EmptyState } from '@/components/empty-state';
@@ -70,7 +69,7 @@ export function LogTimeline({
           </>
         }
         action={
-          <AppButton width="auto" render={<Link href={ADD_LOG_HREF} />}>
+          <AppButton width="auto" href={ADD_LOG_HREF}>
             最初の記録を追加
           </AppButton>
         }

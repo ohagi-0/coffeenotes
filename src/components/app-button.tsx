@@ -1,5 +1,8 @@
 'use client';
 
+import type { ComponentProps } from 'react';
+import type { Route } from 'next';
+import Link from 'next/link';
 import { Button as ButtonPrimitive } from '@base-ui/react/button';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { Loader2 } from 'lucide-react';
@@ -33,33 +36,46 @@ export const appButtonVariants = cva(
   },
 );
 
-type Props = ButtonPrimitive.Props &
-  VariantProps<typeof appButtonVariants> & {
+type Variants = VariantProps<typeof appButtonVariants>;
+
+type ButtonProps = ButtonPrimitive.Props &
+  Variants & {
+    href?: undefined;
     /** true の間はスピナーを出して押せなくする（保存中の二重送信防止） */
     loading?: boolean;
   };
 
-export function AppButton({
-  className,
-  variant,
-  size,
-  width,
-  loading,
-  disabled,
-  children,
-  render,
-  ...props
-}: Props) {
+/** href を渡すと同じ見た目の <Link>（リンクの意味論のまま）になる */
+type LinkProps = Omit<ComponentProps<typeof Link>, 'href'> &
+  Variants & {
+    href: Route;
+    loading?: undefined;
+  };
+
+type Props = ButtonProps | LinkProps;
+
+export function AppButton(props: Props) {
+  if (props.href !== undefined) {
+    const { className, variant, size, width, href, children, ...rest } = props;
+    return (
+      <Link
+        data-slot="app-button"
+        href={href}
+        className={cn(appButtonVariants({ variant, size, width }), className)}
+        {...rest}
+      >
+        {children}
+      </Link>
+    );
+  }
+  const { className, variant, size, width, loading, disabled, children, ...rest } = props;
   return (
     <ButtonPrimitive
       data-slot="app-button"
-      // render で <Link> などに置き換えるときはネイティブの <button> ではないことを Base UI に伝える
-      render={render}
-      nativeButton={render ? false : undefined}
       className={cn(appButtonVariants({ variant, size, width }), className)}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
-      {...props}
+      {...rest}
     >
       {loading && <Loader2 className="size-5 animate-spin" aria-hidden />}
       {children}
