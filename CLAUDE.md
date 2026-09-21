@@ -1,6 +1,8 @@
-# CLAUDE.md — コーヒー記録アプリ
+# CLAUDE.md
 
-このファイルは Claude Code がこのリポジトリで作業するときの前提・ルールをまとめたもの。
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+コーヒー記録アプリ **coffeenotes**。このファイルは Claude Code がこのリポジトリで作業するときの前提・ルールをまとめたもの。
 要件の詳細は `docs/REQUIREMENTS.md` を正とする。矛盾があれば REQUIREMENTS.md を優先し、このファイルを直す。
 
 ## 1. プロジェクト概要
@@ -9,7 +11,8 @@
 
 - 開発者: 個人（Kota）。レビュー相手は Claude Code。
 - 規模目標: 個人〜数十ユーザー。ランニングコストは月 0〜数百円。
-- 現在のフェーズ: **Phase 0（基盤）**。フェーズ定義は REQUIREMENTS.md §10。
+- 現在のフェーズ: **Phase 1（手入力 MVP）**。Phase 0 は 2026-09-21 完了。フェーズ定義は REQUIREMENTS.md §10。
+- 作業の分担: UI（DESIGN.md §7 の手順）は別の Claude Code ウィンドウが担当。それ以外は GitHub Issues の `non-ui` ラベル（#4〜#8）で管理。**同じワーキングツリーを共有している**ので §3.1 の注意を守る。
 
 ## 2. 技術スタック（確定分）
 
@@ -20,14 +23,14 @@
 | UI | Tailwind CSS + shadcn/ui | スマホ幅（375px）を基準にデザイン |
 | PWA | serwist | オフライン時は閲覧のみ |
 | BaaS | Supabase（Postgres / Auth / Storage） | RLS 必須。`supabase/migrations` で管理 |
-| データ取得 | Supabase JS v2 + TanStack Query | サーバーコンポーネントでは `@supabase/ssr` |
+| データ取得 | Supabase JS v2 + TanStack Query | 画面はブラウザから直接叩く。`@supabase/ssr` は Route Handler 用の `src/lib/supabase/server.ts` でのみ使う |
 | バリデーション | Zod | フォーム・API・OCR 出力すべてに適用 |
 | 地図 | react-leaflet + OpenStreetMap タイル | API キー不要 |
 | QR | @zxing/browser | ブラウザ内で完結 |
 | テスト | Vitest（単体）+ Playwright（E2E、主要フローのみ） | |
 | Lint / Format | ESLint（next/core-web-vitals）+ Prettier | コミット前に `pnpm lint && pnpm typecheck` |
 | パッケージ管理 | pnpm | `npm` / `yarn` を混ぜない |
-| ホスティング | Vercel Hobby | 本番 https://coffeenotes-red.vercel.app（プロジェクト `coffeenotes`） |
+| ホスティング | Vercel Hobby | 本番 https://coffeenotes-red.vercel.app（プロジェクト `coffeenotes`）。デプロイは `vercel deploy --prod`。**GitHub 連携は未接続**なので push しても自動デプロイされない |
 
 ### 2.1 決定済み事項（2026-09-21）— 勝手に変えない
 
@@ -41,6 +44,8 @@
 | 配信形態 | PWA 先行、後に Capacitor | §2.2 |
 
 新しい未確定項目が出たら、**仮実装で進めずにユーザーに確認し、REQUIREMENTS.md §8.3 に追記する**。
+
+**判断待ち（2026-09-22）**: Q6 = 豆詳細・記録詳細の URL の形。`/beans/[id]` は静的出力（Capacitor 化に必須）でビルドが落ちることを検証済み。推奨は `/beans?id=…` のクエリ形式。決まるまで S4 / S5 のルートを作らない。
 
 ### 2.2 ネイティブ化（Capacitor）のために守る制約
 
@@ -66,7 +71,7 @@ REQUIREMENTS.md §13.2 の N-1〜N-5。要点:
 │   │   │   ├── page.tsx       # ホーム（タイムライン）
 │   │   │   ├── logs/new/      # 記録作成ウィザード
 │   │   │   ├── logs/[id]/
-│   │   │   ├── beans/[id]/
+│   │   │   ├── beans/[id]/        # ← Q6 でクエリ形式に変わる可能性あり
 │   │   │   ├── shops/
 │   │   │   ├── map/
 │   │   │   ├── stats/
@@ -80,7 +85,7 @@ REQUIREMENTS.md §13.2 の N-1〜N-5。要点:
 │   ├── features/              # ドメインごとのロジック（hooks, queries, mutations）
 │   │   ├── beans/  logs/  shops/  roasts/  tags/  stats/
 │   ├── lib/
-│   │   ├── supabase/          # client.ts / server.ts / middleware.ts
+│   │   ├── supabase/          # client.ts（ブラウザ、シングルトン）/ server.ts（Route Handler 用）。middleware.ts は作らない
 │   │   ├── ocr/               # index.ts(インターフェース) + providers/
 │   │   ├── geo/               # index.ts(インターフェース) + providers/
 │   │   ├── image/             # ブラウザ側圧縮・リサイズ
@@ -93,10 +98,22 @@ REQUIREMENTS.md §13.2 の N-1〜N-5。要点:
 │   ├── seed.sql
 │   └── config.toml
 ├── public/                    # manifest.json, icons
+├── scripts/               # 開発用スクリプト（#7 のシード投入など。ビルド不要の .mjs）
 └── tests/
-    ├── unit/
-    └── e2e/
+    ├── unit/                  # Vitest。setup.ts で jest-dom を読み込む
+    ├── e2e/                   # Playwright。Pixel 7 相当、ポート 3100
+    └── fixtures/cards/        # OCR テスト用のサンプル画像（実 API は叩かない）
 ```
+
+### 3.1 仕組みの要点（複数ファイルにまたがるもの）
+
+- **認証の流れ**: `src/app/page.tsx` がセッションの有無で `/`（`(app)`）か `/login` に振り分ける。`(app)/layout.tsx` が `useSession()`（`src/features/auth/use-session.ts`）でクライアント側にガードし、未ログインなら `/login` へ。ミドルウェアは使わない（静的出力のため）。`src/app/auth/callback/page.tsx` はガードの外にあり、マジックリンクの `?code=`（ブラウザクライアントが自動交換）と `token_hash`（`verifyOtp`）の両方を処理する。
+- **環境変数**: `src/lib/env.ts` の `getPublicEnv()` / `getServerEnv()` は呼び出し時に Zod 検証する（モジュール直下で読むとビルド時のプリレンダーで落ちる）。`/api/*` の URL は `apiUrl('/api/…')`、認証の戻り先は `authCallbackUrl()` で組み立て、どちらも `NEXT_PUBLIC_API_BASE_URL` 基点の絶対 URL になる。
+- **Supabase クライアント**: ブラウザは `getSupabaseBrowserClient()` の 1 つだけ。Route Handler は `createRouteClient(request)` が `Authorization: Bearer` を優先し（ネイティブ版は Cookie を送れない）、無ければ Cookie を使う。`createServiceClient()` は RLS を無視するのでアカウント削除など限定用途のみ。
+- **RLS の前提**: ユーザー所有テーブルへの INSERT は `user_id` をセッションから明示的に入れる（DB 側に既定値は無い）。`log_tags.user_id` も NOT NULL。`roasters` の INSERT は `created_by = auth.uid()` が条件。ロースター名は生成列 `name_normalized` に一意制約があり、同名登録は Postgres の `23505` になる。
+- **静的出力との関係**（2026-09-22 検証）: 現状のコードは `output: 'export'` でビルドが通る。`/api/*` は自動で除外される（Vercel 側が配信し、アプリは本番 URL 経由で呼ぶ）。動的ルート `[id]` だけが落ちる（Q6）。
+- **Prettier の対象外**: Markdown と `docs/design/` は整形しない。`pnpm format` を打っても要件書やモックは変わらない。
+- **並行作業の注意**: UI ウィンドウと同じワーキングツリーを共有している。`git add -A` や `git commit -a` は相手の作業途中ファイルを巻き込むので、**自分が触ったパスだけを `git add` する**。UI 側の担当は `src/app/**`、`src/components/**`、`public/manifest.json`、`docs/DESIGN.md`、`docs/design/**`。非 UI 側は `src/lib/**`、`src/features/**`、`supabase/**`、`scripts/**`、`tests/**`。
 
 ## 4. データモデルの要点
 
@@ -162,26 +179,32 @@ export interface OcrProvider {
 ```bash
 pnpm install
 pnpm dev                 # http://localhost:3100（ポートは 3100 に固定。3000 は他プロジェクトが使用）
-pnpm supabase start      # ローカル Supabase（Docker）
-pnpm db:migrate          # supabase db push（ローカル）
-pnpm db:types            # src/types/database.ts を再生成
 pnpm lint && pnpm typecheck
-pnpm test                # Vitest
-pnpm test:e2e            # Playwright
+pnpm test                                   # Vitest 全部
+pnpm vitest run tests/unit/rating.test.ts   # ファイル 1 つ
+pnpm vitest run -t '0.5 刻み'               # テスト名で絞る
+pnpm test:e2e            # Playwright。3100 で dev サーバーを自分で起動する（起動済みなら再利用）
 pnpm build
+pnpm format              # Prettier（Markdown と docs/design は対象外）
+pnpm db:types            # クラウド（ref gayhfwmvlxwyuzrvmkoy）から src/types/database.ts を再生成
+vercel deploy --prod     # 本番デプロイ（GitHub 連携が無いので手動）
 ```
+
+Docker が無いので `pnpm supabase start` / `db:migrate` / `db:types:local` は使えない。スキーマ変更は `supabase/migrations/` に SQL を書き、ダッシュボードの SQL Editor に貼って適用してから `pnpm db:types` を実行する。コミット前フックが lint / Prettier チェック / typecheck を走らせる（緊急時は `--no-verify`）。
 
 環境変数は `.env.example` を正とし、新しい変数を追加したら必ずそこにも追記する。
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
-NEXT_PUBLIC_API_BASE_URL=         # 例: https://coffeelog.vercel.app（ネイティブ化のため絶対URL）
+NEXT_PUBLIC_API_BASE_URL=         # ローカル http://localhost:3100 / 本番 https://coffeenotes-red.vercel.app（絶対 URL）
 SUPABASE_SERVICE_ROLE_KEY=        # サーバーのみ
 OCR_PROVIDER=claude|none          # none はOCRを無効化（開発時の費用節約）
 ANTHROPIC_API_KEY=                # サーバーのみ
 GEO_PROVIDER=nominatim|google
 GOOGLE_MAPS_API_KEY=              # GEO_PROVIDER=google のとき
+SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID=   # ローカル Supabase の config.toml から env() で参照
+SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=
 ```
 
 ## 7. Claude Code への作業ルール
@@ -210,15 +233,16 @@ GOOGLE_MAPS_API_KEY=              # GEO_PROVIDER=google のとき
 - [x] 画面設計: Web PC 版（3 列、D1〜D4）と iOS アプリ版（I1〜I7）を追加、ADR 0007。モックを 4 ページに分割（2026-09-22）
 - [x] 画面設計: Web スマホ版を Web サイトの作法（ヘッダー + ドロワー、フッター、下タブ無し）に変更。下タブは iOS 版のみ（2026-09-22）
 - [x] Phase 0: Supabase プロジェクト作成（`ohagi-0's coffee`、ref `gayhfwmvlxwyuzrvmkoy`、ap-northeast-1）、`0001_init.sql` を SQL Editor で適用、`.env.local` 設定、`src/types/database.ts` 生成（2026-09-21）
-- [ ] Phase 0: Google OAuth のクライアント登録（Google Cloud）と Supabase Auth での有効化 — **ユーザー作業**。メールリンクの動作確認後でよい
-- [ ] Phase 0: Supabase Auth の URL 設定（Site URL `http://localhost:3100` / Redirect URLs に `http://localhost:3100/auth/callback` と本番 URL、`coffeelog://auth/callback`）— **ユーザー作業**
 - [ ] Phase 0: ローカル Supabase 用に Docker Desktop を導入（任意。クラウドだけで進めることも可）
 - [x] Phase 0: PC でメールリンクのログイン → 空のホーム表示を確認（2026-09-21）。**Phase 0 の完了条件を達成**
-- [x] Vercel にデプロイ（プロジェクト `coffeenotes`、本番 https://coffeenotes-red.vercel.app、GitHub 連携で main への push が自動デプロイ）（2026-09-21）
+- [x] Vercel にデプロイ（プロジェクト `coffeenotes`、本番 https://coffeenotes-red.vercel.app。CLI から `vercel deploy --prod`。GitHub 連携は未接続で、ブラウザで Vercel と GitHub を接続すれば push で自動デプロイになる）（2026-09-21）
 - [x] Supabase Auth の URL 設定（Site URL = 本番、Redirect URLs に localhost:3100 / 127.0.0.1:3100 / 本番 / `coffeelog://` の 4 つ）（2026-09-21）
 - [ ] スマホで本番 URL からログイン確認
 - [ ] Google ログインを有効化（Google Cloud で OAuth クライアント作成 → Supabase の Providers で設定）— F-AUTH-1 の Must
-- [ ] Phase 1 着手
+- [ ] Q6（URL の形）の決定 → CLAUDE.md §3、DESIGN.md S4/S5、Issue #5/#6 に反映
+- [ ] Phase 1: 非 UI（Issues #4 スキーマ → #5 / #6 データ層、#7 シード、#8 画像・platform）
+- [ ] Phase 1: UI（DESIGN.md §7 の 1〜6。別ウィンドウ）
+- [ ] 公開準備（提案中・未着手）: Supabase 内蔵メールは 1 時間 2 通までなのでカスタム SMTP が必須、Google 同意画面の本番公開、プライバシーポリシー、独自ドメイン、アカウント削除（F-AUTH-3）の繰り上げ
 
 進捗はこのチェックリストを更新して管理する。
 

@@ -15,9 +15,7 @@ Next.js 15 (App Router) + TypeScript / Tailwind CSS + shadcn/ui / Supabase / Cla
 ```bash
 pnpm install
 cp .env.example .env.local   # Supabase の URL / anon key などを埋める
-pnpm supabase start           # ローカル Supabase（Docker Desktop が必要）
-pnpm db:migrate               # マイグレーション適用
-pnpm db:types                 # src/types/database.ts を生成
+pnpm db:types                 # クラウドの Supabase から src/types/database.ts を生成
 pnpm dev                      # http://localhost:3100（3000 は他プロジェクトと衝突するため固定）
 pnpm lint && pnpm typecheck && pnpm test
 ```
@@ -27,4 +25,4 @@ Docker が無い場合はクラウドの Supabase プロジェクトを使う: �
 
 ## 現在のフェーズ
 
-Phase 0（基盤）。進捗は CLAUDE.md §8 のチェックリストで管理する。
+Phase 1（手入力 MVP）。Phase 0（基盤）は 2026-09-21 に完了。進捗は CLAUDE.md §8 のチェックリストで管理する。
