@@ -23,7 +23,7 @@ UI ウィンドウの進捗記録。**別ウィンドウ（非 UI）が作業前
 | #17 UI-9 入力記録一覧 | ✅ A（段階 1 + 2） | (次の commit) | `src/app/(app)/page.tsx` `src/components/logs/log-timeline.tsx` `src/features/logs/presenters.ts` `tests/unit/components/log-timeline.test.tsx` `tests/unit/logs/presenters.test.ts` |
 | #18 UI-10 入口と豆フォーム | ✅ A | e9f2809 | `src/app/(app)/logs/new/page.tsx` `src/components/logs/entry-option.tsx` `src/components/beans/bean-form.tsx` `src/components/wizard-stepper.tsx`（PHASE1_STEPS 追加） `src/features/logs/new-log-draft.ts` `tests/unit/components/bean-form.test.tsx` `tests/unit/logs/new-log-draft.test.ts` |
 | #19 UI-11 店・評価・保存 | ✅ A（段階 1 + 2） | (次の commit) | `src/app/(app)/logs/new/page.tsx`（③） `src/components/logs/log-form.tsx` `src/features/logs/save-new-log.ts` `tests/unit/components/log-form.test.tsx` `tests/unit/logs/save-new-log.test.ts` |
-| #20 UI-12 詳細の部品 | ⏸ 非 UI ウィンドウが次に取る予定（未着手。先に始めるならこの行を書き換えてください） | | |
+| #20 UI-12 詳細の部品 | ✅ A（段階 1 + 2、ルート化まで） | (次の commit) | `src/app/(app)/beans/page.tsx` `src/app/(app)/logs/page.tsx` `src/components/beans/bean-detail.tsx` `src/components/logs/log-detail.tsx` `src/features/beans/presenters.ts` `src/app/(app)/logs/new/page.tsx`（保存後の遷移先） `tests/unit/components/detail.test.tsx` |
 | #21 UI-13 記録したお店 | ✅ A（段階 1 + 2） | (次の commit) | `src/app/(app)/shops/page.tsx` `src/app/(app)/shops/detail/page.tsx` `src/components/shops/{shop-form,shop-list}.tsx` `src/features/shops/presenters.ts` `tests/unit/components/shop-form.test.tsx` `tests/unit/shops/presenters.test.ts` |
 | #22 UI-14 設定 | ✅ A | (次の commit) | `src/app/(app)/settings/page.tsx` `src/components/settings/{setting-row,settings-view}.tsx` `src/features/settings/use-preferences.ts` `tests/unit/components/settings.test.tsx` |
 | #23 UI-15 PC レイアウト | ✅ 段階 1（A）/ ⏸ 段階 2 は #20 の後 | (次の commit) | `src/app/(app)/layout.tsx` `src/components/site-nav.tsx` `tests/unit/components/site-nav.test.tsx` |
@@ -259,3 +259,20 @@ B の #14（ログ行・日付見出し・空状態・失敗表示・スケル�
 
 - フォルダ名は `dev`（`_dev` は App Router がルートにしない）。
 - 新しい部品を作ったら、このページにも 1 行足す。
+
+## #20 UI-12 S4 豆詳細 / S5 記録詳細 — ✅ A 2026-09-22（段階 1 + 2。B が未着手だったので A が取った）
+
+**やったこと**
+
+- `src/features/beans/presenters.ts`: `beanSpecItems`（生産国 / 地域 / 品種 / 精製 / 標高 m / 価格 / 焙煎度 / 焙煎日。null はグリッド側が省く）、`beanTaste`、`hasAnyTaste`、`formatPrice`。
+- `src/components/beans/bean-detail.tsx` `BeanDetail`（props 駆動）: パンくず + 編集、104px の `CardImage` + ロースター（銅 11px）+ 豆名（display 34px）+ 平均星と回数、`BeanSpecGrid`、フレーバー、説明文、`TasteRadar`（味覚が 1 つでもあれば）、「この豆の記録」（`LogTimeline`）、「この豆をもう一度記録する」。`layout="wide"`（左 224px にカードとレーダー、右にデータ。#23 段階 2 用）も実装済み。
+- `src/components/logs/log-detail.tsx` `LogDetail`: 日付、豆サマリ（→ 豆の詳細）、場所 / 飲み方（自宅ならレシピ列も）、店の詳細リンク、星 44px、メモ、タグ、「同じ豆のほかの記録」、最下部に破壊ボタン → ネイティブ `<dialog>` の確認（「豆の情報とカード画像は残ります」）。
+- `src/app/(app)/beans/page.tsx`（`/beans?id=`）: `useBean` / `useLogsByBean` / `useRatingStats`。`?edit=1` で `BeanForm` を豆の値で開き `useUpdateBean`（新規ロースター名なら先に `useCreateRoaster`）。「もう一度記録する」は下書きに既存豆を書いて `/logs/new?step=place` へ。
+- `src/app/(app)/logs/page.tsx`（`/logs?id=`）: `useLog`、同じ豆のほかの記録、`useDeleteLog`（成功でトースト → 入力記録一覧）。`?edit=1` で `LogForm` を記録の値で開き `useUpdateLog`（手入力の新しい店は `useCreateShop`）。
+- ウィザード③の保存後の遷移先を `routes.bean(result.beanId)` に変更（#19 の宿題）。
+- テスト 4 件（presenters、BeanDetail、LogDetail の確認ダイアログ）。
+
+**他ウィンドウへの連絡**
+
+- これで Phase 1 の UI Issue は #23 段階 2（xl の一覧 + 詳細）を残してすべて完了。`BeanDetail layout="wide"` は用意済みなので、A が続けて #23 段階 2 を取る。
+- カード画像の URL（`imageSrc`）は Phase 2 で署名付き URL を渡す。`BeanDetail` / `LogDetail` / `LogListItem` すべて `imageSrc` を受ける。

@@ -157,9 +157,7 @@ function PlaceStep() {
       });
       clearNewLogDraft();
       toast.success('保存しました');
-      // 豆詳細（S4、/beans?id=）は #20 で作る。それまでは入力記録一覧へ
-      void result;
-      router.replace(routes.home);
+      router.replace(routes.bean(result.beanId) as Route);
     } catch (e) {
       setFailure(e instanceof Error ? e.message : '保存できませんでした');
       setSaving(false);
