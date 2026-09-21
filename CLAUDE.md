@@ -27,7 +27,7 @@
 | テスト | Vitest（単体）+ Playwright（E2E、主要フローのみ） | |
 | Lint / Format | ESLint（next/core-web-vitals）+ Prettier | コミット前に `pnpm lint && pnpm typecheck` |
 | パッケージ管理 | pnpm | `npm` / `yarn` を混ぜない |
-| ホスティング | Vercel Hobby | |
+| ホスティング | Vercel Hobby | 本番 https://coffeenotes-red.vercel.app（プロジェクト `coffeenotes`） |
 
 ### 2.1 決定済み事項（2026-09-21）— 勝手に変えない
 
@@ -212,7 +212,8 @@ GOOGLE_MAPS_API_KEY=              # GEO_PROVIDER=google のとき
 - [ ] Phase 0: Supabase Auth の URL 設定（Site URL `http://localhost:3100` / Redirect URLs に `http://localhost:3100/auth/callback` と本番 URL、`coffeelog://auth/callback`）— **ユーザー作業**
 - [ ] Phase 0: ローカル Supabase 用に Docker Desktop を導入（任意。クラウドだけで進めることも可）
 - [x] Phase 0: PC でメールリンクのログイン → 空のホーム表示を確認（2026-09-21）。**Phase 0 の完了条件を達成**
-- [ ] Vercel にデプロイして本番 URL を取得し、Supabase の Redirect URLs と `NEXT_PUBLIC_API_BASE_URL` に反映（スマホでの確認に必要）— **ユーザー作業（Vercel アカウント）**
+- [x] Vercel にデプロイ（プロジェクト `coffeenotes`、本番 https://coffeenotes-red.vercel.app、GitHub 連携で main への push が自動デプロイ）（2026-09-21）
+- [ ] Supabase ダッシュボードの Redirect URLs に `https://coffeenotes-red.vercel.app/auth/callback` を追加し、スマホでログイン確認 — **ユーザー作業**
 - [ ] Phase 1 着手
 
 進捗はこのチェックリストを更新して管理する。
