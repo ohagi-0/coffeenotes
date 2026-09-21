@@ -199,13 +199,24 @@ GOOGLE_MAPS_API_KEY=              # GEO_PROVIDER=google のとき
 ## 8. 現在の状態と次のタスク
 
 - [x] Phase 0: ディレクトリ骨組み（§3）・git 初期化・CI ワークフロー・PR テンプレート（2026-09-21）
-- [ ] Phase 0: GitHub リモート作成と push（`gh auth login` 後に `gh repo create`）
-- [ ] Phase 0: リポジトリ初期化（Next.js + Tailwind + shadcn/ui + Supabase 接続）
-- [ ] Phase 0: `supabase/migrations/0001_init.sql`（REQUIREMENTS.md §4 のテーブル + RLS）
-- [ ] Phase 0: 認証（メールリンク）と `(app)` レイアウトの下タブ
-- [ ] Phase 0: 認証は メールリンク + Google の両方を有効化
-- [ ] Phase 0: `docs/decisions/` に ADR を作成 — 0001 OCR=Claude Haiku / 0002 PWA先行→Capacitor / 0003 店の手入力+地図タップをMust / 0004 星0.5刻み / 0005 ロースター共通マスタ
+- [x] Phase 0: GitHub リモート作成と push（https://github.com/ohagi-0/coffeenotes、2026-09-21）
+- [x] Phase 0: リポジトリ初期化（Next.js 15 + Tailwind v4 + shadcn/ui + Supabase クライアント、Vitest / Playwright / Prettier 設定）（2026-09-21）
+- [x] Phase 0: `supabase/migrations/0001_init.sql`（REQUIREMENTS.md §4 のテーブル + RLS + Storage ポリシー）（2026-09-21）
+- [x] Phase 0: 認証（メールリンク + Google のログイン画面・コールバック）と `(app)` レイアウトの下タブ（2026-09-21）
+- [x] Phase 0: `docs/decisions/` に ADR 0001〜0005 を作成（2026-09-21）
 - [x] Q1〜Q5 の決定（REQUIREMENTS.md §8.3、2026-09-21）
+- [ ] Phase 0: Supabase プロジェクト作成（クラウド）と `.env.local` 設定、Google OAuth のクライアント登録、マイグレーション適用、`pnpm db:types` で `src/types/database.ts` 生成 — **ユーザー作業**
+- [ ] Phase 0: ローカル Supabase 用に Docker Desktop を導入（任意。クラウドだけで進めることも可）
+- [ ] Phase 0: 実機（スマホ）でログイン → 空のホーム表示を確認して Phase 0 完了
 - [ ] Phase 1 着手
 
 進捗はこのチェックリストを更新して管理する。
+
+### 8.1 実装上のメモ（Phase 0 で決めた細部）
+
+- 認証ガードはミドルウェアではなく `(app)/layout.tsx` でクライアント側判定する（静的出力・Capacitor 対応のため）。`src/lib/supabase/middleware.ts` は作らない。
+- `next.config.ts` に `output: 'export'` は付けていない（`/api/*` を同居させるため。ADR 0002）。
+- shadcn/ui は Base UI ベース（`@base-ui/react`）。`Button` に `asChild` は無く、リンク化は `render={<Link href="…" />}` を使う。
+- Supabase クライアントはシングルトンを遅延生成する（`getSupabaseBrowserClient()`）。モジュール直下で生成するとビルド時のプリレンダーで env 検証に失敗する。
+- `src/types/database.ts` は `pnpm db:types`（要 Docker またはクラウドの `--project-id`）で生成するまで存在しない。生成後に `createBrowserClient<Database>` へ型を付ける。
+- Prettier は Markdown を対象外（`.prettierignore`）。要件定義書・ADR の表を手書きのまま保つため。

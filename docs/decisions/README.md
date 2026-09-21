@@ -25,8 +25,8 @@
 
 | # | タイトル | ステータス |
 |---|---|---|
-| 0001 | OCR エンジンは Claude Haiku 4.5 Vision | 未作成 |
-| 0002 | PWA 先行、後に Capacitor でネイティブ化 | 未作成 |
-| 0003 | 店の手入力 + 地図タップでの位置指定を Must | 未作成 |
-| 0004 | 星評価は 0.5 刻み | 未作成 |
-| 0005 | ロースター名は全ユーザー共通マスタ | 未作成 |
+| [0001](0001-ocr-claude-haiku.md) | OCR エンジンは Claude Haiku 4.5 Vision | 決定 |
+| [0002](0002-pwa-first-then-capacitor.md) | PWA 先行、後に Capacitor でネイティブ化 | 決定 |
+| [0003](0003-shop-manual-input-and-map-tap.md) | 店の手入力 + 地図タップでの位置指定を Must | 決定 |
+| [0004](0004-rating-half-star.md) | 星評価は 0.5 刻み | 決定 |
+| [0005](0005-roaster-shared-master.md) | ロースター名は全ユーザー共通マスタ | 決定 |
