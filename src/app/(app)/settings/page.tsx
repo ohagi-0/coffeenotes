@@ -3,10 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
+import { SettingsView } from '@/components/settings/settings-view';
 import { signOut } from '@/features/auth/sign-in';
 import { useSession } from '@/features/auth/use-session';
 
+// S9 設定。表示は SettingsView（props 駆動）に任せ、ここではセッションとログアウトをつなぐ。
 export default function SettingsPage() {
   const router = useRouter();
   const { session } = useSession();
@@ -18,22 +19,19 @@ export default function SettingsPage() {
       await signOut();
       router.replace('/login');
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'ログアウトに失敗しました');
+      toast.error(e instanceof Error ? e.message : 'ログアウトできませんでした');
       setBusy(false);
     }
   }
 
+  const providers = (session?.user.app_metadata?.providers as string[] | undefined) ?? [];
+
   return (
-    <div className="space-y-6 py-4">
-      <h1 className="text-2xl font-bold">設定</h1>
-      <section className="space-y-2 rounded-lg border p-4">
-        <h2 className="text-muted-foreground text-sm font-medium">アカウント</h2>
-        <p className="text-sm">{session?.user.email ?? '—'}</p>
-        <Button variant="outline" className="w-full" onClick={handleSignOut} disabled={busy}>
-          {busy ? 'ログアウト中…' : 'ログアウト'}
-        </Button>
-      </section>
-      <p className="text-muted-foreground text-xs">エクスポート・アカウント削除は Phase 5 で実装予定です。</p>
-    </div>
+    <SettingsView
+      email={session?.user.email ?? null}
+      providers={providers}
+      onSignOut={handleSignOut}
+      signingOut={busy}
+    />
   );
 }

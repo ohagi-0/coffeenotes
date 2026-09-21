@@ -17,15 +17,15 @@ UI ウィンドウの進捗記録。**別ウィンドウ（非 UI）が作業前
 | #11 UI-3 レイアウトとナビ | ✅ | (次の commit) | `src/app/(app)/layout.tsx` `src/app/(app)/*/page.tsx`（タイトルのみ） `src/components/nav.ts` `site-header.tsx` `nav-drawer.tsx` `site-footer.tsx` `coming-soon.tsx` `bottom-nav.tsx`（削除） `tests/unit/components/nav.test.tsx` |
 | #12 UI-4 入力系部品 | ✅ | (次の commit) | `src/components/app-button.tsx` `form/field.tsx` `filter-chips.tsx` `logs/place-segment.tsx` `wizard-stepper.tsx` `providers.tsx` `tests/unit/components/inputs.test.tsx` |
 | #13 UI-5 固有部品 | ✅ 非 UI ウィンドウ（詳細は `ui-progress-b.md`） | 1f1863f | `src/components/logs/rating-stars.tsx` `src/components/logs/ocr-field.tsx` `src/components/beans/taste-dots.tsx` `src/components/beans/taste-radar.tsx` `tests/unit/components/{rating-stars,taste-dots,taste-radar,ocr-field}.test.tsx` |
-| #14 UI-6 表示系部品 | 🔧 **非 UI ウィンドウが担当中**（詳細は `ui-progress-b.md`） | | `src/components/{empty-state,error-callout,row,date-group}.tsx` `src/components/beans/{card-image,bean-spec-grid,bean-detail-skeleton}.tsx` `src/components/logs/{log-list-item,log-list-item-skeleton}.tsx` `tests/unit/components/*` |
+| #14 UI-6 表示系部品 | ✅ 非 UI ウィンドウ（詳細は `ui-progress-b.md`） | 965b963 | `src/components/{empty-state,error-callout,row,date-group}.tsx` `src/components/beans/{card-image,bean-spec-grid,bean-detail-skeleton}.tsx` `src/components/logs/{log-list-item,log-list-item-skeleton}.tsx` `tests/unit/components/*` |
 | #15 UI-7 部品ページ | ⏸ | | |
 | #16 UI-8 ログイン | ✅ A | (次の commit) | `src/app/(auth)/login/page.tsx` `tests/e2e/login.spec.ts` |
 | #17 UI-9 入力記録一覧 | ⏸ | | |
 | #18 UI-10 入口と豆フォーム | ⏸ | | |
 | #19 UI-11 店・評価・保存 | ⏸ | | |
-| #20 UI-12 詳細の部品 | ⏸ | | |
+| #20 UI-12 詳細の部品 | ⏸ 非 UI ウィンドウが次に取る予定（未着手。先に始めるならこの行を書き換えてください） | | |
 | #21 UI-13 記録したお店 | ⏸ | | |
-| #22 UI-14 設定 | ⏸ | | |
+| #22 UI-14 設定 | ✅ A | (次の commit) | `src/app/(app)/settings/page.tsx` `src/components/settings/{setting-row,settings-view}.tsx` `src/features/settings/use-preferences.ts` `tests/unit/components/settings.test.tsx` |
 | #23 UI-15 PC レイアウト | ⏸ | | |
 | #24 UI-16 E2E | ⏸ | | |
 
@@ -134,3 +134,17 @@ UI ウィンドウの進捗記録。**別ウィンドウ（非 UI）が作業前
 
 - Playwright で `getByRole('alert')` は Next.js のルートアナウンサー（`#__next-route-announcer__`）にも一致する。`filter({ hasText })` で絞ること。
 - `h1` は `<br>` で 2 行にしているので `aria-label="Coffeenotes"` を付けた（E2E の `getByRole('heading', { name })` 用）。
+
+## #22 UI-14 設定 — ✅ A 2026-09-22
+
+**やったこと**
+
+- `src/components/settings/settings-view.tsx` `SettingsView`（props 駆動）: アカウント行（頭文字アバター、メール、ログイン方式）、「読み取り」（今日の回数 `n / 50` + 進捗バー、Phase 2 まで 0 と注記）、「表示」（星の入力: タップ / スライダー）、「データ」（CSV / JSON は disabled、位置情報の説明）、「アカウント」（ログアウト）、最下部に破壊ボタン「アカウントと全データを削除」（押すと「削除はまだ使えません」の説明。実処理は F-AUTH-3 の別 Issue）。
+- `src/components/settings/setting-row.tsx` `SettingRow` / `SettingSection`: ラベル + 現在値 + 右要素（chevron）、`note` で下に 1 文。
+- `src/features/settings/use-preferences.ts` `useRatingInputMode()`: 星の入力方法を localStorage（`coffeenotes:rating-input`）に保存。`useSyncExternalStore` で同期、読めない環境では `tap`。**`RatingStars` 側のスライダー表示はまだ無い**（#19 で `mode` を渡して接続する想定。B の `RatingStars` に `variant` を足すか要相談）。
+- `src/app/(app)/settings/page.tsx`: セッションから email と `app_metadata.providers` を渡し、ログアウトをつなぐ。
+- テスト 4 件。表示はプレビューで確認（375px、エラーなし）。
+
+**他ウィンドウへの連絡**
+
+- `src/features/settings/` を新設しました（非 UI の `src/features/**` の領域ですが、端末設定の hook なので UI 側で持ちます）。
