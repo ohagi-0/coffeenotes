@@ -30,7 +30,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | テスト | Vitest（単体）+ Playwright（E2E、主要フローのみ） | |
 | Lint / Format | ESLint（next/core-web-vitals）+ Prettier | コミット前に `pnpm lint && pnpm typecheck` |
 | パッケージ管理 | pnpm | `npm` / `yarn` を混ぜない |
-| ホスティング | Vercel Hobby | 本番 https://coffeenotes-red.vercel.app（プロジェクト `coffeenotes`）。デプロイは `vercel deploy --prod`。**GitHub 連携は未接続**なので push しても自動デプロイされない |
+| ホスティング | Vercel Hobby | 本番 **https://coffee-notes.app**（Cloudflare Registrar で取得、DNS は Cloudflare、プロキシ OFF）。旧 URL https://coffeenotes-red.vercel.app は本体へ転送。プロジェクト `coffeenotes`。デプロイは `vercel deploy --prod`。**GitHub 連携は未接続**なので push しても自動デプロイされない |
 
 ### 2.1 決定済み事項（2026-09-21）— 勝手に変えない
 
@@ -203,7 +203,7 @@ Docker が無いので `pnpm supabase start` / `db:migrate` / `db:types:local` �
 ```
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
-NEXT_PUBLIC_API_BASE_URL=         # ローカル http://localhost:3100 / 本番 https://coffeenotes-red.vercel.app（絶対 URL）
+NEXT_PUBLIC_API_BASE_URL=         # ローカル http://localhost:3100 / 本番 https://coffee-notes.app（絶対 URL）
 SUPABASE_SERVICE_ROLE_KEY=        # サーバーのみ
 OCR_PROVIDER=claude|none          # none はOCRを無効化（開発時の費用節約）
 ANTHROPIC_API_KEY=                # サーバーのみ
@@ -250,7 +250,8 @@ SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=
 - [x] Phase 1: 非 UI — #8 画像圧縮・Storage 保存・platform ラッパー（`src/lib/image/compress.ts`、`src/lib/storage/bean-images.ts`、`src/lib/platform/{camera,geolocation,share}.ts`。F-OCR-1 / F-BEAN-12 / F-SHOP-3、N-4 / N-5）（2026-09-22）
 - [x] Phase 1: 非 UI — #7 開発用シードデータ投入（`scripts/seed-dev.mjs` + `pnpm seed:dev -- --email <アドレス> --reset`。記録 15 / 豆 6 / 店 4 / 焙煎 1 / タグ 5。行の ID はユーザー ID を名前空間にした UUID v5 なので再実行しても増えない。`SUPABASE_SERVICE_ROLE_KEY` が要る）（2026-09-22）。**実行はユーザー作業**: キーを `.env.local` に入れて 1 回流す
 - [ ] Phase 1: UI（Issues #9〜#24。今すぐ着手できるのは #9 #10 #12 #13 #14、次いで #11 #15 #16 #17〜#22 の段階 1。#23 PC レイアウト、#24 E2E は最後）
-- [ ] 公開準備（提案中・未着手）: Supabase 内蔵メールは 1 時間 2 通までなのでカスタム SMTP が必須、Google 同意画面の本番公開、プライバシーポリシー、独自ドメイン、アカウント削除（F-AUTH-3）の繰り上げ
+- [x] 公開準備: 独自ドメイン coffee-notes.app を取得し本番に設定（Vercel・Supabase Auth・config.toml）（2026-09-22）
+- [ ] 公開準備（未着手）: カスタム SMTP（Supabase 内蔵メールは 1 時間 2 通まで）、Google 同意画面の本番公開、プライバシーポリシー、アカウント削除（F-AUTH-3）の繰り上げ
 
 進捗はこのチェックリストを更新して管理する。
 

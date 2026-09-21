@@ -1,5 +1,7 @@
 # coffeenotes — コーヒー記録アプリ
 
+本番: https://coffee-notes.app
+
 飲んだコーヒー豆をテイスティングカードの写真から半自動で記録し、店・星評価・タグと紐づけて一覧 / 検索 / 地図 / 統計で振り返るスマホ向け PWA。
 
 - 要件定義: [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md)（正）
