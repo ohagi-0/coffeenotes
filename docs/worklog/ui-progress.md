@@ -8,10 +8,10 @@ UI ウィンドウの進捗記録。**別ウィンドウ（非 UI）が作業前
 | Issue | 状態 | commit | 触ったパス |
 |---|---|---|---|
 | #9 UI-1 トークン | ✅ | e743f47 | `src/app/globals.css` `src/app/layout.tsx` `src/components/providers.tsx` `public/manifest.json` |
-| #10 UI-2 書体 | ✅ | (次の commit) | `src/app/layout.tsx` `src/app/globals.css` |
-| #11 UI-3 レイアウトとナビ | ⏸ | | |
+| #10 UI-2 書体 | ✅ | 4dc1e97 | `src/app/layout.tsx` `src/app/globals.css` |
+| #11 UI-3 レイアウトとナビ | ✅ | (次の commit) | `src/app/(app)/layout.tsx` `src/app/(app)/*/page.tsx`（タイトルのみ） `src/components/nav.ts` `site-header.tsx` `nav-drawer.tsx` `site-footer.tsx` `coming-soon.tsx` `bottom-nav.tsx`（削除） `tests/unit/components/nav.test.tsx` |
 | #12 UI-4 入力系部品 | ⏸ | | |
-| #13 UI-5 固有部品 | ⏸ | | |
+| #13 UI-5 固有部品 | 🔧 **非 UI ウィンドウが担当中**（詳細は `ui-progress-b.md`） | | `src/components/logs/rating-stars.tsx` `src/components/logs/ocr-field.tsx` `src/components/beans/taste-dots.tsx` `src/components/beans/taste-radar.tsx` `tests/unit/components/{rating-stars,taste-dots,taste-radar,ocr-field}.test.tsx` |
 | #14 UI-6 表示系部品 | ⏸ | | |
 | #15 UI-7 部品ページ | ⏸ | | |
 | #16 UI-8 ログイン | ⏸ | | |
@@ -72,3 +72,25 @@ UI ウィンドウの進捗記録。**別ウィンドウ（非 UI）が作業前
 
 - `docs/decisions/0007-detail-page-url-query-string.md` を作成中のようですが、**0007 は昨日の「PC は 3 列レイアウト・iOS は同じ UI」で使用済み**です（`docs/decisions/README.md` の一覧参照）。**0008** に振り直してください。
 - `src/app/(app)/beans/[id]/.gitkeep` と `logs/[id]/.gitkeep` の削除がステージされたままです（Q6 の作業と思われます）。UI 側の commit は `git commit -- <自分のパス>` で行うので巻き込みません。
+
+## #11 UI-3 共通レイアウトとナビ — ✅ 2026-09-22
+
+**やったこと**
+
+- `src/components/nav.ts`: ナビ定義の唯一の元（`NAV_ITEMS`、`ADD_LOG_HREF`、`isWizardPath`、`isActivePath`）。ラベルはページ名そのまま。`href` は `Route` 型（typedRoutes）。
+- `site-header.tsx`: sticky 56px、ワードマーク（`font-display`）、「＋ 記録する」（銅のピル）、メニューボタン 44px。`variant="wizard"` で「やめる」。
+- `nav-drawer.tsx`: ネイティブ `<dialog>` + `showModal()`。フォーカストラップ・Esc・top layer はブラウザ任せ。背景クリックで閉じる。ログアウトは `signOut()` → `/login`。
+- `site-footer.tsx`: `bg-card` 地、5 ページへのリンク、著作権。
+- `(app)/layout.tsx`: `BottomNav` を外し、ヘッダー + `main` + フッター + ドロワー。`main` の横余白は `px-5`（20px）に統一。ウィザード（`/logs/new`）ではフッターを出さない。`bottom-nav.tsx` は削除。
+- 各ページの `<h1>` をページ名に統一（入力記録一覧 / 記録したお店 / 記録したお店のマップ / 好みの分析 / 記録を追加）。サイズは 24px（`text-2xl`）。
+- `tests/unit/components/nav.test.tsx`: 8 件（ラベル、active 判定、ヘッダーの切り替え、ドロワーの項目・onClose・ログアウト・Esc）。jsdom は `<dialog>` の `showModal/close` を持たないので `beforeAll` でスタブ。
+
+**決めたこと・注意**
+
+- ヘッダーとフッターは `-mx-5` で `main` の余白を打ち消して画面端まで伸ばす。**ページ側は `px` を付けない**（layout が持つ）。
+- ドロワー内の `<a>` は `onClick={onClose}` で閉じる。ルート変更の監視はしない。
+- App Router では `_` で始まるフォルダはルートにならない（一時プレビューで `/_preview` が 404 だった）。開発用ページを作るときは `_dev` ではなく **`dev/`** のような名前にする（#15 に反映）。
+
+**他ウィンドウへの連絡**
+
+- 画面の URL は `src/lib/routes.ts`（ADR 0008）を使うので、以後 UI 側の `href` は `routes.*` に寄せます。`nav.ts` の `href` もそちらに合わせて差し替える予定（#17 以降）。

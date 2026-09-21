@@ -12,7 +12,7 @@ export default function HomePage() {
 
   return (
     <div className="space-y-6 py-4">
-      <h1 className="text-xl font-bold">ホーム</h1>
+      <h1 className="text-2xl font-bold">入力記録一覧</h1>
 
       {isPending && (
         <div className="space-y-3" aria-busy>

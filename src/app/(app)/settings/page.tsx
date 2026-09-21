@@ -25,7 +25,7 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6 py-4">
-      <h1 className="text-xl font-bold">設定</h1>
+      <h1 className="text-2xl font-bold">設定</h1>
       <section className="space-y-2 rounded-lg border p-4">
         <h2 className="text-muted-foreground text-sm font-medium">アカウント</h2>
         <p className="text-sm">{session?.user.email ?? '—'}</p>
