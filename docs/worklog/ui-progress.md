@@ -21,7 +21,7 @@ UI ウィンドウの進捗記録。**別ウィンドウ（非 UI）が作業前
 | #15 UI-7 部品ページ | ⏸ | | |
 | #16 UI-8 ログイン | ✅ A | (次の commit) | `src/app/(auth)/login/page.tsx` `tests/e2e/login.spec.ts` |
 | #17 UI-9 入力記録一覧 | ✅ A（段階 1 + 2） | (次の commit) | `src/app/(app)/page.tsx` `src/components/logs/log-timeline.tsx` `src/features/logs/presenters.ts` `tests/unit/components/log-timeline.test.tsx` `tests/unit/logs/presenters.test.ts` |
-| #18 UI-10 入口と豆フォーム | 🔧 **A が担当中** | | `src/app/(app)/logs/new/page.tsx` `src/components/logs/entry-option.tsx` `src/components/beans/bean-form.tsx` `tests/unit/components/bean-form.test.tsx` |
+| #18 UI-10 入口と豆フォーム | ✅ A | e9f2809 | `src/app/(app)/logs/new/page.tsx` `src/components/logs/entry-option.tsx` `src/components/beans/bean-form.tsx` `src/components/wizard-stepper.tsx`（PHASE1_STEPS 追加） `src/features/logs/new-log-draft.ts` `tests/unit/components/bean-form.test.tsx` `tests/unit/logs/new-log-draft.test.ts` |
 | #19 UI-11 店・評価・保存 | ⏸ | | |
 | #20 UI-12 詳細の部品 | ⏸ 非 UI ウィンドウが次に取る予定（未着手。先に始めるならこの行を書き換えてください） | | |
 | #21 UI-13 記録したお店 | ⏸ | | |
@@ -164,3 +164,19 @@ B の #14（ログ行・日付見出し・空状態・失敗表示・スケル�
 
 - `LogListItem` に `loggedOn` を含むオブジェクトをそのままスプレッドしています（DOM には流れない）。props を DOM に流す変更をするなら `loggedOn` を除いてください。
 - 「絞り込み」の詳細シート（`onOpenFilter`）は Phase 1 では出していません。
+
+## #18 UI-10 記録作成の入口と ②豆フォーム — ✅ A 2026-09-22
+
+**やったこと**
+
+- `src/app/(app)/logs/new/page.tsx`: 段階を URL の `?step=` に持つ（なし = 入口 / `bean` = ② / `place` = ③）。入口は「手で入力する」（主候補）「登録済みの豆から」の 2 択 + 「最近の豆」3 件（`useBeans`）。「カードを撮る」は Phase 2 で先頭に足す。③は #19 まで案内文だけ。
+- `src/components/logs/entry-option.tsx` `EntryOption`: 角丸 18px、左に 48px のアイコン地。`href` か `onClick`。
+- `src/components/beans/bean-form.tsx` `BeanForm`: `beanFormSchema` から `roaster_id` を外し `roaster_name` + `roaster_id (nullable)` にした resolver。ロースターは `roasterOptions` / `onRoasterSearch` で候補を出し、選べば id 付き、選ばなければ **新規ロースター（id null）** として `onSubmit` に渡す。フレーバーはタグ入力（追加 / Enter / × / 重複除去）、味覚チャートは B の `TasteDots`。数値は `type="number"` + スキーマの `numberOrNull` で数値化。`defaultValues` に OCR 結果を流せる形（Phase 2）。
+- `src/features/logs/new-log-draft.ts`: ②の内容を sessionStorage に置く。**豆は③の「保存する」まで DB に作らない**（途中でやめても孤児の豆を残さない）。③で `roaster.id` が null なら `createRoasterWithDedupe` で登録してから `useCreateBean` → `useCreateLog` の順に保存する（#19）。
+- テスト 7 件（必須エラー、数値化、候補選択、フレーバー、味覚チャート、下書き）。
+
+**他ウィンドウへの連絡**
+
+- `PHASE1_STEPS`（豆 / 店と評価）を `wizard-stepper.tsx` に足しました。Phase 2 で `WIZARD_STEPS` に戻します。
+- Next.js の page ファイルからは default 以外を export できません（`.next/types` の型検査で落ちる）。定数や純関数は別モジュールへ。
+- 価格欄は 375px で 2 列だと切れるので 1 行に独立させました（e9f2809 の次の commit）。

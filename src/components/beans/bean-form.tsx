@@ -280,45 +280,46 @@ export function BeanForm({
         <TasteDots value={taste} onChange={onTaste} />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <Field
-          label="価格"
-          htmlFor={id('price')}
-          error={errors.price_jpy?.message ?? errors.price_grams?.message}
-        >
-          <div className="flex items-center gap-1.5">
-            <div className="relative flex-1">
-              <span className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2 text-xs">
-                ¥
-              </span>
-              <TextInput
-                id={id('price')}
-                type="number"
-                inputMode="numeric"
-                placeholder="3800"
-                className="font-num pl-7"
-                aria-invalid={!!errors.price_jpy}
-                {...register('price_jpy')}
-              />
-            </div>
-            <span className="text-muted-foreground text-xs">/</span>
-            <div className="relative w-[76px]">
-              <TextInput
-                id={id('grams')}
-                type="number"
-                inputMode="numeric"
-                placeholder="100"
-                aria-label="グラム数"
-                className="font-num pr-6"
-                aria-invalid={!!errors.price_grams}
-                {...register('price_grams')}
-              />
-              <span className="text-muted-foreground absolute top-1/2 right-2.5 -translate-y-1/2 text-xs">
-                g
-              </span>
-            </div>
+      <Field
+        label="価格"
+        htmlFor={id('price')}
+        error={errors.price_jpy?.message ?? errors.price_grams?.message}
+      >
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <span className="text-muted-foreground absolute top-1/2 left-3.5 -translate-y-1/2 text-sm">
+              ¥
+            </span>
+            <TextInput
+              id={id('price')}
+              type="number"
+              inputMode="numeric"
+              placeholder="3800"
+              className="font-num pl-8"
+              aria-invalid={!!errors.price_jpy}
+              {...register('price_jpy')}
+            />
           </div>
-        </Field>
+          <span className="text-muted-foreground text-sm">/</span>
+          <div className="relative w-[104px]">
+            <TextInput
+              id={id('grams')}
+              type="number"
+              inputMode="numeric"
+              placeholder="100"
+              aria-label="グラム数"
+              className="font-num pr-8"
+              aria-invalid={!!errors.price_grams}
+              {...register('price_grams')}
+            />
+            <span className="text-muted-foreground absolute top-1/2 right-3.5 -translate-y-1/2 text-sm">
+              g
+            </span>
+          </div>
+        </div>
+      </Field>
+
+      <div className="grid grid-cols-2 gap-3">
         <Field label="入手区分" htmlFor={id('source')} error={errors.source?.message}>
           <Select id={id('source')} {...register('source')}>
             {Object.entries(SOURCE_LABELS).map(([v, l]) => (
@@ -328,18 +329,17 @@ export function BeanForm({
             ))}
           </Select>
         </Field>
+        <Field label="焙煎度" htmlFor={id('roast')} error={errors.roast_level?.message}>
+          <Select id={id('roast')} {...register('roast_level')}>
+            <option value="">未設定</option>
+            {Object.entries(ROAST_LABELS).map(([v, l]) => (
+              <option key={v} value={v}>
+                {l}
+              </option>
+            ))}
+          </Select>
+        </Field>
       </div>
-
-      <Field label="焙煎度" htmlFor={id('roast')} error={errors.roast_level?.message}>
-        <Select id={id('roast')} {...register('roast_level')}>
-          <option value="">未設定</option>
-          {Object.entries(ROAST_LABELS).map(([v, l]) => (
-            <option key={v} value={v}>
-              {l}
-            </option>
-          ))}
-        </Select>
-      </Field>
 
       <Field label="説明文" htmlFor={id('description')} error={errors.description?.message}>
         <Textarea
