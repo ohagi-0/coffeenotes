@@ -463,3 +463,39 @@ footer{padding-block:32px 48px;border-top:1px solid var(--line);font-size:13px;c
 .cam .th.done .cardimg{position:absolute;inset:0;border-radius:0;padding:10% 12%}
 .cam .th.done span{position:absolute;left:0;right:0;bottom:0;background:var(--a-cu);color:var(--a-oncu);font-weight:700;text-align:center;line-height:14px}
 .cam .th.now{border-style:dashed}
+
+/* ===== Web スマホ版: サイトの作法 ===== */
+.a-url{flex:none;height:36px;margin:2px 16px 6px;border-radius:10px;background:var(--a-sf2);display:flex;align-items:center;justify-content:center;gap:6px;font-family:var(--f-num),sans-serif;font-size:12px;color:var(--a-mute)}
+.a-url svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2}
+.site{display:flex;align-items:center;justify-content:space-between;height:56px;margin:0 -20px;padding:0 10px 0 20px;border-bottom:1px solid var(--a-line);position:sticky;top:0;background:var(--a-bg);z-index:3}
+.site .wm{font-family:var(--f-disp);font-weight:var(--disp-w);font-size:22px;letter-spacing:var(--disp-ls);text-decoration:none;color:var(--a-text)}
+.site .r{display:flex;align-items:center;gap:2px}
+.site .cta{height:36px;padding:0 14px 0 10px;border-radius:999px;background:var(--a-cu);color:var(--a-oncu);font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:4px;text-decoration:none}
+.site .cta svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round}
+.site .menu{width:44px;height:44px;display:grid;place-items:center;color:var(--a-text)}
+.site .menu svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.crumb{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--a-mute);margin:12px 0 10px}
+.crumb a{color:var(--a-mute);text-decoration:none}
+.crumb a.lnk{color:var(--a-cu)}
+.sfoot{margin:44px -20px 0;padding:24px 20px 10px;border-top:1px solid var(--a-line);background:var(--a-sf);font-size:11px;color:var(--a-mute);line-height:1.8}
+.sfoot .wm{font-family:var(--f-disp);font-weight:var(--disp-w);font-size:20px;color:var(--a-text);margin-bottom:8px}
+.sfoot .links{display:flex;flex-wrap:wrap;gap:2px 16px;margin-bottom:12px;font-size:13px}
+.sfoot a{color:var(--a-text);text-decoration:none}
+.sfoot div:last-child a{color:var(--a-mute)}
+.stepper{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:4px 0 16px}
+.stepper span{font-size:11px;color:var(--a-mute);padding-top:8px;border-top:3px solid var(--a-line);font-family:var(--f-ui)}
+.stepper span.done{border-top-color:var(--a-cu);color:var(--a-text)}
+.stepper span.now{border-top-color:var(--a-cu);color:var(--a-cu);font-weight:700}
+.drawer{position:absolute;inset:0;z-index:9;background:rgba(0,0,0,.55)}
+.drawer .pnl{position:absolute;top:0;right:0;bottom:0;width:82%;background:var(--a-bg);border-left:1px solid var(--a-line);padding:64px 20px 24px;display:flex;flex-direction:column}
+.drawer .pnl > a{display:flex;align-items:center;gap:14px;height:54px;font-size:17px;font-weight:700;color:var(--a-text);text-decoration:none;border-bottom:1px solid var(--a-line)}
+.drawer .pnl > a.on{color:var(--a-cu)}
+.drawer .pnl > a svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.drawer .pnl > a.btn{justify-content:center;gap:8px;color:var(--a-oncu);height:52px}
+.drawer .x{position:absolute;top:12px;right:12px}
+.uptile{border:1.5px dashed var(--a-line);border-radius:14px;padding:16px 14px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}
+.uptile.done{border-style:solid;border-color:var(--a-cu);flex-direction:row;text-align:left;gap:14px;align-items:center}
+.uptile.done b{flex:1}
+.mapbox{position:relative;height:300px;margin:0 -20px;overflow:hidden;border-top:1px solid var(--a-line);border-bottom:1px solid var(--a-line)}
+.mapbox svg{position:absolute;inset:0;width:100%;height:100%}
+.mapcard{border:1px solid var(--a-cu);border-radius:16px;padding:14px;margin-top:14px;background:var(--a-sf)}

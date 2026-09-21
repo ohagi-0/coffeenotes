@@ -208,6 +208,7 @@ GOOGLE_MAPS_API_KEY=              # GEO_PROVIDER=google のとき
 - [x] Q1〜Q5 の決定（REQUIREMENTS.md §8.3、2026-09-21）
 - [x] 画面設計: モック `docs/design/`・基本設計書 `docs/DESIGN.md`・ADR 0006（ダーク専用・銅アクセント・Bodoni Moda + Manrope）（2026-09-21）
 - [x] 画面設計: Web PC 版（3 列、D1〜D4）と iOS アプリ版（I1〜I7）を追加、ADR 0007。モックを 4 ページに分割（2026-09-22）
+- [x] 画面設計: Web スマホ版を Web サイトの作法（ヘッダー + ドロワー、フッター、下タブ無し）に変更。下タブは iOS 版のみ（2026-09-22）
 - [x] Phase 0: Supabase プロジェクト作成（`ohagi-0's coffee`、ref `gayhfwmvlxwyuzrvmkoy`、ap-northeast-1）、`0001_init.sql` を SQL Editor で適用、`.env.local` 設定、`src/types/database.ts` 生成（2026-09-21）
 - [ ] Phase 0: Google OAuth のクライアント登録（Google Cloud）と Supabase Auth での有効化 — **ユーザー作業**。メールリンクの動作確認後でよい
 - [ ] Phase 0: Supabase Auth の URL 設定（Site URL `http://localhost:3100` / Redirect URLs に `http://localhost:3100/auth/callback` と本番 URL、`coffeelog://auth/callback`）— **ユーザー作業**
