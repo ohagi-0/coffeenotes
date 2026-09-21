@@ -9,15 +9,25 @@ import { EntryOption } from '@/components/logs/entry-option';
 import { FullScreenLoading } from '@/components/full-screen-loading';
 import { Row } from '@/components/row';
 import { PHASE1_STEPS, WizardStepper } from '@/components/wizard-stepper';
+import { toast } from 'sonner';
+import { ErrorCallout } from '@/components/error-callout';
+import { LogForm } from '@/components/logs/log-form';
+import { useCreateBean } from '@/features/beans/mutations';
 import { useBeans } from '@/features/beans/queries';
-import { writeNewLogDraft } from '@/features/logs/new-log-draft';
+import { useCreateLog } from '@/features/logs/mutations';
+import { clearNewLogDraft, readNewLogDraft, writeNewLogDraft } from '@/features/logs/new-log-draft';
+import { saveNewLog, type LogFormDraft } from '@/features/logs/save-new-log';
+import { useCreateRoaster } from '@/features/roasters/mutations';
 import { useRoasterSearch } from '@/features/roasters/queries';
+import { useCreateShop } from '@/features/shops/mutations';
+import { useShops } from '@/features/shops/queries';
+import { useTags } from '@/features/tags/queries';
 import { routes } from '@/lib/routes';
 
 // S3 記録作成（F-LOG-1）。段階は URL の ?step= に持つ（動的セグメントは使わない。ADR 0008）。
 //   (なし)  入口: カードを撮る（Phase 2）/ 手で入力する / 登録済みの豆から
 //   bean    ② 豆フォーム（手入力）
-//   place   ③ 店・日付・評価・メモ（Issue #19）
+//   place   ③ 店・日付・評価・メモ → 保存（豆・ロースター・店・記録の順に作る）
 
 const RECENT_BEANS = 3;
 
@@ -105,12 +115,77 @@ function BeanStep() {
 }
 
 function PlaceStep() {
-  // ③ は Issue #19 で実装する
+  const router = useRouter();
+  const [draft] = useState(() => readNewLogDraft());
+  const [shopQuery, setShopQuery] = useState('');
+  const shops = useShops(shopQuery.trim() ? { search: shopQuery } : {});
+  const tags = useTags();
+  const createRoaster = useCreateRoaster();
+  const createBean = useCreateBean();
+  const createShop = useCreateShop();
+  const createLog = useCreateLog();
+  const [saving, setSaving] = useState(false);
+  const [failure, setFailure] = useState<string | null>(null);
+
+  if (!draft) {
+    return (
+      <div className="pb-2">
+        <h1 className="pt-2 pb-3 text-2xl font-bold">どこで、どうだった？</h1>
+        <ErrorCallout
+          title="豆の情報が見つかりません"
+          what="この画面は豆を選んでから開きます。ブラウザを閉じると途中の入力は消えます。"
+          next="入口に戻って、もう一度豆を選んでください。"
+          onRetry={() => router.replace(routes.newLog)}
+          retryLabel="入口に戻る"
+        />
+      </div>
+    );
+  }
+
+  const beanName = draft.bean.kind === 'existing' ? draft.bean.name : draft.bean.form.name;
+
+  async function onSubmit(values: LogFormDraft) {
+    if (!draft) return;
+    setSaving(true);
+    setFailure(null);
+    try {
+      const result = await saveNewLog(draft, values, {
+        createRoaster: (input) => createRoaster.mutateAsync(input),
+        createBean: (input) => createBean.mutateAsync(input),
+        createShop: (input) => createShop.mutateAsync(input),
+        createLog: (input) => createLog.mutateAsync(input),
+      });
+      clearNewLogDraft();
+      toast.success('保存しました');
+      // 豆詳細（S4、/beans?id=）は #20 で作る。それまでは入力記録一覧へ
+      void result;
+      router.replace(routes.home);
+    } catch (e) {
+      setFailure(e instanceof Error ? e.message : '保存できませんでした');
+      setSaving(false);
+    }
+  }
+
   return (
     <div className="pb-2">
       <h1 className="pt-2 pb-3 text-2xl font-bold">どこで、どうだった？</h1>
       <WizardStepper current={2} steps={PHASE1_STEPS} className="mb-4" />
-      <p className="text-muted-foreground text-sm">店・日付・評価・メモの入力は次の作業（#19）で入ります。</p>
+      {failure && (
+        <ErrorCallout
+          title="保存できませんでした"
+          what={failure}
+          next="入力は残っています。通信状態を確認して、もう一度保存してください。"
+          className="mb-4"
+        />
+      )}
+      <LogForm
+        beanName={beanName}
+        shopOptions={(shops.data ?? []).map((s) => ({ id: s.id, name: s.name, address: s.address }))}
+        onShopSearch={setShopQuery}
+        tagSuggestions={(tags.data ?? []).map((t) => t.name)}
+        onSubmit={onSubmit}
+        submitting={saving}
+      />
     </div>
   );
 }

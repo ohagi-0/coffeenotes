@@ -22,7 +22,7 @@ UI ウィンドウの進捗記録。**別ウィンドウ（非 UI）が作業前
 | #16 UI-8 ログイン | ✅ A | (次の commit) | `src/app/(auth)/login/page.tsx` `tests/e2e/login.spec.ts` |
 | #17 UI-9 入力記録一覧 | ✅ A（段階 1 + 2） | (次の commit) | `src/app/(app)/page.tsx` `src/components/logs/log-timeline.tsx` `src/features/logs/presenters.ts` `tests/unit/components/log-timeline.test.tsx` `tests/unit/logs/presenters.test.ts` |
 | #18 UI-10 入口と豆フォーム | ✅ A | e9f2809 | `src/app/(app)/logs/new/page.tsx` `src/components/logs/entry-option.tsx` `src/components/beans/bean-form.tsx` `src/components/wizard-stepper.tsx`（PHASE1_STEPS 追加） `src/features/logs/new-log-draft.ts` `tests/unit/components/bean-form.test.tsx` `tests/unit/logs/new-log-draft.test.ts` |
-| #19 UI-11 店・評価・保存 | ⏸ | | |
+| #19 UI-11 店・評価・保存 | ✅ A（段階 1 + 2） | (次の commit) | `src/app/(app)/logs/new/page.tsx`（③） `src/components/logs/log-form.tsx` `src/features/logs/save-new-log.ts` `tests/unit/components/log-form.test.tsx` `tests/unit/logs/save-new-log.test.ts` |
 | #20 UI-12 詳細の部品 | ⏸ 非 UI ウィンドウが次に取る予定（未着手。先に始めるならこの行を書き換えてください） | | |
 | #21 UI-13 記録したお店 | ⏸ | | |
 | #22 UI-14 設定 | ✅ A | (次の commit) | `src/app/(app)/settings/page.tsx` `src/components/settings/{setting-row,settings-view}.tsx` `src/features/settings/use-preferences.ts` `tests/unit/components/settings.test.tsx` |
@@ -180,3 +180,17 @@ B の #14（ログ行・日付見出し・空状態・失敗表示・スケル�
 - `PHASE1_STEPS`（豆 / 店と評価）を `wizard-stepper.tsx` に足しました。Phase 2 で `WIZARD_STEPS` に戻します。
 - Next.js の page ファイルからは default 以外を export できません（`.next/types` の型検査で落ちる）。定数や純関数は別モジュールへ。
 - 価格欄は 375px で 2 列だと切れるので 1 行に独立させました（e9f2809 の次の commit）。
+
+## #19 UI-11 ③店・日付・評価・メモと保存 — ✅ A 2026-09-22（段階 1 + 2）
+
+**やったこと**
+
+- `src/components/logs/log-form.tsx` `LogForm`（props 駆動）: `PlaceSegment`（店で / 自宅で）、店（既存候補 `shopOptions` / `onShopSearch`、無ければ店名の手入力で新規 = F-SHOP-6、選ばなくても保存可）、日付（既定 今日）、`RatingStars` 44px（設定が「スライダー」なら range も出す）、メモ、タグ（候補は点線でトグル、手入力は `#` を落とす）、飲み方（ハンドドリップ / エスプレッソ / アイス / その他 → 自由入力）。**星もメモも空で保存できる**。レシピと焙煎バッチは Phase 4 まで出さない。
+- `src/features/logs/save-new-log.ts` `saveNewLog(draft, log, deps)`: ロースター（id 無しなら `createRoasterWithDedupe`）→ 豆（新規のときだけ）→ 店（手入力なら `createShop`、自宅なら付けない）→ 記録 の順に作る純関数。mutation を `deps` で受けるので偽物でテストできる（5 件）。
+- `src/app/(app)/logs/new/page.tsx` ③: `readNewLogDraft()` が無ければ「入口に戻る」のコールアウト。保存は `useCreateRoaster / useCreateBean / useCreateShop / useCreateLog` の `mutateAsync` を `saveNewLog` に渡す。成功で下書きを消し `toast.success('保存しました')` → **入力記録一覧へ**（豆詳細 `/beans?id=` は #20 ができたら `routes.bean(result.beanId)` に差し替える）。失敗は `ErrorCallout`、入力は保持。
+- テスト 10 件（LogForm 5、saveNewLog 5）。
+
+**他ウィンドウへの連絡（#20 担当へ）**
+
+- 保存後の遷移先を `router.replace(routes.home)` にしてあります。`/beans?id=` のページができたら `page.tsx` の `PlaceStep` 内 `router.replace(routes.home)` を `routes.bean(result.beanId)` に変えてください（`result` は既に取ってあります）。
+- `useShops({ search })` は店名の部分一致なので、そのまま候補に使っています。
