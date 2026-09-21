@@ -18,7 +18,7 @@ UI ウィンドウの進捗記録。**別ウィンドウ（非 UI）が作業前
 | #12 UI-4 入力系部品 | ✅ | (次の commit) | `src/components/app-button.tsx` `form/field.tsx` `filter-chips.tsx` `logs/place-segment.tsx` `wizard-stepper.tsx` `providers.tsx` `tests/unit/components/inputs.test.tsx` |
 | #13 UI-5 固有部品 | ✅ 非 UI ウィンドウ（詳細は `ui-progress-b.md`） | 1f1863f | `src/components/logs/rating-stars.tsx` `src/components/logs/ocr-field.tsx` `src/components/beans/taste-dots.tsx` `src/components/beans/taste-radar.tsx` `tests/unit/components/{rating-stars,taste-dots,taste-radar,ocr-field}.test.tsx` |
 | #14 UI-6 表示系部品 | ✅ 非 UI ウィンドウ（詳細は `ui-progress-b.md`） | 965b963 | `src/components/{empty-state,error-callout,row,date-group}.tsx` `src/components/beans/{card-image,bean-spec-grid,bean-detail-skeleton}.tsx` `src/components/logs/{log-list-item,log-list-item-skeleton}.tsx` `tests/unit/components/*` |
-| #15 UI-7 部品ページ | ⏸ | | |
+| #15 UI-7 部品ページ | ✅ A | (次の commit) | `src/app/(app)/dev/components/page.tsx` |
 | #16 UI-8 ログイン | ✅ A | (次の commit) | `src/app/(auth)/login/page.tsx` `tests/e2e/login.spec.ts` |
 | #17 UI-9 入力記録一覧 | ✅ A（段階 1 + 2） | (次の commit) | `src/app/(app)/page.tsx` `src/components/logs/log-timeline.tsx` `src/features/logs/presenters.ts` `tests/unit/components/log-timeline.test.tsx` `tests/unit/logs/presenters.test.ts` |
 | #18 UI-10 入口と豆フォーム | ✅ A | e9f2809 | `src/app/(app)/logs/new/page.tsx` `src/components/logs/entry-option.tsx` `src/components/beans/bean-form.tsx` `src/components/wizard-stepper.tsx`（PHASE1_STEPS 追加） `src/features/logs/new-log-draft.ts` `tests/unit/components/bean-form.test.tsx` `tests/unit/logs/new-log-draft.test.ts` |
@@ -246,3 +246,16 @@ B の #14（ログ行・日付見出し・空状態・失敗表示・スケル�
 
 - `/shops/detail?id=` は作りました。`/beans?id=`（S4）と `/logs?id=`（S5）は #20 で。作り方は `shops/detail/page.tsx` と同じ形（`Suspense` → `idFromSearchParams` → 3 状態）で揃えてください。
 - `ShopList` の行は `Row` の `href` で遷移しています。`Row` に `onClick` を足す変更をする場合は `href` 優先のままにしてください。
+
+## #15 UI-7 開発用の部品ページ — ✅ A 2026-09-22（B が未着手だったので A が取った）
+
+**やったこと**
+
+- `src/app/(app)/dev/components/page.tsx`（URL `/dev/components`、認証ガードの内側）。`NODE_ENV === 'production'` では `notFound()`。
+- 並べたもの: `AppButton` 全バリアント・サイズ・loading・href、`Field` + `TextInput` / `Textarea` / `Select`（hint / error）、`FilterChips`（絞り込み付き）、`PlaceSegment`、`WizardStepper`（Phase 1 と Phase 2 の段階）、`RatingStars`（3 サイズ・入力・未入力）、`TasteDots`（表示・入力）、`TasteRadar`（単体・compare・部分入力）、`OcrField`（低信頼・高信頼・error）、`LogListSkeleton`、`EmptyState` × 2、`ErrorCallout`、`CardImage`（sm / md / full）、`DateGroup` + `LogListItem`（長い豆名を含む）、`Row` × 3、`BeanSpecGrid`（unit・空項目）、`EntryOption`（主・通常・disabled）、`SettingRow` / `SettingSection`、`ShopList`。
+- 星と味覚チャートとチップは state を持たせて操作できる。
+
+**注意**
+
+- フォルダ名は `dev`（`_dev` は App Router がルートにしない）。
+- 新しい部品を作ったら、このページにも 1 行足す。
