@@ -19,7 +19,7 @@ UI ウィンドウの進捗記録。**別ウィンドウ（非 UI）が作業前
 | #13 UI-5 固有部品 | ✅ 非 UI ウィンドウ（詳細は `ui-progress-b.md`） | 1f1863f | `src/components/logs/rating-stars.tsx` `src/components/logs/ocr-field.tsx` `src/components/beans/taste-dots.tsx` `src/components/beans/taste-radar.tsx` `tests/unit/components/{rating-stars,taste-dots,taste-radar,ocr-field}.test.tsx` |
 | #14 UI-6 表示系部品 | 🔧 **非 UI ウィンドウが担当中**（詳細は `ui-progress-b.md`） | | `src/components/{empty-state,error-callout,row,date-group}.tsx` `src/components/beans/{card-image,bean-spec-grid,bean-detail-skeleton}.tsx` `src/components/logs/{log-list-item,log-list-item-skeleton}.tsx` `tests/unit/components/*` |
 | #15 UI-7 部品ページ | ⏸ | | |
-| #16 UI-8 ログイン | 🔧 **A が担当中** | | `src/app/(auth)/login/page.tsx` `tests/e2e/login.spec.ts` |
+| #16 UI-8 ログイン | ✅ A | (次の commit) | `src/app/(auth)/login/page.tsx` `tests/e2e/login.spec.ts` |
 | #17 UI-9 入力記録一覧 | ⏸ | | |
 | #18 UI-10 入口と豆フォーム | ⏸ | | |
 | #19 UI-11 店・評価・保存 | ⏸ | | |
@@ -121,3 +121,16 @@ UI ウィンドウの進捗記録。**別ウィンドウ（非 UI）が作業前
 **注意**
 
 - `.next/types/app/<消したルート>/` が残ると `pnpm typecheck` が落ちる（dev サーバーが生成した型が古いまま）。ルートを消したら `.next/types/app/<そのルート>` も消す。
+
+## #16 UI-8 ログイン — ✅ A 2026-09-22
+
+**やったこと**
+
+- `src/app/(auth)/login/page.tsx`: DESIGN.md §5 S1 の構成に作り直した。ワードマーク（`font-display` 64px）を `mt-auto` で画面下寄せ、タグライン、「Google で続ける」（`AppButton variant="white"` + G マーク）、メール入力（`Field` + `TextInput`）、「ログインリンクを送る」（`variant="secondary"`）、注記。
+- 状態: 送信中（`loading`）、送信完了（フォームを「リンクを送りました。メールを開いてください」のカードに置き換え。「同じメールにもう一度送る」「別のメールアドレスを使う」）、失敗（錆色のコールアウト。#14 の `ErrorCallout` ができたら差し替える）。
+- `tests/e2e/login.spec.ts`: 見出し `Coffeenotes`、ボタン `Google で続ける` / `ログインリンクを送る` に合わせ、空送信のバリデーションを 1 本追加。
+
+**注意**
+
+- Playwright で `getByRole('alert')` は Next.js のルートアナウンサー（`#__next-route-announcer__`）にも一致する。`filter({ hasText })` で絞ること。
+- `h1` は `<br>` で 2 行にしているので `aria-label="Coffeenotes"` を付けた（E2E の `getByRole('heading', { name })` 用）。
