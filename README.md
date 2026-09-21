@@ -18,7 +18,7 @@ cp .env.example .env.local   # Supabase の URL / anon key などを埋める
 pnpm supabase start           # ローカル Supabase（Docker Desktop が必要）
 pnpm db:migrate               # マイグレーション適用
 pnpm db:types                 # src/types/database.ts を生成
-pnpm dev                      # http://localhost:3000
+pnpm dev                      # http://localhost:3100（3000 は他プロジェクトと衝突するため固定）
 pnpm lint && pnpm typecheck && pnpm test
 ```
 

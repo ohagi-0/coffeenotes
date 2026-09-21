@@ -13,8 +13,8 @@ export default defineConfig({
   },
   projects: [{ name: 'mobile-chrome', use: { ...devices['Pixel 7'] } }],
   webServer: {
-    // 3000 は他プロジェクトの dev サーバーと衝突しやすいので E2E 専用ポートを使う
-    command: 'pnpm dev -p 3100',
+    // dev サーバーは package.json で 3100 に固定している（3000 は他プロジェクトと衝突）
+    command: 'pnpm dev',
     url: 'http://localhost:3100',
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

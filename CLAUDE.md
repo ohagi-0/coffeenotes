@@ -160,7 +160,7 @@ export interface OcrProvider {
 
 ```bash
 pnpm install
-pnpm dev                 # http://localhost:3000
+pnpm dev                 # http://localhost:3100（ポートは 3100 に固定。3000 は他プロジェクトが使用）
 pnpm supabase start      # ローカル Supabase（Docker）
 pnpm db:migrate          # supabase db push（ローカル）
 pnpm db:types            # src/types/database.ts を再生成
@@ -207,7 +207,7 @@ GOOGLE_MAPS_API_KEY=              # GEO_PROVIDER=google のとき
 - [x] Q1〜Q5 の決定（REQUIREMENTS.md §8.3、2026-09-21）
 - [x] Phase 0: Supabase プロジェクト作成（`ohagi-0's coffee`、ref `gayhfwmvlxwyuzrvmkoy`、ap-northeast-1）、`0001_init.sql` を SQL Editor で適用、`.env.local` 設定、`src/types/database.ts` 生成（2026-09-21）
 - [ ] Phase 0: Google OAuth のクライアント登録（Google Cloud）と Supabase Auth での有効化 — **ユーザー作業**。メールリンクの動作確認後でよい
-- [ ] Phase 0: Supabase Auth の URL 設定（Site URL / Redirect URLs に `http://localhost:3000/auth/callback` と本番 URL、`coffeelog://auth/callback`）— **ユーザー作業**
+- [ ] Phase 0: Supabase Auth の URL 設定（Site URL `http://localhost:3100` / Redirect URLs に `http://localhost:3100/auth/callback` と本番 URL、`coffeelog://auth/callback`）— **ユーザー作業**
 - [ ] Phase 0: ローカル Supabase 用に Docker Desktop を導入（任意。クラウドだけで進めることも可）
 - [ ] Phase 0: 実機（スマホ）でログイン → 空のホーム表示を確認して Phase 0 完了
 - [ ] Phase 1 着手
