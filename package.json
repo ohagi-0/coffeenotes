@@ -23,6 +23,7 @@
     "db:reset": "supabase db reset",
     "db:types": "supabase gen types typescript --project-id gayhfwmvlxwyuzrvmkoy > src/types/database.ts",
     "db:types:local": "supabase gen types typescript --local > src/types/database.ts",
+    "seed:dev": "node scripts/seed-dev.mjs",
     "prepare": "simple-git-hooks"
   },
   "dependencies": {

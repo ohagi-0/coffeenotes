@@ -249,7 +249,7 @@ SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=
 - [ ] Q6（URL の形）の決定 → CLAUDE.md §3、DESIGN.md S4/S5、Issue #5/#6 に反映
 - [x] Phase 1: 非 UI — #4 Zod スキーマ、#5 豆・ロースター・店・タグのデータ層、#6 記録のデータ層（2026-09-22）
 - [x] Phase 1: 非 UI — #8 画像圧縮・Storage 保存・platform ラッパー（`src/lib/image/compress.ts`、`src/lib/storage/bean-images.ts`、`src/lib/platform/{camera,geolocation,share}.ts`。F-OCR-1 / F-BEAN-12 / F-SHOP-3、N-4 / N-5）（2026-09-22）
-- [ ] Phase 1: 非 UI — #7 シード投入（別ウィンドウで作業中）
+- [x] Phase 1: 非 UI — #7 開発用シードデータ投入（`scripts/seed-dev.mjs` + `pnpm seed:dev -- --email <アドレス> --reset`。記録 15 / 豆 6 / 店 4 / 焙煎 1 / タグ 5。行の ID はユーザー ID を名前空間にした UUID v5 なので再実行しても増えない。`SUPABASE_SERVICE_ROLE_KEY` が要る）（2026-09-22）。**実行はユーザー作業**: キーを `.env.local` に入れて 1 回流す
 - [ ] Phase 1: UI（Issues #9〜#24。今すぐ着手できるのは #9 #10 #12 #13 #14、次いで #11 #15 #16 #17〜#22 の段階 1。#23 PC レイアウト、#24 E2E は最後）
 - [ ] 公開準備（提案中・未着手）: Supabase 内蔵メールは 1 時間 2 通までなのでカスタム SMTP が必須、Google 同意画面の本番公開、プライバシーポリシー、独自ドメイン、アカウント削除（F-AUTH-3）の繰り上げ
 
