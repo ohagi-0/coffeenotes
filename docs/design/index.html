@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="light dark">
 <title>Coffeenotes Design</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Manrope:wght@400..800&family=Syne:wght@400..800&family=Geist:wght@400..800&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600;1,700&family=Noto+Sans+JP:wght@400;500;700&family=Shippori+Mincho+B1:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Manrope:wght@400..800&display=swap">
 <style>
 html{color-scheme:dark}
 :root{
@@ -14,16 +14,10 @@ html{color-scheme:dark}
   --a-bg:#17120F; --a-sf:#211A15; --a-sf2:#2C231C; --a-line:#3B2F26; --a-text:#F1E8DA; --a-mute:#A39181; --a-cu:#D48C4E; --a-cu2:#F0B57A; --a-oncu:#17120F; --a-ok:#8DB36E; --a-warn:#E3A94D; --a-bad:#D96A57;
   --cardpaper:#F6F1E8; --cardink:#2A2118;
 }
-/* 書体の組み合わせ。A が既定。ページ上のスイッチで data-font を切り替える */
-:root,.fa{ --f-disp:"Bodoni Moda",Didot,"Bodoni 72","Times New Roman",serif; --disp-w:500; --disp-i:normal; --disp-ls:-.02em; --disp-lh:.96;
+/* 書体（決定: ADR 0006）。豆名は Bodoni Moda、数字は Manrope、日本語 UI は端末フォント */
+:root{ --f-disp:"Bodoni Moda",Didot,"Bodoni 72","Times New Roman",serif; --disp-w:500; --disp-i:normal; --disp-ls:-.02em; --disp-lh:.96;
   --f-num:"Manrope",system-ui,sans-serif; --num-w:600;
   --f-ui:"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",system-ui,sans-serif; }
-:root[data-font="b"],.fb{ --f-disp:"Syne",system-ui,sans-serif; --disp-w:800; --disp-i:normal; --disp-ls:-.035em; --disp-lh:.92;
-  --f-num:"Geist",system-ui,sans-serif; --num-w:600;
-  --f-ui:"Noto Sans JP","Hiragino Sans",system-ui,sans-serif; }
-:root[data-font="c"],.fc{ --f-disp:"Cormorant Garamond",Georgia,"Times New Roman",serif; --disp-w:600; --disp-i:italic; --disp-ls:-.01em; --disp-lh:.98;
-  --f-num:"Manrope",system-ui,sans-serif; --num-w:600;
-  --f-ui:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif; }
 
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.75;-webkit-font-smoothing:antialiased}
@@ -48,11 +42,6 @@ section{padding-block:clamp(56px,8vw,112px);border-top:1px solid var(--line)}
 .nav ul::-webkit-scrollbar{display:none}
 .nav li a{display:block;padding:6px 12px;border-radius:999px;font-size:13px;text-decoration:none;color:var(--ink2);white-space:nowrap}
 .nav li a:hover,.nav li a:focus-visible{color:var(--ink);background:var(--bg2);outline:none}
-.fsw{display:flex;align-items:center;gap:4px;flex:none;font-size:12px;color:var(--ink2)}
-.fsw span{margin-right:4px}
-.fsw button{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink);font-family:var(--f-num),sans-serif;font-weight:700;font-size:13px;cursor:pointer}
-.fsw button.on{background:var(--copper);border-color:var(--copper);color:#17120F}
-.fsw button:focus-visible{outline:2px solid var(--copper);outline-offset:2px}
 
 /* hero */
 .hero{padding-block:clamp(48px,7vw,96px) clamp(40px,6vw,80px)}
@@ -87,18 +76,13 @@ section{padding-block:clamp(56px,8vw,112px);border-top:1px solid var(--line)}
 .pairs{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:8px}
 @media (max-width:900px){.pairs{grid-template-columns:1fr}}
 .pair{border:1px solid var(--line);border-radius:18px;padding:22px 22px 20px;background:var(--bg2);display:flex;flex-direction:column;gap:14px;font-family:var(--f-ui)}
-.pair.on{border-color:var(--copper);box-shadow:0 0 0 1px var(--copper)}
 .pair .pn{font-size:14px;font-weight:700}
-.pair .pn b{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--bg);font-family:var(--f-num),sans-serif;font-size:13px;margin-right:8px}
-.pair .pd{font-size:13px;color:var(--ink2);line-height:1.7;min-height:6.8em}
+.pair .pd{font-size:13px;color:var(--ink2);line-height:1.7}
 .pair .sp.disp{font-size:42px;color:var(--ink);border-top:1px solid var(--line);padding-top:16px}
 .pair .sp.num{font-size:15px;color:var(--ink)}
 .pair .sp.rvv{color:var(--copper);line-height:1}
 .pair .sp.ja{font-size:14px;line-height:1.75}
 .pair .sp.ja b{display:block;font-size:20px;line-height:1.3;margin-bottom:6px;color:var(--ink)}
-.fbtn{margin-top:auto;height:44px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--ink);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
-.fbtn:hover,.fbtn:focus-visible{border-color:var(--copper);outline:none}
-.pair.on .fbtn{background:var(--copper);color:#17120F;border-color:var(--copper)}
 
 .comps{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:8px}
 .comp{background:var(--a-bg);color:var(--a-text);border-radius:16px;padding:20px;font-size:14px;line-height:1.5;border:1px solid var(--a-line)}
@@ -328,7 +312,6 @@ footer{padding-block:32px 48px;border-top:1px solid var(--line);font-size:13px;c
     <li><a href="#states">状態</a></li>
     <li><a href="#next">次へ</a></li>
   </ul>
-  <div class="fsw" role="group" aria-label="書体の切り替え"><span>書体</span><button type="button" data-f="a">A</button><button type="button" data-f="b">B</button><button type="button" data-f="c">C</button></div>
 </div></nav>
 
 <header class="hero wrap" id="top">
@@ -365,7 +348,7 @@ footer{padding-block:32px 48px;border-top:1px solid var(--line);font-size:13px;c
 <section id="tokens"><div class="wrap">
   <div class="secno">COLOR &amp; TYPE</div>
   <h2>色と書体</h2>
-  <p class="lead">アプリはダーク専用。ライトテーマは提供しない。色はすべてトークンで定義し、コンポーネントは色を直接持たない。</p>
+  <p class="lead">アプリはダーク専用。ライトテーマは提供しない。色はすべてトークンで定義し、コンポーネントは色を直接持たない。書体は Bodoni Moda + Manrope + 端末の日本語フォントで確定（ADR 0006）。</p>
   <div class="subh">基本色</div>
   <div class="pal">
     <div class="lt" style="background:#17120F"><b>Espresso</b><span>#17120F</span>地</div>
@@ -383,37 +366,26 @@ footer{padding-block:32px 48px;border-top:1px solid var(--line);font-size:13px;c
     <div class="lt" style="background:#D96A57;color:#fff"><b>削除 / 失敗</b> <span>#D96A57</span></div>
   </div>
 
-  <div class="subh">書体 — 3 組から選ぶ（右上のスイッチでページ全体が切り替わる）</div>
+  <div class="subh">書体</div>
   <div class="pairs">
-    <div class="pair fa" id="pair-a">
-      <div class="pn"><b>A</b> Bodoni Moda + Manrope + 端末の日本語</div>
-      <div class="pd">香水瓶のラベル。極端なコントラストのボドニで豆名だけを際立たせ、UI の日本語は iOS の Hiragino Sans、Android の Noto Sans JP をそのまま使う。日本語のフォント読み込みが要らず、いちばん軽い。</div>
+    <div class="pair">
+      <div class="pn">Bodoni Moda — 豆名、ワードマーク</div>
+      <div class="pd">香水瓶のラベルのような高コントラストのボドニ。豆名とワードマークだけに使い、文章には使わない。可変フォントで opsz を自動にし、20px の一覧でも 190px のヒーローでも線の太さが崩れない。</div>
       <div class="sp disp">Lusitania<br>Lime Geisha</div>
-      <div class="sp num">1,650 m · ¥3,800 / 100 g · 1:15 · 92 ℃ · 2:45</div>
-      <div class="sp rvv"><span class="num" style="font-weight:800;font-size:44px">4.5</span></div>
-      <div class="sp ja"><b>読み取り結果を確認</b>ライムを思わせるシトラス系の香りと、ベルガモットの華やかさ。冷めるとローリエのようなハーブ感が出てくる。</div>
-      <button class="fbtn" type="button" data-f="a">この組み合わせで表示</button>
     </div>
-    <div class="pair fb" id="pair-b">
-      <div class="pn"><b>B</b> Syne + Geist + Noto Sans JP</div>
-      <div class="pd">ギャラリーのポスター。幅広の Syne を極太で組み、数字は Geist で機械的に。日本語は Noto Sans JP を Web フォントで統一する。もっとも現代的で、勢いがある。</div>
-      <div class="sp disp">Lusitania<br>Lime Geisha</div>
+    <div class="pair">
+      <div class="pn">Manrope — 数字、日付、データ、英字ラベル</div>
+      <div class="pd">標高・価格・比率・星の数値。tabular-nums で桁を揃える。600 を基本に、星の数値と集計だけ 800。</div>
       <div class="sp num">1,650 m · ¥3,800 / 100 g · 1:15 · 92 ℃ · 2:45</div>
       <div class="sp rvv"><span class="num" style="font-weight:800;font-size:44px">4.5</span></div>
-      <div class="sp ja"><b>読み取り結果を確認</b>ライムを思わせるシトラス系の香りと、ベルガモットの華やかさ。冷めるとローリエのようなハーブ感が出てくる。</div>
-      <button class="fbtn" type="button" data-f="b">この組み合わせで表示</button>
     </div>
-    <div class="pair fc" id="pair-c">
-      <div class="pn"><b>C</b> Cormorant Garamond + Manrope + しっぽり明朝</div>
-      <div class="pd">古書の扉。豆名はガラモンのイタリック、日本語は明朝で、喫茶店のメニューのような佇まい。数字だけ Manrope で読みやすさを確保する。落ち着きは一番、モダンさは一番控えめ。</div>
-      <div class="sp disp">Lusitania<br>Lime Geisha</div>
-      <div class="sp num">1,650 m · ¥3,800 / 100 g · 1:15 · 92 ℃ · 2:45</div>
-      <div class="sp rvv"><span class="num" style="font-weight:800;font-size:44px">4.5</span></div>
+    <div class="pair">
+      <div class="pn">端末の日本語フォント — UI 文言、メモ、説明文</div>
+      <div class="pd">iOS は Hiragino Sans、Android は Noto Sans JP、PC は Yu Gothic UI か Noto Sans JP。Web フォントを読み込まないので初回表示が軽く、OS のアプリと同じ手触りになる。</div>
       <div class="sp ja"><b>読み取り結果を確認</b>ライムを思わせるシトラス系の香りと、ベルガモットの華やかさ。冷めるとローリエのようなハーブ感が出てくる。</div>
-      <button class="fbtn" type="button" data-f="c">この組み合わせで表示</button>
     </div>
   </div>
-  <p class="lead" style="margin-top:20px;font-size:13px">スケールは共通: 30 / 24 / 20 / 16 / 14 / 12 / 11 px、行間 1.5、角丸 14 / 18 / 999、タップ領域 44 px 以上。実装では選んだ 1 組だけを next/font で読み込む。</p>
+  <p class="lead" style="margin-top:20px;font-size:13px">スケール: 30 / 24 / 20 / 16 / 14 / 12 / 11 px、行間 1.5、角丸 14 / 18 / 999、タップ領域 44 px 以上。実装では Bodoni Moda と Manrope を next/font で読み込み、日本語はフォールバックスタックに任せる。</p>
 </div></section>
 
 <section id="components"><div class="wrap">
@@ -855,12 +827,12 @@ footer{padding-block:32px 48px;border-top:1px solid var(--line);font-size:13px;c
 <section id="next"><div class="wrap">
   <div class="secno">NEXT</div>
   <h2>このデザインが決まったら</h2>
-  <p class="lead">モックアップの承認後に、基本設計書として次を整える。</p>
+  <p class="lead">画面設計は確定。基本設計書は docs/DESIGN.md、決定は ADR 0006。以後の変更はモックと DESIGN.md を同時に更新する。</p>
   <div class="next">
-    <div><h3>docs/DESIGN.md</h3><p>トークン、書体、部品仕様、画面ごとの要素・状態・遷移・対応する要件 ID を 1 冊にまとめる。実装はこの文書を正とする。</p></div>
+    <div><h3>docs/DESIGN.md</h3><p>トークン、書体、部品仕様、画面ごとの要素・状態・遷移・対応する要件 ID。実装はこの文書を正とし、このモックは見た目の参照。</p></div>
     <div><h3>Tailwind / shadcn テーマ</h3><p>ここで決めた色をそのまま CSS 変数として globals.css に落とす。ダーク専用なので color-scheme は dark 固定、ライト用の変数は持たない。</p></div>
-    <div><h3>フォントの導入</h3><p>選んだ 1 組を next/font で読み込み、サブセット化して PWA のオフライン閲覧でも崩れないようにする。A なら日本語は端末フォントで済み、読み込みは欧文 2 書体だけ。</p></div>
-    <div><h3>ADR 0006</h3><p>「ダーク専用・銅アクセント・書体の組み合わせ」の決定を背景 / 選択肢 / 決定 / 理由の 4 節で残す。</p></div>
+    <div><h3>フォントの導入</h3><p>Bodoni Moda と Manrope を next/font で読み込み、PWA のオフライン閲覧でも崩れないようにする。日本語は端末フォントなので読み込みは欧文 2 書体だけ。</p></div>
+    <div><h3>ADR 0006</h3><p>「ダーク専用・銅アクセント・Bodoni Moda + Manrope」の決定を残した（docs/decisions/0006）。</p></div>
   </div>
 </div></section>
 
@@ -884,15 +856,6 @@ footer{padding-block:32px 48px;border-top:1px solid var(--line);font-size:13px;c
     }).join('');
   });
   var sb='<svg viewBox="0 0 56 14"><rect x="0" y="8" width="3" height="6" rx="1"/><rect x="5" y="6" width="3" height="8" rx="1"/><rect x="10" y="4" width="3" height="10" rx="1"/><rect x="15" y="2" width="3" height="12" rx="1"/><path d="M23 6.5a7 7 0 0 1 10 0l-1.4 1.4a5 5 0 0 0-7.2 0zM25.8 9.3a3 3 0 0 1 4.4 0L28 11.5z"/><rect x="37" y="2.5" width="16" height="9" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="38.5" y="4" width="11" height="6" rx="1.2"/><rect x="54" y="5" width="1.5" height="4" rx=".7"/></svg>';
-  function setFont(f){
-    if(f==='a') document.documentElement.removeAttribute('data-font'); else document.documentElement.setAttribute('data-font',f);
-    document.querySelectorAll('.fsw button,.fbtn').forEach(function(b){ b.classList.toggle('on',b.getAttribute('data-f')===f); });
-    document.querySelectorAll('.pair').forEach(function(p){ p.classList.toggle('on',p.id==='pair-'+f); });
-    try{ localStorage.setItem('cn-font',f); }catch(e){}
-  }
-  var saved='a'; try{ saved=localStorage.getItem('cn-font')||'a'; }catch(e){}
-  setFont(saved);
-  document.querySelectorAll('.fsw button,.fbtn').forEach(function(b){ b.addEventListener('click',function(){ setFont(b.getAttribute('data-f')); }); });
   document.querySelectorAll('.a-status').forEach(function(n){ n.innerHTML='<span>9:41</span>'+sb; });
   document.querySelectorAll('.st').forEach(function(n){
     var v=parseFloat(n.getAttribute('data-v')||'0'),h='';

@@ -30,3 +30,4 @@
 | [0003](0003-shop-manual-input-and-map-tap.md) | 店の手入力 + 地図タップでの位置指定を Must | 決定 |
 | [0004](0004-rating-half-star.md) | 星評価は 0.5 刻み | 決定 |
 | [0005](0005-roaster-shared-master.md) | ロースター名は全ユーザー共通マスタ | 決定 |
+| [0006](0006-visual-design-dark-copper-bodoni.md) | ビジュアルデザインはダーク専用・銅アクセント・Bodoni Moda + Manrope | 決定 |

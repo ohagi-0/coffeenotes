@@ -144,6 +144,7 @@ export interface OcrProvider {
 
 ### 5.3 UI
 
+- 色・書体・部品・画面仕様は `docs/DESIGN.md` に従う（ダーク専用、銅は操作要素だけ、豆名は Bodoni Moda、数字は Manrope、日本語は端末フォント）。
 - モバイルファースト。ボタン・タップ領域は 44px 以上。
 - フォームは react-hook-form + Zod resolver。OCR 結果はフォームの `defaultValues` に流し込むだけにし、確定は必ずユーザー操作。
 - 画像は保存前に `src/lib/image/compress.ts` で長辺 1,600px・JPEG 品質 0.8 に圧縮する。
@@ -205,6 +206,7 @@ GOOGLE_MAPS_API_KEY=              # GEO_PROVIDER=google のとき
 - [x] Phase 0: 認証（メールリンク + Google のログイン画面・コールバック）と `(app)` レイアウトの下タブ（2026-09-21）
 - [x] Phase 0: `docs/decisions/` に ADR 0001〜0005 を作成（2026-09-21）
 - [x] Q1〜Q5 の決定（REQUIREMENTS.md §8.3、2026-09-21）
+- [x] 画面設計: モック `docs/design/index.html`・基本設計書 `docs/DESIGN.md`・ADR 0006（ダーク専用・銅アクセント・Bodoni Moda + Manrope）（2026-09-21）
 - [x] Phase 0: Supabase プロジェクト作成（`ohagi-0's coffee`、ref `gayhfwmvlxwyuzrvmkoy`、ap-northeast-1）、`0001_init.sql` を SQL Editor で適用、`.env.local` 設定、`src/types/database.ts` 生成（2026-09-21）
 - [ ] Phase 0: Google OAuth のクライアント登録（Google Cloud）と Supabase Auth での有効化 — **ユーザー作業**。メールリンクの動作確認後でよい
 - [ ] Phase 0: Supabase Auth の URL 設定（Site URL `http://localhost:3100` / Redirect URLs に `http://localhost:3100/auth/callback` と本番 URL、`coffeelog://auth/callback`）— **ユーザー作業**
@@ -226,4 +228,4 @@ GOOGLE_MAPS_API_KEY=              # GEO_PROVIDER=google のとき
 - Prettier は Markdown と `docs/design/` を対象外（`.prettierignore`）。要件定義書・ADR の表と画面設計モックを手書きのまま保つため。
 - コミット前フック（simple-git-hooks + lint-staged）で staged ファイルの ESLint / Prettier チェックと `pnpm typecheck` が走る。緊急時は `git commit --no-verify`。
 - Supabase Free の一時停止対策として `.github/workflows/supabase-keepalive.yml` が週 2 回 REST を叩く（Secrets: `SUPABASE_URL` / `SUPABASE_ANON_KEY`）。
-- 画面設計モックは `docs/design/index.html`（単一 HTML、サンプルデータ）。GitHub Pages（main の `/docs`）で https://ohagi-0.github.io/coffeenotes/design/ に公開しており、push すると同じ URL で更新される。リポジトリは Pages のため public（2026-09-21）。デザインの変更はまずこのモックに反映し、基本設計書 `docs/DESIGN.md`（未作成）と整合させる。
+- 画面設計は `docs/DESIGN.md` を正とする（トークン、書体、部品仕様、画面ごとの要素・状態・遷移）。見た目の参照はモック `docs/design/index.html`（単一 HTML、サンプルデータ。GitHub Pages で https://ohagi-0.github.io/coffeenotes/design/ に公開、push で更新）。リポジトリは Pages のため public（2026-09-21）。画面や部品を変えるときはモックと DESIGN.md を同じ PR で更新する。
