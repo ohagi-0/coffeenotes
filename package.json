@@ -22,7 +22,8 @@
     "db:migrate": "supabase db push --local",
     "db:reset": "supabase db reset",
     "db:types": "supabase gen types typescript --project-id gayhfwmvlxwyuzrvmkoy > src/types/database.ts",
-    "db:types:local": "supabase gen types typescript --local > src/types/database.ts"
+    "db:types:local": "supabase gen types typescript --local > src/types/database.ts",
+    "prepare": "simple-git-hooks"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
@@ -59,8 +60,10 @@
     "eslint-config-next": "15.5.25",
     "eslint-config-prettier": "^10.1.0",
     "jsdom": "^27.0.0",
+    "lint-staged": "^17.5.1",
     "prettier": "^3.6.0",
     "prettier-plugin-tailwindcss": "^0.6.0",
+    "simple-git-hooks": "^2.14.0",
     "supabase": "^2.45.0",
     "tailwindcss": "^4",
     "typescript": "^5",
@@ -71,6 +74,18 @@
       "esbuild",
       "supabase",
       "unrs-resolver"
+    ]
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm exec lint-staged && pnpm typecheck"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,mjs,js}": [
+      "eslint --max-warnings=0",
+      "prettier --check"
+    ],
+    "*.{json,css,yml,yaml}": [
+      "prettier --check"
     ]
   }
 }

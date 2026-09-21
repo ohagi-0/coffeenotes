@@ -209,7 +209,8 @@ GOOGLE_MAPS_API_KEY=              # GEO_PROVIDER=google のとき
 - [ ] Phase 0: Google OAuth のクライアント登録（Google Cloud）と Supabase Auth での有効化 — **ユーザー作業**。メールリンクの動作確認後でよい
 - [ ] Phase 0: Supabase Auth の URL 設定（Site URL `http://localhost:3100` / Redirect URLs に `http://localhost:3100/auth/callback` と本番 URL、`coffeelog://auth/callback`）— **ユーザー作業**
 - [ ] Phase 0: ローカル Supabase 用に Docker Desktop を導入（任意。クラウドだけで進めることも可）
-- [ ] Phase 0: 実機（スマホ）でログイン → 空のホーム表示を確認して Phase 0 完了
+- [x] Phase 0: PC でメールリンクのログイン → 空のホーム表示を確認（2026-09-21）。**Phase 0 の完了条件を達成**
+- [ ] Vercel にデプロイして本番 URL を取得し、Supabase の Redirect URLs と `NEXT_PUBLIC_API_BASE_URL` に反映（スマホでの確認に必要）— **ユーザー作業（Vercel アカウント）**
 - [ ] Phase 1 着手
 
 進捗はこのチェックリストを更新して管理する。
@@ -222,5 +223,7 @@ GOOGLE_MAPS_API_KEY=              # GEO_PROVIDER=google のとき
 - Supabase クライアントはシングルトンを遅延生成する（`getSupabaseBrowserClient()`）。モジュール直下で生成するとビルド時のプリレンダーで env 検証に失敗する。
 - `pnpm db:types` はクラウドのプロジェクト（`--project-id gayhfwmvlxwyuzrvmkoy`）から生成する。Docker でローカル Supabase を動かす場合は `pnpm db:types:local`。
 - 0001 は SQL Editor で手動適用したため `supabase_migrations` に記録が無い。`supabase link` して `db push` を使い始めるときは、先に `supabase migration repair --status applied 0001` で整合を取る。
-- Prettier は Markdown を対象外（`.prettierignore`）。要件定義書・ADR の表を手書きのまま保つため。
+- Prettier は Markdown と `docs/design/` を対象外（`.prettierignore`）。要件定義書・ADR の表と画面設計モックを手書きのまま保つため。
+- コミット前フック（simple-git-hooks + lint-staged）で staged ファイルの ESLint / Prettier チェックと `pnpm typecheck` が走る。緊急時は `git commit --no-verify`。
+- Supabase Free の一時停止対策として `.github/workflows/supabase-keepalive.yml` が週 2 回 REST を叩く（Secrets: `SUPABASE_URL` / `SUPABASE_ANON_KEY`）。
 - 画面設計モックは `docs/design/index.html`（単一 HTML、サンプルデータ）。GitHub Pages（main の `/docs`）で https://ohagi-0.github.io/coffeenotes/design/ に公開しており、push すると同じ URL で更新される。リポジトリは Pages のため public（2026-09-21）。デザインの変更はまずこのモックに反映し、基本設計書 `docs/DESIGN.md`（未作成）と整合させる。

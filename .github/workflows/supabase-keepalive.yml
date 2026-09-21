@@ -1,0 +1,27 @@
+# Supabase Free は 1 週間アクセスが無いとプロジェクトが一時停止する（REQUIREMENTS.md §9）。
+# 保険として週 2 回 REST API を叩いて活動を作る。anon key は公開前提のキーだが Secrets に置く。
+name: Supabase keep-alive
+
+on:
+  schedule:
+    - cron: '0 0 * * 1,4' # 月・木 09:00 JST
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: REST API に問い合わせる
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "::error::SUPABASE_URL / SUPABASE_ANON_KEY が Secrets に未設定です"; exit 1
+          fi
+          code=$(curl -s -o /dev/null -w '%{http_code}' \
+            "$SUPABASE_URL/rest/v1/roasters?select=id&limit=1" \
+            -H "apikey: $SUPABASE_ANON_KEY" -H "Authorization: Bearer $SUPABASE_ANON_KEY")
+          echo "HTTP $code"
+          [ "$code" = "200" ]
