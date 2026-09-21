@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 開発者: 個人（Kota）。レビュー相手は Claude Code。
 - 規模目標: 個人〜数十ユーザー。ランニングコストは月 0〜数百円。
 - 現在のフェーズ: **Phase 1（手入力 MVP）**。Phase 0 は 2026-09-21 完了。フェーズ定義は REQUIREMENTS.md §10。
-- 作業の分担: UI（DESIGN.md §7 の手順）は別の Claude Code ウィンドウが担当。それ以外は GitHub Issues の `non-ui` ラベル（#4〜#8）で管理。**同じワーキングツリーを共有している**ので §3.1 の注意を守る。
+- 作業の分担: UI は GitHub Issues の `ui` ラベル（#9〜#24、UI-1〜UI-16。着手順は番号順）、それ以外は `non-ui` ラベル（#4〜#8）で管理。UI と非 UI は別の Claude Code ウィンドウが担当。UI の Issue は「見た目（props 駆動）→ データ接続」の 2 段階に分けてあり、段階 1 は非 UI の完了を待たずに進める。**同じワーキングツリーを共有している**ので §3.1 の注意を守る。
 
 ## 2. 技術スタック（確定分）
 
@@ -248,7 +248,7 @@ SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=
 - [ ] Q6（URL の形）の決定 → CLAUDE.md §3、DESIGN.md S4/S5、Issue #5/#6 に反映
 - [x] Phase 1: 非 UI — #4 Zod スキーマ、#5 豆・ロースター・店・タグのデータ層、#6 記録のデータ層（2026-09-22）
 - [ ] Phase 1: 非 UI — #7 シード投入、#8 画像・Storage・platform（別ウィンドウで作業中）
-- [ ] Phase 1: UI（DESIGN.md §7 の 1〜6。別ウィンドウ）
+- [ ] Phase 1: UI（Issues #9〜#24。今すぐ着手できるのは #9 #10 #12 #13 #14、次いで #11 #15 #16 #17〜#22 の段階 1。#23 PC レイアウト、#24 E2E は最後）
 - [ ] 公開準備（提案中・未着手）: Supabase 内蔵メールは 1 時間 2 通までなのでカスタム SMTP が必須、Google 同意画面の本番公開、プライバシーポリシー、独自ドメイン、アカウント削除（F-AUTH-3）の繰り上げ
 
 進捗はこのチェックリストを更新して管理する。
