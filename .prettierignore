@@ -10,3 +10,6 @@ test-results
 
 # Markdown は手で書いたまま保つ（要件定義書・ADR の表を崩さない）
 *.md
+
+# 画面設計モック（手書きの HTML）は整形しない
+docs/design/
