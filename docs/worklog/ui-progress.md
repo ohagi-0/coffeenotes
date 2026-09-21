@@ -10,7 +10,7 @@ UI ウィンドウの進捗記録。**別ウィンドウ（非 UI）が作業前
 | #9 UI-1 トークン | ✅ | e743f47 | `src/app/globals.css` `src/app/layout.tsx` `src/components/providers.tsx` `public/manifest.json` |
 | #10 UI-2 書体 | ✅ | 4dc1e97 | `src/app/layout.tsx` `src/app/globals.css` |
 | #11 UI-3 レイアウトとナビ | ✅ | (次の commit) | `src/app/(app)/layout.tsx` `src/app/(app)/*/page.tsx`（タイトルのみ） `src/components/nav.ts` `site-header.tsx` `nav-drawer.tsx` `site-footer.tsx` `coming-soon.tsx` `bottom-nav.tsx`（削除） `tests/unit/components/nav.test.tsx` |
-| #12 UI-4 入力系部品 | ⏸ | | |
+| #12 UI-4 入力系部品 | ✅ | (次の commit) | `src/components/app-button.tsx` `form/field.tsx` `filter-chips.tsx` `logs/place-segment.tsx` `wizard-stepper.tsx` `providers.tsx` `tests/unit/components/inputs.test.tsx` |
 | #13 UI-5 固有部品 | 🔧 **非 UI ウィンドウが担当中**（詳細は `ui-progress-b.md`） | | `src/components/logs/rating-stars.tsx` `src/components/logs/ocr-field.tsx` `src/components/beans/taste-dots.tsx` `src/components/beans/taste-radar.tsx` `tests/unit/components/{rating-stars,taste-dots,taste-radar,ocr-field}.test.tsx` |
 | #14 UI-6 表示系部品 | ⏸ | | |
 | #15 UI-7 部品ページ | ⏸ | | |
@@ -94,3 +94,25 @@ UI ウィンドウの進捗記録。**別ウィンドウ（非 UI）が作業前
 **他ウィンドウへの連絡**
 
 - 画面の URL は `src/lib/routes.ts`（ADR 0008）を使うので、以後 UI 側の `href` は `routes.*` に寄せます。`nav.ts` の `href` もそちらに合わせて差し替える予定（#17 以降）。
+
+## #12 UI-4 入力系の共通部品 — ✅ 2026-09-22
+
+**やったこと**
+
+- `src/components/app-button.tsx` `AppButton`: Base UI の `Button` に cva でバリアントを載せた。`variant` = primary（銅）/ secondary / ghost / destructive / white、`size` = lg 52px / md 44px / sm 36px、`width` = full / auto。`loading` でスピナー + disabled + `aria-busy`。リンク化は `render={<Link href={…} />}`。`ui/button.tsx`（生成物）は触っていない。
+- `src/components/form/field.tsx`: `Field`（ラベル 11px、`hint` / `error`。error は `role="alert"`）、`TextInput`（48px）、`Textarea`（最小 84px）、`Select`（48px）。React 19 なので react-hook-form の `register()` の `ref` はそのまま props で渡せる。
+- `src/components/filter-chips.tsx` `FilterChips`: 制御コンポーネント（`value` / `onChange`）。`onOpenFilter` を渡すと先頭に銅枠の「絞り込み」。`-mx-5 px-5` で画面端まで横スクロール。
+- `src/components/logs/place-segment.tsx` `PlaceSegment`: `role="radiogroup"`。値は `LogPlace`（`'shop' | 'home'`）。
+- `src/components/wizard-stepper.tsx` `WizardStepper`: `current` と任意の `steps`。現在は `aria-current="step"`。
+- `src/components/providers.tsx`: トーストを DESIGN.md §4 の見た目に（クレマ地・エスプレッソ文字・3 秒・成功は緑のチェック）。
+- `tests/unit/components/inputs.test.tsx`: 7 件。
+
+**使い方**
+
+- 主ボタン: `<AppButton>保存する</AppButton>`。二次: `variant="secondary"`。破壊: `variant="destructive"`（必ず確認を挟む）。
+- 入力: `<Field label="豆名" htmlFor="name" error={errors.name?.message}><TextInput id="name" aria-invalid={!!errors.name} {...register('name')} /></Field>`
+- 成功トースト: `toast.success('保存しました')`（ボタンと同じ動詞で）。
+
+**注意**
+
+- `.next/types/app/<消したルート>/` が残ると `pnpm typecheck` が落ちる（dev サーバーが生成した型が古いまま）。ルートを消したら `.next/types/app/<そのルート>` も消す。
