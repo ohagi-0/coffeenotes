@@ -8,13 +8,20 @@ export interface FakeResult<T = unknown> {
 
 /**
  * 単体テスト用の最小の Supabase 偽クライアント。
- * `from(...).insert(...)` は inserts の先頭を、`from(...).select(...)` は selects の先頭を順に消費する。
+ * `from(...).insert/select/update/delete` はそれぞれの配列の先頭を順に消費する（テーブルは区別しない）。
  * 以降のチェーン（eq / in / order / limit / select）は同じ結果を持ち回り、`single()` か `await` で解決する。
  */
-export function fakeClient(script: { inserts?: FakeResult[]; selects?: FakeResult[] }) {
+export function fakeClient(script: {
+  inserts?: FakeResult[];
+  selects?: FakeResult[];
+  updates?: FakeResult[];
+  deletes?: FakeResult[];
+}) {
   const inserts = [...(script.inserts ?? [])];
   const selects = [...(script.selects ?? [])];
-  const calls: { table: string; op: 'insert' | 'select'; payload?: unknown }[] = [];
+  const updates = [...(script.updates ?? [])];
+  const deletes = [...(script.deletes ?? [])];
+  const calls: { table: string; op: 'insert' | 'select' | 'update' | 'delete'; payload?: unknown }[] = [];
 
   const chain = (result: FakeResult) => {
     const o: Record<string, unknown> = {};
@@ -39,6 +46,14 @@ export function fakeClient(script: { inserts?: FakeResult[]; selects?: FakeResul
       select: () => {
         calls.push({ table, op: 'select' });
         return chain(take(selects, `${table}.select`));
+      },
+      update: (payload: unknown) => {
+        calls.push({ table, op: 'update', payload });
+        return chain(take(updates, `${table}.update`));
+      },
+      delete: () => {
+        calls.push({ table, op: 'delete' });
+        return chain(take(deletes, `${table}.delete`));
       },
     }),
   } as unknown as SupabaseClient<Database>;

@@ -53,6 +53,9 @@ const noShopAtHome = (v: { place: LogPlace; shop_id: string | null }) =>
   v.place !== 'home' || v.shop_id === null;
 const homeIssue = { message: '自宅で淹れた記録には店を付けられません', path: ['shop_id'] };
 
+/** フォーム項目だけ（相互制約なし）。部分更新で `.partial()` するときに使う。 */
+export const logFormFieldsSchema = logBase.extend({ tag_names: z.array(tagNameSchema).default([]) });
+
 /** フォーム用。タグは名前の配列で受け取り、保存時に ID へ解決する（無ければ作る）。 */
 export const logFormSchema = logBase
   .extend({ tag_names: z.array(tagNameSchema).default([]) })
