@@ -220,3 +220,4 @@ GOOGLE_MAPS_API_KEY=              # GEO_PROVIDER=google のとき
 - Supabase クライアントはシングルトンを遅延生成する（`getSupabaseBrowserClient()`）。モジュール直下で生成するとビルド時のプリレンダーで env 検証に失敗する。
 - `src/types/database.ts` は `pnpm db:types`（要 Docker またはクラウドの `--project-id`）で生成するまで存在しない。生成後に `createBrowserClient<Database>` へ型を付ける。
 - Prettier は Markdown を対象外（`.prettierignore`）。要件定義書・ADR の表を手書きのまま保つため。
+- 画面設計モックは `docs/design/index.html`（単一 HTML、サンプルデータ）。GitHub Pages（main の `/docs`）で https://ohagi-0.github.io/coffeenotes/design/ に公開しており、push すると同じ URL で更新される。リポジトリは Pages のため public（2026-09-21）。デザインの変更はまずこのモックに反映し、基本設計書 `docs/DESIGN.md`（未作成）と整合させる。
