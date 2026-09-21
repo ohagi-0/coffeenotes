@@ -24,7 +24,7 @@ UI ウィンドウの進捗記録。**別ウィンドウ（非 UI）が作業前
 | #18 UI-10 入口と豆フォーム | ✅ A | e9f2809 | `src/app/(app)/logs/new/page.tsx` `src/components/logs/entry-option.tsx` `src/components/beans/bean-form.tsx` `src/components/wizard-stepper.tsx`（PHASE1_STEPS 追加） `src/features/logs/new-log-draft.ts` `tests/unit/components/bean-form.test.tsx` `tests/unit/logs/new-log-draft.test.ts` |
 | #19 UI-11 店・評価・保存 | ✅ A（段階 1 + 2） | (次の commit) | `src/app/(app)/logs/new/page.tsx`（③） `src/components/logs/log-form.tsx` `src/features/logs/save-new-log.ts` `tests/unit/components/log-form.test.tsx` `tests/unit/logs/save-new-log.test.ts` |
 | #20 UI-12 詳細の部品 | ⏸ 非 UI ウィンドウが次に取る予定（未着手。先に始めるならこの行を書き換えてください） | | |
-| #21 UI-13 記録したお店 | ⏸ | | |
+| #21 UI-13 記録したお店 | ✅ A（段階 1 + 2） | (次の commit) | `src/app/(app)/shops/page.tsx` `src/app/(app)/shops/detail/page.tsx` `src/components/shops/{shop-form,shop-list}.tsx` `src/features/shops/presenters.ts` `tests/unit/components/shop-form.test.tsx` `tests/unit/shops/presenters.test.ts` |
 | #22 UI-14 設定 | ✅ A | (次の commit) | `src/app/(app)/settings/page.tsx` `src/components/settings/{setting-row,settings-view}.tsx` `src/features/settings/use-preferences.ts` `tests/unit/components/settings.test.tsx` |
 | #23 UI-15 PC レイアウト | ✅ 段階 1（A）/ ⏸ 段階 2 は #20 の後 | (次の commit) | `src/app/(app)/layout.tsx` `src/components/site-nav.tsx` `tests/unit/components/site-nav.test.tsx` |
 | #24 UI-16 E2E | ✅ A（資格情報があれば実行。無ければ skip） | (次の commit) | `tests/e2e/{env,global-setup,create-log.spec}.ts` `playwright.config.ts` `src/components/dev-test-hooks.tsx` `src/app/layout.tsx` `.env.example` |
@@ -231,3 +231,18 @@ B の #14（ログ行・日付見出し・空状態・失敗表示・スケル�
 
 - 画面側は `px` を付けない（layout が持つ）ルールは PC でも同じ。ページ内で幅を広げたいときは `md:` / `xl:` の grid をページに書く。
 - `.a-body` 相当の `-mx-5`（ヘッダー・フッター・チップの突き抜け）は `md:` 以上では効かせないようにしてあるので、`FilterChips` の `-mx-5 px-5` は md でも見た目上問題ありません（余白 32px の内側で 20px 分だけ突き抜ける）。気になれば `md:mx-0 md:px-0` を足してください。
+
+## #21 UI-13 記録したお店 — ✅ A 2026-09-22（段階 1 + 2。B が未着手だったので A が取った）
+
+**やったこと**
+
+- `src/features/shops/presenters.ts`: `toShopRow(shop, stat)`（種別ラベル、住所の短縮 `shortArea`、座標の有無、回数、平均星）、`sortShopRows`（名前順 / 評価順。星なしは最後）。テスト 3 件。
+- `src/components/shops/shop-list.tsx` `ShopList`: 読み込み / 失敗 / 空 / 絞り込み 0 件 / 一覧の 5 状態。行は B の `Row`（頭文字アバター、店名、種別 · 市区 · 回数、座標なしピル、右に星と平均）。行は `routes.shop(id)`（`/shops/detail?id=`）へ。
+- `src/components/shops/shop-form.tsx` `ShopForm`: `shopFormSchema` の resolver。店名だけで登録できる。座標は任意で、片方だけ入れるとスキーマの「両方入力」エラー。「住所から座標」「地図で指定」は Phase 3。テスト 3 件。
+- `src/app/(app)/shops/page.tsx`: 検索欄（`useShops({ search })` の部分一致）、種別チップ + 評価順（`?f=`）、`useRatingStats().byShop` で平均星、`?new=1` で登録フォーム → 成功でトースト → 店詳細へ。
+- `src/app/(app)/shops/detail/page.tsx`（**S6 の店詳細を A が先に作った**）: `idFromSearchParams` → `useShop` / `useLogsByShop`。店名、平均星と回数、`BeanSpecGrid`（種別 / 住所 / 座標）、「この店の記録」（`LogTimeline`）、「この店で記録する」。id 無し / 読み込み / 失敗の状態あり。
+
+**他ウィンドウへの連絡（#20 担当へ）**
+
+- `/shops/detail?id=` は作りました。`/beans?id=`（S4）と `/logs?id=`（S5）は #20 で。作り方は `shops/detail/page.tsx` と同じ形（`Suspense` → `idFromSearchParams` → 3 状態）で揃えてください。
+- `ShopList` の行は `Row` の `href` で遷移しています。`Row` に `onClick` を足す変更をする場合は `href` 優先のままにしてください。
