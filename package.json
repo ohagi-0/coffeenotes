@@ -21,7 +21,8 @@
     "supabase": "supabase",
     "db:migrate": "supabase db push --local",
     "db:reset": "supabase db reset",
-    "db:types": "supabase gen types typescript --local > src/types/database.ts"
+    "db:types": "supabase gen types typescript --project-id gayhfwmvlxwyuzrvmkoy > src/types/database.ts",
+    "db:types:local": "supabase gen types typescript --local > src/types/database.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

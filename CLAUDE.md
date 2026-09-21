@@ -205,7 +205,9 @@ GOOGLE_MAPS_API_KEY=              # GEO_PROVIDER=google のとき
 - [x] Phase 0: 認証（メールリンク + Google のログイン画面・コールバック）と `(app)` レイアウトの下タブ（2026-09-21）
 - [x] Phase 0: `docs/decisions/` に ADR 0001〜0005 を作成（2026-09-21）
 - [x] Q1〜Q5 の決定（REQUIREMENTS.md §8.3、2026-09-21）
-- [ ] Phase 0: Supabase プロジェクト作成（クラウド）と `.env.local` 設定、Google OAuth のクライアント登録、マイグレーション適用、`pnpm db:types` で `src/types/database.ts` 生成 — **ユーザー作業**
+- [x] Phase 0: Supabase プロジェクト作成（`ohagi-0's coffee`、ref `gayhfwmvlxwyuzrvmkoy`、ap-northeast-1）、`0001_init.sql` を SQL Editor で適用、`.env.local` 設定、`src/types/database.ts` 生成（2026-09-21）
+- [ ] Phase 0: Google OAuth のクライアント登録（Google Cloud）と Supabase Auth での有効化 — **ユーザー作業**。メールリンクの動作確認後でよい
+- [ ] Phase 0: Supabase Auth の URL 設定（Site URL / Redirect URLs に `http://localhost:3000/auth/callback` と本番 URL、`coffeelog://auth/callback`）— **ユーザー作業**
 - [ ] Phase 0: ローカル Supabase 用に Docker Desktop を導入（任意。クラウドだけで進めることも可）
 - [ ] Phase 0: 実機（スマホ）でログイン → 空のホーム表示を確認して Phase 0 完了
 - [ ] Phase 1 着手
@@ -218,6 +220,7 @@ GOOGLE_MAPS_API_KEY=              # GEO_PROVIDER=google のとき
 - `next.config.ts` に `output: 'export'` は付けていない（`/api/*` を同居させるため。ADR 0002）。
 - shadcn/ui は Base UI ベース（`@base-ui/react`）。`Button` に `asChild` は無く、リンク化は `render={<Link href="…" />}` を使う。
 - Supabase クライアントはシングルトンを遅延生成する（`getSupabaseBrowserClient()`）。モジュール直下で生成するとビルド時のプリレンダーで env 検証に失敗する。
-- `src/types/database.ts` は `pnpm db:types`（要 Docker またはクラウドの `--project-id`）で生成するまで存在しない。生成後に `createBrowserClient<Database>` へ型を付ける。
+- `pnpm db:types` はクラウドのプロジェクト（`--project-id gayhfwmvlxwyuzrvmkoy`）から生成する。Docker でローカル Supabase を動かす場合は `pnpm db:types:local`。
+- 0001 は SQL Editor で手動適用したため `supabase_migrations` に記録が無い。`supabase link` して `db push` を使い始めるときは、先に `supabase migration repair --status applied 0001` で整合を取る。
 - Prettier は Markdown を対象外（`.prettierignore`）。要件定義書・ADR の表を手書きのまま保つため。
 - 画面設計モックは `docs/design/index.html`（単一 HTML、サンプルデータ）。GitHub Pages（main の `/docs`）で https://ohagi-0.github.io/coffeenotes/design/ に公開しており、push すると同じ URL で更新される。リポジトリは Pages のため public（2026-09-21）。デザインの変更はまずこのモックに反映し、基本設計書 `docs/DESIGN.md`（未作成）と整合させる。
