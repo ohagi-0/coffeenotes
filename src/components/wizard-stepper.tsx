@@ -1,6 +1,8 @@
 import { cn } from '@/lib/utils';
 
 export const WIZARD_STEPS = ['撮影', '確認', '店と評価'] as const;
+/** Phase 1（手入力のみ）の段階。Phase 2 で WIZARD_STEPS に切り替える */
+export const PHASE1_STEPS = ['豆', '店と評価'] as const;
 
 type Props = {
   /** 現在の段階（1 始まり） */

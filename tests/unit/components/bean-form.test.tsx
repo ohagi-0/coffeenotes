@@ -1,0 +1,92 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { BeanForm } from '@/components/beans/bean-form';
+
+afterEach(() => cleanup());
+
+describe('BeanForm', () => {
+  it('豆名とロースターが空なら送信せずエラーを出す', async () => {
+    const onSubmit = vi.fn();
+    render(<BeanForm onSubmit={onSubmit} />);
+    fireEvent.click(screen.getByRole('button', { name: '次へ：どこで飲んだ？' }));
+    await waitFor(() => expect(screen.getAllByRole('alert')).toHaveLength(2));
+    expect(screen.getByText('豆名を入力してください')).toBeInTheDocument();
+    expect(screen.getByText('ロースターを入力してください')).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('数値文字列は数値に、空は null に。新しいロースターは id null で渡す', async () => {
+    const onSubmit = vi.fn();
+    render(<BeanForm onSubmit={onSubmit} />);
+    fireEvent.change(screen.getByLabelText('豆名'), { target: { value: '  Lusitania Lime Geisha ' } });
+    fireEvent.change(screen.getByLabelText('ロースター'), { target: { value: 'KIELO COFFEE' } });
+    fireEvent.change(screen.getByLabelText('標高'), { target: { value: '1650' } });
+    fireEvent.change(screen.getByLabelText('価格'), { target: { value: '3800' } });
+    fireEvent.click(screen.getByRole('button', { name: '次へ：どこで飲んだ？' }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    const arg = onSubmit.mock.calls[0][0];
+    expect(arg.roaster).toEqual({ id: null, name: 'KIELO COFFEE' });
+    expect(arg.form).toMatchObject({
+      name: 'Lusitania Lime Geisha',
+      altitude_m: 1650,
+      price_jpy: 3800,
+      price_grams: null,
+      country: null,
+      source: 'purchased',
+      roast_level: null,
+      flavor_notes: [],
+    });
+  });
+
+  it('ロースター候補を選ぶと id が付く', async () => {
+    const onSubmit = vi.fn();
+    render(
+      <BeanForm
+        onSubmit={onSubmit}
+        roasterOptions={[{ id: '11111111-1111-4111-8111-111111111111', name: 'KIELO COFFEE' }]}
+      />,
+    );
+    fireEvent.change(screen.getByLabelText('豆名'), { target: { value: 'Geisha' } });
+    const roaster = screen.getByLabelText('ロースター');
+    fireEvent.focus(roaster);
+    fireEvent.change(roaster, { target: { value: 'KI' } });
+    fireEvent.click(await screen.findByRole('option', { name: 'KIELO COFFEE' }));
+    fireEvent.click(screen.getByRole('button', { name: '次へ：どこで飲んだ？' }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0].roaster).toEqual({
+      id: '11111111-1111-4111-8111-111111111111',
+      name: 'KIELO COFFEE',
+    });
+  });
+
+  it('フレーバーは追加・重複除去・削除ができ、Enter でも追加できる', async () => {
+    const onSubmit = vi.fn();
+    render(<BeanForm onSubmit={onSubmit} defaultValues={{ name: 'x', roaster_name: 'y' }} />);
+    const flavor = screen.getByLabelText('フレーバー');
+    fireEvent.change(flavor, { target: { value: ' Lime ' } });
+    fireEvent.click(screen.getByRole('button', { name: 'フレーバーを追加' }));
+    fireEvent.change(flavor, { target: { value: 'Lime' } });
+    fireEvent.keyDown(flavor, { key: 'Enter' });
+    fireEvent.change(flavor, { target: { value: 'Bergamot' } });
+    fireEvent.keyDown(flavor, { key: 'Enter' });
+    expect(screen.getByRole('list', { name: '追加したフレーバー' }).querySelectorAll('li')).toHaveLength(2);
+    fireEvent.click(screen.getByRole('button', { name: 'Lime を外す' }));
+    fireEvent.click(screen.getByRole('button', { name: '次へ：どこで飲んだ？' }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0].form.flavor_notes).toEqual(['Bergamot']);
+  });
+
+  it('味覚チャートの入力が taste_* に入る', async () => {
+    const onSubmit = vi.fn();
+    render(<BeanForm onSubmit={onSubmit} defaultValues={{ name: 'x', roaster_name: 'y' }} />);
+    fireEvent.click(screen.getByRole('radio', { name: 'Flavor 5' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'Body 3' }));
+    fireEvent.click(screen.getByRole('button', { name: '次へ：どこで飲んだ？' }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0].form).toMatchObject({
+      taste_flavor: 5,
+      taste_body: 3,
+      taste_acidity: null,
+    });
+  });
+});
