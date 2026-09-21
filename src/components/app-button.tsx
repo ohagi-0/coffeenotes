@@ -39,10 +39,23 @@ type Props = ButtonPrimitive.Props &
     loading?: boolean;
   };
 
-export function AppButton({ className, variant, size, width, loading, disabled, children, ...props }: Props) {
+export function AppButton({
+  className,
+  variant,
+  size,
+  width,
+  loading,
+  disabled,
+  children,
+  render,
+  ...props
+}: Props) {
   return (
     <ButtonPrimitive
       data-slot="app-button"
+      // render で <Link> などに置き換えるときはネイティブの <button> ではないことを Base UI に伝える
+      render={render}
+      nativeButton={render ? false : undefined}
       className={cn(appButtonVariants({ variant, size, width }), className)}
       disabled={disabled || loading}
       aria-busy={loading || undefined}

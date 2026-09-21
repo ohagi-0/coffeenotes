@@ -20,8 +20,8 @@ UI ウィンドウの進捗記録。**別ウィンドウ（非 UI）が作業前
 | #14 UI-6 表示系部品 | ✅ 非 UI ウィンドウ（詳細は `ui-progress-b.md`） | 965b963 | `src/components/{empty-state,error-callout,row,date-group}.tsx` `src/components/beans/{card-image,bean-spec-grid,bean-detail-skeleton}.tsx` `src/components/logs/{log-list-item,log-list-item-skeleton}.tsx` `tests/unit/components/*` |
 | #15 UI-7 部品ページ | ⏸ | | |
 | #16 UI-8 ログイン | ✅ A | (次の commit) | `src/app/(auth)/login/page.tsx` `tests/e2e/login.spec.ts` |
-| #17 UI-9 入力記録一覧 | ⏸ | | |
-| #18 UI-10 入口と豆フォーム | ⏸ | | |
+| #17 UI-9 入力記録一覧 | ✅ A（段階 1 + 2） | (次の commit) | `src/app/(app)/page.tsx` `src/components/logs/log-timeline.tsx` `src/features/logs/presenters.ts` `tests/unit/components/log-timeline.test.tsx` `tests/unit/logs/presenters.test.ts` |
+| #18 UI-10 入口と豆フォーム | 🔧 **A が担当中** | | `src/app/(app)/logs/new/page.tsx` `src/components/logs/entry-option.tsx` `src/components/beans/bean-form.tsx` `tests/unit/components/bean-form.test.tsx` |
 | #19 UI-11 店・評価・保存 | ⏸ | | |
 | #20 UI-12 詳細の部品 | ⏸ 非 UI ウィンドウが次に取る予定（未着手。先に始めるならこの行を書き換えてください） | | |
 | #21 UI-13 記録したお店 | ⏸ | | |
@@ -148,3 +148,19 @@ UI ウィンドウの進捗記録。**別ウィンドウ（非 UI）が作業前
 **他ウィンドウへの連絡**
 
 - `src/features/settings/` を新設しました（非 UI の `src/features/**` の領域ですが、端末設定の hook なので UI 側で持ちます）。
+
+## #17 UI-9 入力記録一覧 — ✅ A 2026-09-22（段階 1 + 2 を同時に）
+
+B の #14（ログ行・日付見出し・空状態・失敗表示・スケルトン）と非 UI の `useLogs` / `useMonthlyLogCount` / `useBeanFilterOptions` が揃っていたので、見た目とデータ接続を一度に入れた。
+
+**やったこと**
+
+- `src/features/logs/presenters.ts`: `toTimelineItem(log)`（DB 行 → `LogListItemProps` + `loggedOn`）、`formatLogDetail`（店は飲み方だけ、自宅は 器具 · 1:15 · 92 ℃）、`formatBrewRatio`、`groupByDate`、`chipToFilters`（`?f=` の値 → `LogFilters`）。すべて純関数でテスト 5 件。
+- `src/components/logs/log-timeline.tsx` `LogTimeline`: 読み込み（`LogListSkeleton`）/ 失敗（`ErrorCallout` + 再試行）/ 空（「まだ記録がありません」+「最初の記録を追加」）/ 絞り込み 0 件（「条件に合う記録はありません」+ 解除）/ 一覧（`DateGroup` + `LogListItem`）の 5 状態。テスト 4 件。
+- `src/app/(app)/page.tsx`: 見出し + 今月の杯数、検索欄（Phase 5 まで見た目だけ、「準備中」）、`FilterChips`（すべて / 星 4 以上 / 自宅 / 店で + 自分の豆に出てくる生産国・精製を最大 4 つずつ）、`LogTimeline`。絞り込みは URL の `?f=` に持ち `router.replace`（`useSearchParams` は `Suspense` の中、ADR 0008）。
+- カード画像の URL は Phase 2（署名付き URL）まで `null`。それまでは `CardImage` の印刷物風プレースホルダが出る。
+
+**他ウィンドウへの連絡**
+
+- `LogListItem` に `loggedOn` を含むオブジェクトをそのままスプレッドしています（DOM には流れない）。props を DOM に流す変更をするなら `loggedOn` を除いてください。
+- 「絞り込み」の詳細シート（`onOpenFilter`）は Phase 1 では出していません。
