@@ -8,6 +8,14 @@
 - 開発ルール: [CLAUDE.md](CLAUDE.md)
 - 決定記録（ADR）: [docs/decisions/](docs/decisions/)
 
+## できること
+
+- カードを撮って豆情報を読み取り（Claude Haiku 4.5）、店・星・メモ・タグと一緒に記録
+- 手入力、登録済みの豆からの再記録、自宅レシピ（比率の自動計算、前回の複製）、自家焙煎バッチ
+- 記録した店の地図（現在地からの候補、店名・住所からの座標、長押しで登録）
+- 好みの分析（高評価の生産国・精製・フレーバー、味覚の形、月別）
+- PWA（ホーム画面に追加、オフライン閲覧）、CSV / JSON エクスポート、アカウント削除
+
 ## 技術スタック
 
 Next.js 15 (App Router) + TypeScript / Tailwind CSS + shadcn/ui / Supabase / Claude Haiku 4.5 Vision (OCR) / react-leaflet + OpenStreetMap / Vercel

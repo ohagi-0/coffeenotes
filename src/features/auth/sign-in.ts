@@ -24,4 +24,15 @@ export async function signInWithGoogle(): Promise<void> {
 export async function signOut(): Promise<void> {
   const { error } = await getSupabaseBrowserClient().auth.signOut();
   if (error) throw error;
+  await clearOfflineCaches();
+}
+
+/** Service Worker がオフライン閲覧用に持つデータのキャッシュを消す（別のアカウントでログインしたときに残さない） */
+export async function clearOfflineCaches(): Promise<void> {
+  if (typeof caches === 'undefined') return;
+  try {
+    await Promise.all(['supabase-rest', 'supabase-images'].map((name) => caches.delete(name)));
+  } catch {
+    // キャッシュが無い・使えない環境では何もしない
+  }
 }

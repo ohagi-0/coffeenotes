@@ -24,6 +24,13 @@ export const metadata: Metadata = {
   title: { default: 'coffeenotes', template: '%s | coffeenotes' },
   description: '飲んだコーヒー豆をカード写真から記録し、店・評価と紐づけて振り返るアプリ',
   manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: '/icons/apple-touch-icon.png',
+  },
   appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'coffeenotes' },
 };
 

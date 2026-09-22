@@ -23,6 +23,8 @@ export type SettingsViewProps = {
   signingOut?: boolean;
   /** アカウントと全データの削除（F-AUTH-3）。成功したら呼び出し側でログイン画面へ */
   onDeleteAccount?: () => Promise<void>;
+  /** エクスポート（F-MISC-2）。渡さなければ行を無効にする */
+  onExport?: (format: 'csv' | 'json') => Promise<void>;
 };
 
 const PROVIDER_LABEL: Record<string, string> = { google: 'Google', email: 'メールリンク' };
@@ -35,6 +37,7 @@ export function SettingsView({
   onSignOut,
   signingOut,
   onDeleteAccount,
+  onExport,
 }: SettingsViewProps) {
   const [ratingInput, setRatingInput] = useRatingInputMode();
   const [confirming, setConfirming] = useState(false);
@@ -42,6 +45,20 @@ export function SettingsView({
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const emailMatches = !!email && confirmEmail.trim().toLowerCase() === email.toLowerCase();
+  const [exporting, setExporting] = useState<'csv' | 'json' | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
+  async function runExport(format: 'csv' | 'json') {
+    if (!onExport || exporting) return;
+    setExporting(format);
+    setExportError(null);
+    try {
+      await onExport(format);
+    } catch (e) {
+      setExportError(e instanceof Error ? e.message : 'エクスポートできませんでした');
+    } finally {
+      setExporting(null);
+    }
+  }
   const initial = (email?.[0] ?? '?').toUpperCase();
   const providerText = providers.map((p) => PROVIDER_LABEL[p] ?? p).join(' / ') || '—';
   const ocrPercent = Math.min(100, Math.round((ocrUsedToday / OCR_DAILY_LIMIT) * 100));
@@ -123,15 +140,18 @@ export function SettingsView({
 
       <SettingSection title="データ">
         <SettingRow
-          label="CSV でダウンロード"
-          disabled
+          label={exporting === 'csv' ? 'CSV を作成中…' : 'CSV でダウンロード'}
+          onClick={() => void runExport('csv')}
+          disabled={!onExport || exporting !== null}
           trailing={<Download className="text-muted-foreground size-[18px]" aria-hidden />}
-          note="Phase 5 で有効になります"
+          note="Excel で開ける形式。記録・豆・店・レシピ・タグを 1 行 1 記録で出します"
         />
         <SettingRow
-          label="JSON でダウンロード"
-          disabled
+          label={exporting === 'json' ? 'JSON を作成中…' : 'JSON でダウンロード'}
+          onClick={() => void runExport('json')}
+          disabled={!onExport || exporting !== null}
           trailing={<Download className="text-muted-foreground size-[18px]" aria-hidden />}
+          note={exportError ? <span className="text-destructive">{exportError}</span> : undefined}
         />
         <SettingRow
           label="位置情報"

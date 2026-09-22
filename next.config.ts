@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import withSerwistInit from '@serwist/next';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -8,4 +9,13 @@ const nextConfig: NextConfig = {
   typedRoutes: true,
 };
 
-export default nextConfig;
+// PWA（F-MISC-1）: serwist で Service Worker を生成し、オフラインでは閲覧のみ可能にする。
+// 開発中は無効（dev サーバーのチャンクをキャッシュしないため）。
+const withSerwist = withSerwistInit({
+  swSrc: 'src/app/sw.ts',
+  swDest: 'public/sw.js',
+  disable: process.env.NODE_ENV === 'development',
+  reloadOnOnline: true,
+});
+
+export default withSerwist(nextConfig);

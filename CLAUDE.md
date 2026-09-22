@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - 開発者: 個人（Kota）。レビュー相手は Claude Code。
 - 規模目標: 個人〜数十ユーザー。ランニングコストは月 0〜数百円。
-- 現在のフェーズ: **Phase 3〜5 を実装中**（Phase 0〜2 は 2026-09-22 までに完了。Phase 2 は API キー設定と実機確認のみ残）。フェーズ定義は REQUIREMENTS.md §10。
+- 現在のフェーズ: **Phase 0〜5 の実装が完了**（2026-09-22）。残りはユーザー側の設定（Anthropic API キー、Google OAuth）と実機確認、UI の微調整、Phase 6（Capacitor）。フェーズ定義は REQUIREMENTS.md §10。
 - 作業の分担: UI / 非 UI の並行作業は 2026-09-22 に終了し、いまは 1 つのウィンドウで全部を扱う。Issue は完了済み（#4〜#24）。同じワーキングツリーで別ウィンドウが動くときは §3.1「並行作業の注意」に従う。
 
 ## 2. 技術スタック（確定分）
@@ -270,7 +270,11 @@ SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=
 - [ ] Phase 2: 実機で撮影 → 読み取り → 保存が 1 分以内に終わることを確認（完了条件）
 - [x] F-AUTH-3 アカウント削除（0003_delete_my_account.sql、設定画面の確認ブロック）と /privacy /terms（2026-09-22）
 - [ ] 公開準備（ユーザー作業）: Google Cloud で OAuth クライアント作成 → Supabase Providers で Google 有効化 → 同意画面を本番公開。Vercel と GitHub の連携（任意）
-- [ ] Phase 3（地図）/ Phase 4（自宅抽出・焙煎）/ Phase 5（統計・PWA・エクスポート・QR）— 実装中（2026-09-22〜）
+- [x] Phase 3 地図: /map（Leaflet + OSM、平均星で色分けしたピン、現在地、長押しで店登録）、/api/geo（Overpass / Nominatim）、記録作成③と店フォームの「現在地から探す / 店名で検索 / 地図で指定」（2026-09-22）
+- [x] Phase 4 自宅抽出・焙煎: レシピの折りたたみ、比率の自動計算、前回のレシピを複製、焙煎バッチ（一覧・登録・記録への紐づけ・バッチ別平均星）（2026-09-22）
+- [x] Phase 5 分析・仕上げ: /stats（4 タイル、高評価の生産国・精製、フレーバー、味覚レーダー、月別）、PWA（serwist、オフライン閲覧、アイコン）、CSV / JSON エクスポート、カードの QR → 参照 URL（2026-09-22）
+- [ ] Phase 5 の実機確認: ホーム画面に追加 → 機内モードで一覧・豆詳細が開く、エクスポートのダウンロード
+- [ ] Phase 6 ネイティブ化（Capacitor）— 未着手。前提の制約（§2.2）は守られている
 
 進捗はこのチェックリストを更新して管理する。
 
@@ -295,5 +299,8 @@ SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=
 - Supabase Free では、カスタム SMTP を設定して初めてメール文面を変更できる（内蔵メールのままだと Management API が 400 を返す）。
 - マイグレーションは `pnpm exec supabase db query --linked --project-ref gayhfwmvlxwyuzrvmkoy -f supabase/migrations/NNNN.sql` で本番に適用できる（CLI のトークンを使うのでキーチェーン不要）。0001 / 0002 はこの方法か SQL Editor で適用済みで、`supabase_migrations` には記録が無い。
 - 記録作成ウィザードの段階間の受け渡しは sessionStorage。撮影画像は data URL（`src/features/ocr/capture-draft.ts`）、豆の下書きは `new-log-draft.ts`。Blob は JSON にできないため。保存時に `dataUrlToBlob` で戻して Storage に上げる。
+- **PWA / オフライン**: `src/app/sw.ts`（serwist）。Supabase REST の GET は NetworkFirst、署名付き画像と地図タイルは StaleWhileRevalidate。書き込みと `/api/*` はキャッシュしない。ログアウトと退会で `clearOfflineCaches()` がデータのキャッシュを消す。開発中は SW 無効。`public/sw.js` は生成物（.gitignore 済み）。
+- **統計**: `features/stats/aggregate.ts` の純粋関数で集計（高評価 = 星 4 以上、豆ごとに 1 回数える項目とレコードごとに数える項目がある）。データは `useStatsRows()` が必要な列だけ全件取る。
+- **エクスポート**: `features/export/build.ts`（CSV は BOM + CRLF、JSON は記録の配列）。ダウンロードは `lib/platform/download.ts`。
 - Supabase Free の一時停止対策として `.github/workflows/supabase-keepalive.yml` が週 2 回 REST を叩く（Secrets: `SUPABASE_URL` / `SUPABASE_ANON_KEY`）。
 - 画面設計は `docs/DESIGN.md` を正とする（トークン、書体、部品仕様、画面ごとの要素・状態・遷移）。見た目の参照はモック `docs/design/`（index = 方針・色・書体・部品、mobile = Web スマホ、desktop = Web PC、ios = iOS アプリ。共通の design.css / design.js。GitHub Pages で https://ohagi-0.github.io/coffeenotes/design/ に公開、push で更新）。リポジトリは Pages のため public（2026-09-21）。画面や部品を変えるときはモックと DESIGN.md を同じ PR で更新する。

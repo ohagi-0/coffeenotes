@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { clearOfflineCaches } from '@/features/auth/sign-in';
 import { BEAN_IMAGES_BUCKET } from '@/lib/storage/bean-images';
 import type { Database } from '@/types/database';
 
@@ -38,4 +39,5 @@ export async function deleteMyAccount(client: Client, userId: string): Promise<v
   const { error } = await client.rpc('delete_my_account');
   if (error) throw error;
   await client.auth.signOut({ scope: 'local' });
+  await clearOfflineCaches();
 }

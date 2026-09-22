@@ -412,6 +412,24 @@ export function BeanForm({
         />
       </F>
 
+      <F
+        name="reference_url"
+        ocr={ocr}
+        label="参照 URL"
+        htmlFor={id('url')}
+        error={errors.reference_url?.message}
+        hint="カードの QR コードから自動で入ります"
+      >
+        <TextInput
+          id={id('url')}
+          type="url"
+          inputMode="url"
+          placeholder="https://"
+          autoComplete="off"
+          {...register('reference_url')}
+        />
+      </F>
+
       <div className="mt-2">
         <AppButton type="submit" loading={submitting}>
           {submitLabel}

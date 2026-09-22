@@ -10,6 +10,9 @@ import { useQueryClient } from '@tanstack/react-query';
 import { deleteMyAccount } from '@/features/account/delete-account';
 import { requireUserId } from '@/features/auth/require-user-id';
 import { useOcrUsage } from '@/features/ocr/queries';
+import { buildCsv, buildJson, exportFileName } from '@/features/export/build';
+import { LOG_SELECT, type LogWithRelations } from '@/features/logs/queries';
+import { downloadBlob } from '@/lib/platform/download';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 
 // S9 設定。表示は SettingsView（props 駆動）に任せ、ここではセッションとログアウトをつなぐ。
@@ -40,6 +43,19 @@ export default function SettingsPage() {
       ocrUsedToday={ocrUsage.data?.used ?? 0}
       onSignOut={handleSignOut}
       signingOut={busy}
+      onExport={async (format) => {
+        const { data, error } = await getSupabaseBrowserClient()
+          .from('logs')
+          .select(LOG_SELECT)
+          .order('logged_on', { ascending: false })
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        const logs = data as LogWithRelations[];
+        const body = format === 'csv' ? buildCsv(logs) : buildJson(logs);
+        const type = format === 'csv' ? 'text/csv;charset=utf-8' : 'application/json;charset=utf-8';
+        downloadBlob(new Blob([body], { type }), exportFileName(format));
+        toast.success(`${logs.length} 件を書き出しました`);
+      }}
       onDeleteAccount={async () => {
         await deleteMyAccount(getSupabaseBrowserClient(), await requireUserId());
         queryClient.clear();

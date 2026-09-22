@@ -43,6 +43,7 @@ import { useCreateShop } from '@/features/shops/mutations';
 import { useShops } from '@/features/shops/queries';
 import { useTags } from '@/features/tags/queries';
 import { blobToDataUrl, dataUrlToBlob } from '@/lib/image/data-url';
+import { qrTextToUrl, readQrFromBlob } from '@/lib/image/qr';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { routes } from '@/lib/routes';
 
@@ -176,6 +177,8 @@ function OcrStepPage() {
   const [phase, setPhase] = useState<OcrPhase>('running');
   const [prefill, setPrefill] = useState<BeanFormPrefill | null>(null);
   const [ocrRaw, setOcrRaw] = useState<unknown>(null);
+  /** カードの QR から読んだ参照 URL（F-OCR-4）。読み取りの成否に関係なくフォームに入れる */
+  const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
   const [roasterQuery, setRoasterQuery] = useState('');
@@ -195,6 +198,10 @@ function OcrStepPage() {
           dataUrlToBlob(capture.front),
           capture.back ? dataUrlToBlob(capture.back) : Promise.resolve(null),
         ]);
+        // QR はブラウザ内で読む（OCR と並行。無ければ null）
+        void Promise.all([readQrFromBlob(front), back ? readQrFromBlob(back) : Promise.resolve(null)]).then(
+          ([a, b]) => setQrUrl(qrTextToUrl(a) ?? qrTextToUrl(b)),
+        );
         const res = await requestBeanCardExtraction({ front, back, signal: ac.signal });
         setPrefill(extractionToBeanForm(res.extraction));
         setOcrRaw(res.raw);
@@ -353,9 +360,19 @@ function OcrStepPage() {
             )}
           </p>
           <BeanForm
-            key={phase}
-            defaultValues={phase === 'ready' ? prefill?.values : undefined}
-            confidence={phase === 'ready' ? prefill?.confidence : undefined}
+            key={`${phase}-${qrUrl ?? ''}`}
+            defaultValues={{
+              ...(phase === 'ready' ? prefill?.values : {}),
+              ...(qrUrl && !prefill?.values.reference_url ? { reference_url: qrUrl } : {}),
+            }}
+            confidence={
+              phase === 'ready'
+                ? {
+                    ...prefill?.confidence,
+                    ...(qrUrl && !prefill?.values.reference_url ? { reference_url: 1 } : {}),
+                  }
+                : undefined
+            }
             roasterOptions={(roasters.data ?? []).map((r) => ({ id: r.id, name: r.name }))}
             onRoasterSearch={setRoasterQuery}
             onSubmit={onSubmit}
