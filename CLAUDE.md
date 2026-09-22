@@ -11,8 +11,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - 開発者: 個人（Kota）。レビュー相手は Claude Code。
 - 規模目標: 個人〜数十ユーザー。ランニングコストは月 0〜数百円。
-- 現在のフェーズ: **Phase 1（手入力 MVP）**。Phase 0 は 2026-09-21 完了。フェーズ定義は REQUIREMENTS.md §10。
-- 作業の分担: UI は GitHub Issues の `ui` ラベル（#9〜#24、UI-1〜UI-16。着手順は番号順）、それ以外は `non-ui` ラベル（#4〜#8）で管理。UI と非 UI は別の Claude Code ウィンドウが担当。UI の Issue は「見た目（props 駆動）→ データ接続」の 2 段階に分けてあり、段階 1 は非 UI の完了を待たずに進める。 **UI 側の進捗と触ったパスは `docs/worklog/ui-progress.md` に記録する。非 UI 側は作業前にそれを読み、書かれたパスを触らない。****同じワーキングツリーを共有している**ので §3.1 の注意を守る。
+- 現在のフェーズ: **Phase 3〜5 を実装中**（Phase 0〜2 は 2026-09-22 までに完了。Phase 2 は API キー設定と実機確認のみ残）。フェーズ定義は REQUIREMENTS.md §10。
+- 作業の分担: UI / 非 UI の並行作業は 2026-09-22 に終了し、いまは 1 つのウィンドウで全部を扱う。Issue は完了済み（#4〜#24）。同じワーキングツリーで別ウィンドウが動くときは §3.1「並行作業の注意」に従う。
 
 ## 2. 技術スタック（確定分）
 
@@ -66,6 +66,7 @@ REQUIREMENTS.md §13.2 の N-1〜N-5。要点:
 ├── src/
 │   ├── app/                   # App Router（route ごとにフォルダ）
 │   │   ├── (auth)/login/
+│   │   ├── (legal)/           # /privacy /terms（ログイン不要。Google 同意画面・App Store 申請の参照先）
 │   │   ├── (app)/             # ログイン後。layout に認証ガード + ナビ（Web はサイトヘッダー + ドロワー。現状の bottom-nav.tsx は Phase 0 の暫定で、DESIGN.md §3 に置き換える）
 │   │   │   ├── page.tsx       # ホーム（タイムライン）
 │   │   │   ├── logs/new/      # 記録作成ウィザード
@@ -75,14 +76,16 @@ REQUIREMENTS.md §13.2 の N-1〜N-5。要点:
 │   │   │   ├── map/
 │   │   │   ├── stats/
 │   │   │   └── settings/
-│   │   └── api/
+│   │   └── api/               # Route Handler。ocr/route.ts（Claude Haiku）、geo/route.ts（店候補）。静的出力からは除外される
 │   │       ├── ocr/route.ts   # OCR 実行（API キーはここでのみ使う）
 │   │       └── geo/route.ts   # 店候補・ジオコーディング
 │   ├── components/
 │   │   ├── ui/                # shadcn/ui 生成物（手で編集しない）
 │   │   ├── beans/  logs/  shops/  map/  stats/
 │   ├── features/              # ドメインごとのロジック（hooks, queries, mutations）
-│   │   ├── beans/  logs/  shops/  roasts/  tags/  stats/
+│   │   ├── beans/  logs/  shops/  roasters/  tags/  auth/  geo/
+│   │   ├── ocr/               # /api/ocr の呼び出し、抽出→フォーム変換、撮影画像の受け渡し、今日の回数
+│   │   ├── account/           # アカウント削除（Storage 掃除 → delete_my_account()）
 │   ├── lib/
 │   │   ├── supabase/          # client.ts（ブラウザ、シングルトン）/ server.ts（Route Handler 用）。middleware.ts は作らない
 │   │   ├── ocr/               # index.ts(インターフェース) + providers/
@@ -98,7 +101,7 @@ REQUIREMENTS.md §13.2 の N-1〜N-5。要点:
 │   ├── seed.sql
 │   └── config.toml
 ├── public/                    # manifest.json, icons
-├── scripts/               # 開発用スクリプト（#7 のシード投入など。ビルド不要の .mjs）
+├── scripts/               # seed-dev.mjs（サンプルデータ投入。要 SUPABASE_SERVICE_ROLE_KEY）
 └── tests/
     ├── unit/                  # Vitest。setup.ts で jest-dom を読み込む
     ├── e2e/                   # Playwright。Pixel 7 相当、ポート 3100
@@ -116,6 +119,9 @@ REQUIREMENTS.md §13.2 の N-1〜N-5。要点:
 - **RLS の前提**: ユーザー所有テーブルへの INSERT は `user_id` をセッションから明示的に入れる（DB 側に既定値は無い）。`log_tags.user_id` も NOT NULL。`roasters` の INSERT は `created_by = auth.uid()` が条件。ロースター名は生成列 `name_normalized` に一意制約があり、同名登録は Postgres の `23505` になる。
 - **静的出力との関係**（2026-09-22 検証）: 現状のコードは `output: 'export'` でビルドが通る。`/api/*` は自動で除外される（Vercel 側が配信し、アプリは本番 URL 経由で呼ぶ）。動的ルート `[id]` は落ちるので使わない（ADR 0008。URL は `src/lib/routes.ts` で組み立てる）。
 - **Prettier の対象外**: Markdown と `docs/design/` は整形しない。`pnpm format` を打っても要件書やモックは変わらない。
+- **カード読み取りの流れ**（Phase 2）: `/logs/new?step=capture` で OS カメラ→`compressImage`→data URL を sessionStorage（`features/ocr/capture-draft.ts`）→`?step=ocr` が `/api/ocr` を Bearer 付き絶対 URL で呼ぶ→`extractionToBeanForm` で `BeanForm` の `defaultValues` と `confidence`→③保存で豆を作ってから Storage へ画像と `bean_images` 行、`ocr_raw`。上限は DB 関数 `consume_ocr_quota()`（50 回/日、日本時間）。`OCR_PROVIDER=none` なら 503 で手入力へ。
+- **店候補**（Phase 3）: `/api/geo`（認証必須）→ `GeoProvider`。`nearby` は Overpass（amenity=cafe / shop=coffee）、`geocode` は Nominatim（日本限定、ja）。公開サーバーなので User-Agent を付け、結果は 60 秒キャッシュ。
+- **アカウント削除**（F-AUTH-3）: service role は使わない。クライアントが Storage の自分のプレフィックスを消してから DB 関数 `delete_my_account()`（SECURITY DEFINER）を呼び、ローカルの signOut。
 - **並行作業の注意**: UI ウィンドウと同じワーキングツリーを共有している。`git add -A` や `git commit -a` は相手の作業途中ファイルを巻き込むので、**自分が触ったパスだけを `git add` する**。UI 側の担当は `src/app/**`、`src/components/**`、`public/manifest.json`、`docs/DESIGN.md`、`docs/design/**`。非 UI 側は `src/lib/**`、`src/features/**`、`supabase/**`、`scripts/**`、`tests/**`。
 
 ## 4. データモデルの要点
@@ -192,10 +198,13 @@ pnpm vitest run tests/unit/rating.test.ts   # ファイル 1 つ
 pnpm vitest run -t '0.5 刻み'               # テスト名で絞る
 # 単体テストの既定環境は jsdom。Node 専用のテストは先頭に `// @vitest-environment node` を書く（env.test.ts が例）
 pnpm test:e2e            # Playwright。3100 で dev サーバーを自分で起動する（起動済みなら再利用）
-pnpm build
+pnpm build               # dev サーバー（3100）が動いている間は実行しない（.next を上書きして dev が壊れる）
 pnpm format              # Prettier（Markdown と docs/design は対象外）
 pnpm db:types            # クラウド（ref gayhfwmvlxwyuzrvmkoy）から src/types/database.ts を再生成
 vercel deploy --prod     # 本番デプロイ（GitHub 連携が無いので手動）
+pnpm seed:dev -- --email <ログインに使ったアドレス> --reset   # サンプルデータ投入（.env.local に SUPABASE_SERVICE_ROLE_KEY）
+ANTHROPIC_API_KEY=sk-ant-… pnpm vitest run tests/unit/ocr/live.test.ts   # OCR を実 API で確認し応答を録画
+pnpm exec supabase db query --linked --project-ref gayhfwmvlxwyuzrvmkoy -f supabase/migrations/NNNN_x.sql   # 本番にマイグレーション適用
 ```
 
 Docker が無いので `pnpm supabase start` / `db:migrate` / `db:types:local` は使えない。スキーマ変更は `supabase/migrations/` に SQL を書き、ダッシュボードの SQL Editor に貼って適用してから `pnpm db:types` を実行する。コミット前フックが lint / Prettier チェック / typecheck を走らせる（緊急時は `--no-verify`）。
@@ -259,7 +268,9 @@ SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=
 - [x] Phase 2: カード読み取り — マイグレーション 0002（`ocr_usage` + `consume_ocr_quota()`）、`providers/claude.ts`、`/api/ocr`、S3 ①撮影 / ②読み取り確認（要確認タグ、10 秒で手入力へ、失敗・上限・無効の 3 状態）、保存時に Storage へ画像と `bean_images` 行、豆詳細・一覧・記録詳細で署名付き URL を表示、設定に今日の回数（2026-09-22）
 - [ ] Phase 2: `ANTHROPIC_API_KEY` と `OCR_PROVIDER=claude` を Vercel に設定し、実 API で `tests/unit/ocr/live.test.ts` を通して応答を録画（`recorded: true`）— **API キー待ち**
 - [ ] Phase 2: 実機で撮影 → 読み取り → 保存が 1 分以内に終わることを確認（完了条件）
-- [ ] 公開準備（未着手）: Google 同意画面の本番公開、プライバシーポリシー、アカウント削除（F-AUTH-3）の繰り上げ
+- [x] F-AUTH-3 アカウント削除（0003_delete_my_account.sql、設定画面の確認ブロック）と /privacy /terms（2026-09-22）
+- [ ] 公開準備（ユーザー作業）: Google Cloud で OAuth クライアント作成 → Supabase Providers で Google 有効化 → 同意画面を本番公開。Vercel と GitHub の連携（任意）
+- [ ] Phase 3（地図）/ Phase 4（自宅抽出・焙煎）/ Phase 5（統計・PWA・エクスポート・QR）— 実装中（2026-09-22〜）
 
 進捗はこのチェックリストを更新して管理する。
 
