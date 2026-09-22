@@ -1,5 +1,6 @@
 import type { LogFormInput } from '@/lib/schemas/log';
 import type { RoasterFormInput } from '@/lib/schemas/roaster';
+import type { RoastFormValues } from '@/lib/schemas/roast';
 import type { ShopFormInput } from '@/lib/schemas/shop';
 import type { Json } from '@/types/database';
 import type { CreateBeanInput } from '@/features/beans/mutations';
@@ -21,6 +22,8 @@ export type LogFormDraft = {
   fields: Omit<LogFormInput, 'bean_id' | 'shop_id'>;
   /** 店で飲んだとき。既存（id あり）か新規（名前 + 候補や地図で決めた座標）か、選ばなかった（null） */
   shop: NewLogShop | null;
+  /** 自家焙煎の豆で、この記録と一緒に新しい焙煎バッチを登録するとき（F-ROAST-1〜7） */
+  newRoast?: RoastFormValues | null;
 };
 
 export type SaveNewLogDeps = {
@@ -28,6 +31,7 @@ export type SaveNewLogDeps = {
   createBean: (input: CreateBeanInput) => Promise<{ id: string }>;
   createShop: (input: ShopFormInput) => Promise<{ id: string }>;
   createLog: (input: LogFormInput) => Promise<{ id: string }>;
+  createRoast?: (input: RoastFormValues & { bean_id: string }) => Promise<{ id: string }>;
   /** カード画像の保存（F-BEAN-12）。渡さなければ画像は保存しない */
   saveBeanImages?: (beanId: string, images: DraftImages) => Promise<void>;
 };
@@ -90,7 +94,14 @@ export async function saveNewLog(
         : null);
   }
 
-  // 3. 記録
-  const logId = (await deps.createLog({ ...log.fields, bean_id: beanId, shop_id: shopId })).id;
+  // 3. 焙煎バッチ（新規なら豆の後に作り、記録に付ける）
+  let roastId = log.fields.roast_id ?? null;
+  if (log.newRoast && deps.createRoast) {
+    roastId = (await deps.createRoast({ ...log.newRoast, bean_id: beanId })).id;
+  }
+
+  // 4. 記録
+  const logId = (await deps.createLog({ ...log.fields, bean_id: beanId, shop_id: shopId, roast_id: roastId }))
+    .id;
   return { beanId, logId, shopId, ...(imageError ? { imageError } : {}) };
 }

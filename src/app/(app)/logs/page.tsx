@@ -12,6 +12,9 @@ import { LogListSkeleton } from '@/components/logs/log-list-item-skeleton';
 import { frontImagePath, useBeanImageUrl } from '@/features/beans/images';
 import { useDeleteLog, useUpdateLog } from '@/features/logs/mutations';
 import { formatBrewRatio, toTimelineItem } from '@/features/logs/presenters';
+import { useCreateRoast } from '@/features/roasts/mutations';
+import { useRoastsByBean } from '@/features/roasts/queries';
+import { roastLevelLabel } from '@/components/roasts/roast-batches';
 import { useLog, useLogsByBean } from '@/features/logs/queries';
 import type { LogFormDraft } from '@/features/logs/save-new-log';
 import { useCreateShop } from '@/features/shops/mutations';
@@ -27,6 +30,9 @@ function LogPageInner() {
   const id = idFromSearchParams(params);
   const editing = params.get('edit') === '1';
   const log = useLog(id);
+  const roasts = useRoastsByBean(log.data?.bean.id ?? null);
+  const greenShops = useShops({ kind: 'green_bean_shop' });
+  const createRoast = useCreateRoast();
   const image = useBeanImageUrl(frontImagePath(log.data?.bean.bean_images));
   const beanId = log.data?.bean_id ?? null;
   const siblings = useLogsByBean(beanId);
@@ -99,7 +105,10 @@ function LogPageInner() {
               ? (await createShop.mutateAsync({ name: values.shop.name.trim() })).id
               : null);
         }
-        await updateLog.mutateAsync({ id: l.id, ...values.fields, shop_id: shopId });
+        let roastId = values.fields.roast_id ?? null;
+        if (values.newRoast)
+          roastId = (await createRoast.mutateAsync({ ...values.newRoast, bean_id: l.bean.id })).id;
+        await updateLog.mutateAsync({ id: l.id, ...values.fields, shop_id: shopId, roast_id: roastId });
         toast.success('保存しました');
         router.replace(routes.log(l.id) as Route);
       } catch (e) {
@@ -133,15 +142,30 @@ function LogPageInner() {
             memo: l.memo ?? '',
             tag_names: tagNames,
             brew_method: l.brew_method ?? '',
+            grinder: l.grinder ?? '',
+            grind_setting: l.grind_setting ?? '',
+            dose_g: l.dose_g ?? '',
+            water_g: l.water_g ?? '',
+            water_temp_c: l.water_temp_c ?? '',
+            brew_time_sec: l.brew_time_sec ?? '',
+            recipe_memo: l.recipe_memo ?? '',
+            roast_id: l.roast?.id ?? null,
             shop_id: l.shop?.id ?? null,
             shop_name: l.shop?.name ?? '',
           }}
+          homeRoasted={l.bean.source === 'home_roasted'}
+          roastOptions={(roasts.data ?? []).map((r) => ({
+            id: r.id,
+            roasted_on: r.roasted_on,
+            roast_level: r.roast_level,
+          }))}
+          greenShops={(greenShops.data ?? []).map((s) => ({ id: s.id, name: s.name }))}
           shopOptions={(shops.data ?? []).map((s) => ({ id: s.id, name: s.name, address: s.address }))}
           onShopSearch={setShopQuery}
           tagSuggestions={(tags.data ?? []).map((t) => t.name)}
           onSubmit={onSubmit}
           submitLabel="保存する"
-          submitting={updateLog.isPending || createShop.isPending}
+          submitting={updateLog.isPending || createShop.isPending || createRoast.isPending}
         />
       </div>
     );
@@ -151,6 +175,13 @@ function LogPageInner() {
   const recipe =
     l.place === 'home'
       ? [
+          {
+            label: '焙煎バッチ',
+            value: l.roast
+              ? [l.roast.roasted_on, roastLevelLabel(l.roast.roast_level)].filter(Boolean).join(' · ')
+              : null,
+            ja: true,
+          },
           { label: 'グラインダー', value: l.grinder, ja: true },
           { label: '挽き目', value: l.grind_setting },
           {

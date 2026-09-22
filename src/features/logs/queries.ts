@@ -12,7 +12,7 @@ import { aggregateRatings } from './aggregate';
  * 店・焙煎バッチは NULL 可なので通常の埋め込み。
  */
 export const LOG_SELECT =
-  '*, bean:beans!inner(id, name, country, process, variety, roaster_id, price_jpy, roaster:roasters(id, name), bean_images(side, storage_path)), shop:shops(id, name, kind), roast:roasts(id, roasted_on, roast_level), log_tags(tag:tags(id, name))';
+  '*, bean:beans!inner(id, name, source, country, process, variety, roaster_id, price_jpy, roaster:roasters(id, name), bean_images(side, storage_path)), shop:shops(id, name, kind), roast:roasts(id, roasted_on, roast_level), log_tags(tag:tags(id, name))';
 
 function logQuery() {
   return getSupabaseBrowserClient().from('logs').select(LOG_SELECT);
@@ -186,7 +186,7 @@ export function useRatingStats() {
     queryFn: async () => {
       const { data, error } = await getSupabaseBrowserClient()
         .from('logs')
-        .select('bean_id, shop_id, rating');
+        .select('bean_id, shop_id, roast_id, rating');
       if (error) throw error;
       return aggregateRatings(data);
     },

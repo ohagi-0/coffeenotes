@@ -6,6 +6,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { BeanDetail } from '@/components/beans/bean-detail';
 import { frontImagePath, useBeanImageUrl } from '@/features/beans/images';
+import { RoastBatches } from '@/components/roasts/roast-batches';
+import { useCreateRoast } from '@/features/roasts/mutations';
+import { useRoastsByBean } from '@/features/roasts/queries';
+import { useShops } from '@/features/shops/queries';
 import { BeanDetailSkeleton } from '@/components/beans/bean-detail-skeleton';
 import { BeanForm, type BeanFormSubmit } from '@/components/beans/bean-form';
 import { ErrorCallout } from '@/components/error-callout';
@@ -29,6 +33,10 @@ function BeanPageInner() {
   const editing = params.get('edit') === '1';
   const bean = useBean(id);
   const image = useBeanImageUrl(frontImagePath(bean.data?.bean_images));
+  const homeRoasted = bean.data?.source === 'home_roasted';
+  const roasts = useRoastsByBean(homeRoasted ? id : null);
+  const greenShops = useShops({ kind: 'green_bean_shop' });
+  const createRoast = useCreateRoast();
   const logs = useLogsByBean(id);
   const stats = useRatingStats();
   const items = useMemo(() => (logs.data ?? []).map(toTimelineItem), [logs.data]);
@@ -153,26 +161,43 @@ function BeanPageInner() {
   }
 
   return (
-    <BeanDetail
-      name={b.name}
-      imageSrc={image.data ?? null}
-      roasterName={b.roaster?.name ?? (b.source === 'home_roasted' ? '自家焙煎' : null)}
-      country={b.country}
-      spec={beanSpecItems(b)}
-      flavorNotes={b.flavor_notes}
-      description={b.description}
-      taste={beanTaste(b)}
-      stat={stats.data?.byBean.get(b.id)}
-      logs={items}
-      logsPending={logs.isPending}
-      logsError={logs.error}
-      onRetryLogs={() => void logs.refetch()}
-      editHref={`${routes.bean(b.id)}&edit=1` as Route}
-      onLogAgain={() => {
-        writeNewLogDraft({ bean: { kind: 'existing', id: b.id, name: b.name } });
-        router.push(`${routes.newLog}?step=place` as Route);
-      }}
-    />
+    <>
+      <BeanDetail
+        name={b.name}
+        imageSrc={image.data ?? null}
+        roasterName={b.roaster?.name ?? (b.source === 'home_roasted' ? '自家焙煎' : null)}
+        country={b.country}
+        spec={beanSpecItems(b)}
+        flavorNotes={b.flavor_notes}
+        description={b.description}
+        taste={beanTaste(b)}
+        stat={stats.data?.byBean.get(b.id)}
+        logs={items}
+        logsPending={logs.isPending}
+        logsError={logs.error}
+        onRetryLogs={() => void logs.refetch()}
+        editHref={`${routes.bean(b.id)}&edit=1` as Route}
+        onLogAgain={() => {
+          writeNewLogDraft({ bean: { kind: 'existing', id: b.id, name: b.name } });
+          router.push(`${routes.newLog}?step=place` as Route);
+        }}
+      />
+      {homeRoasted && (
+        <RoastBatches
+          roasts={roasts.data}
+          isPending={roasts.isPending}
+          error={roasts.error}
+          onRetry={() => void roasts.refetch()}
+          statByRoast={stats.data?.byRoast}
+          greenShops={(greenShops.data ?? []).map((s) => ({ id: s.id, name: s.name }))}
+          creating={createRoast.isPending}
+          onCreate={async (values) => {
+            await createRoast.mutateAsync({ ...values, bean_id: b.id });
+            toast.success('バッチを登録しました');
+          }}
+        />
+      )}
+    </>
   );
 }
 

@@ -5,12 +5,16 @@ import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
-import { ChevronRight, Plus, Store, X } from 'lucide-react';
+import { ChevronDown, ChevronRight, Copy, Plus, Store, X } from 'lucide-react';
 import { AppButton } from '@/components/app-button';
 import { Field, TextInput, Textarea } from '@/components/form/field';
 import { PlaceSegment } from '@/components/logs/place-segment';
 import { ShopCandidateTools, type ShopCandidate } from '@/components/shops/shop-candidate-tools';
 import { RatingStars } from '@/components/logs/rating-stars';
+import { RoastForm, type GreenShopOption } from '@/components/roasts/roast-form';
+import { RECIPE_KEYS, hasRecipe, type RecipeValues } from '@/features/logs/aggregate';
+import { formatBrewRatio } from '@/features/logs/presenters';
+import { ROAST_LEVEL_LABELS, type RoastFormValues, type RoastLevel } from '@/lib/schemas/roast';
 import { useRatingInputMode } from '@/features/settings/use-preferences';
 import type { LogFormDraft } from '@/features/logs/save-new-log';
 import { logFormFieldsSchema, type LogPlace } from '@/lib/schemas/log';
@@ -36,6 +40,14 @@ export type LogFormProps = {
   onShopSearch?: (query: string) => void;
   /** 過去に使ったタグ（候補として点線で出す） */
   tagSuggestions?: string[];
+  /** 同じ豆の直近レシピ（F-BREW-7「前回のレシピを複製」）。無ければボタンを出さない */
+  lastRecipe?: RecipeValues | null;
+  /** 自家焙煎の豆のとき: 既存の焙煎バッチ。渡すと「自宅で」にバッチ選択が出る */
+  roastOptions?: { id: string; roasted_on: string; roast_level: string | null }[];
+  /** 自家焙煎の豆か（バッチが 0 件でも新規登録の導線を出す） */
+  homeRoasted?: boolean;
+  /** 新規バッチのフォームに出す生豆販売店 */
+  greenShops?: GreenShopOption[];
   /** 店の候補検索（F-SHOP-3/4）。渡さなければチップを出さない */
   shopCandidates?: {
     nearby: (pos: { lat: number; lng: number }) => Promise<ShopCandidate[]>;
@@ -56,6 +68,10 @@ export function LogForm({
   shopOptions = [],
   onShopSearch,
   tagSuggestions = [],
+  lastRecipe,
+  roastOptions = [],
+  homeRoasted = false,
+  greenShops,
   shopCandidates,
   defaultValues,
   onSubmit,
@@ -89,6 +105,17 @@ export function LogForm({
   const shopName = useWatch({ control, name: 'shop_name' }) ?? '';
   const tags = (useWatch({ control, name: 'tag_names' }) ?? []) as string[];
   const brewMethod = useWatch({ control, name: 'brew_method' });
+  const doseG = useWatch({ control, name: 'dose_g' });
+  const waterG = useWatch({ control, name: 'water_g' });
+  const roastIdRaw = useWatch({ control, name: 'roast_id' });
+  const roastId = typeof roastIdRaw === 'string' ? roastIdRaw : null;
+  const ratio = formatBrewRatio(num(doseG), num(waterG));
+  // レシピは既定で閉じる。編集で値が入っていれば開く
+  const [recipeOpen, setRecipeOpen] = useState(() =>
+    hasRecipe(defaultValues as Partial<RecipeValues> | undefined),
+  );
+  const [newRoast, setNewRoast] = useState<RoastFormValues | null>(null);
+  const [roastAdding, setRoastAdding] = useState(false);
 
   const [shopPicking, setShopPicking] = useState(false);
   /** 候補や地図で決めた新規店の付帯情報（既存の店を選んだら null） */
@@ -130,6 +157,19 @@ export function LogForm({
     onShopSearch?.('');
     setShopPicking(true);
   }
+  function copyLastRecipe() {
+    if (!lastRecipe) return;
+    for (const k of RECIPE_KEYS) {
+      const v = lastRecipe[k];
+      setValue(k, (v ?? '') as never, { shouldDirty: true });
+    }
+    setBrewOther(
+      typeof lastRecipe.brew_method === 'string' &&
+        lastRecipe.brew_method !== '' &&
+        !(BREW_METHODS as readonly string[]).includes(lastRecipe.brew_method),
+    );
+    setRecipeOpen(true);
+  }
   function toggleTag(name: string) {
     setValue('tag_names', tags.includes(name) ? tags.filter((t) => t !== name) : [...tags, name], {
       shouldDirty: true,
@@ -145,7 +185,8 @@ export function LogForm({
   const submit = handleSubmit((values) => {
     const { shop_id, shop_name, ...fields } = values;
     onSubmit({
-      fields,
+      fields: { ...fields, roast_id: fields.place === 'home' ? (newRoast ? null : fields.roast_id) : null },
+      newRoast: fields.place === 'home' ? newRoast : null,
       shop:
         fields.place === 'shop' && (shop_id || shop_name)
           ? { id: shop_id, name: shop_name, ...(shop_id ? {} : (shopMeta ?? {})) }
@@ -258,6 +299,204 @@ export function LogForm({
           <p className="text-muted-foreground text-xs">
             店は後から付けることもできます。座標が無くても保存できます。
           </p>
+        </div>
+      )}
+
+      {place === 'home' && (homeRoasted || roastOptions.length > 0) && (
+        <div className="flex flex-col gap-1.5">
+          <span className="text-muted-foreground text-[11px]">焙煎バッチ</span>
+          {newRoast ? (
+            <div className="border-primary bg-card flex items-center justify-between rounded-[14px] border px-3.5 py-3 text-sm">
+              <span>
+                <span className="font-num">{newRoast.roasted_on}</span>
+                <span className="text-muted-foreground ml-2 text-xs">
+                  {newRoast.roast_level ? ROAST_LEVEL_LABELS[newRoast.roast_level as RoastLevel] : ''} ·
+                  新しいバッチとして登録
+                </span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setNewRoast(null)}
+                className="text-muted-foreground text-xs underline"
+              >
+                取り消す
+              </button>
+            </div>
+          ) : roastAdding ? (
+            <RoastForm
+              greenShops={greenShops}
+              onCancel={() => setRoastAdding(false)}
+              submitLabel="このバッチを使う"
+              onSubmit={(values) => {
+                setNewRoast(values);
+                setValue('roast_id', null);
+                setRoastAdding(false);
+              }}
+            />
+          ) : (
+            <div className="flex flex-col gap-2">
+              {roastOptions.length > 0 && (
+                <select
+                  aria-label="焙煎バッチ"
+                  className="border-border bg-card h-11 rounded-xl border px-3.5 text-sm"
+                  value={roastId ?? ''}
+                  onChange={(e) => setValue('roast_id', e.target.value || null, { shouldDirty: true })}
+                >
+                  <option value="">バッチを選ばない</option>
+                  {roastOptions.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.roasted_on}
+                      {r.roast_level && r.roast_level in ROAST_LEVEL_LABELS
+                        ? ` · ${ROAST_LEVEL_LABELS[r.roast_level as RoastLevel]}`
+                        : ''}
+                    </option>
+                  ))}
+                </select>
+              )}
+              <button
+                type="button"
+                onClick={() => setRoastAdding(true)}
+                className="text-primary flex items-center gap-1 self-start text-[13px] font-medium"
+              >
+                <Plus className="size-4" aria-hidden />
+                新しいバッチを登録
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {place === 'home' && (
+        <div className="border-border rounded-[14px] border">
+          <div className="flex items-center justify-between px-3.5 py-2.5">
+            <button
+              type="button"
+              aria-expanded={recipeOpen}
+              onClick={() => setRecipeOpen((v) => !v)}
+              className="flex items-center gap-1.5 text-sm font-bold"
+            >
+              <ChevronDown
+                className={cn('size-4 transition-transform', !recipeOpen && '-rotate-90')}
+                aria-hidden
+              />
+              レシピ
+              <span className="text-muted-foreground text-[11px] font-normal">任意</span>
+            </button>
+            {lastRecipe && (
+              <button
+                type="button"
+                onClick={copyLastRecipe}
+                className="text-primary flex items-center gap-1 text-[12px] font-medium"
+              >
+                <Copy className="size-3.5" aria-hidden />
+                前回のレシピを複製
+              </button>
+            )}
+          </div>
+          {recipeOpen && (
+            <div className="border-border flex flex-col gap-3 border-t px-3.5 pt-3 pb-3.5">
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="グラインダー" htmlFor={id('grinder')} error={errors.grinder?.message}>
+                  <TextInput
+                    id={id('grinder')}
+                    placeholder="Comandante C40"
+                    autoComplete="off"
+                    {...register('grinder')}
+                  />
+                </Field>
+                <Field label="挽き目" htmlFor={id('grind')} error={errors.grind_setting?.message}>
+                  <TextInput
+                    id={id('grind')}
+                    placeholder="25 クリック"
+                    autoComplete="off"
+                    {...register('grind_setting')}
+                  />
+                </Field>
+              </div>
+              <div className="grid grid-cols-[1fr_1fr_auto] items-end gap-3">
+                <Field label="豆量" htmlFor={id('dose')} error={errors.dose_g?.message}>
+                  <div className="relative">
+                    <TextInput
+                      id={id('dose')}
+                      type="number"
+                      inputMode="decimal"
+                      step="any"
+                      placeholder="15"
+                      className="font-num pr-7"
+                      {...register('dose_g')}
+                    />
+                    <span className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2 text-xs">
+                      g
+                    </span>
+                  </div>
+                </Field>
+                <Field label="湯量" htmlFor={id('water')} error={errors.water_g?.message}>
+                  <div className="relative">
+                    <TextInput
+                      id={id('water')}
+                      type="number"
+                      inputMode="decimal"
+                      step="any"
+                      placeholder="225"
+                      className="font-num pr-7"
+                      {...register('water_g')}
+                    />
+                    <span className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2 text-xs">
+                      g
+                    </span>
+                  </div>
+                </Field>
+                <div className="pb-3 text-right">
+                  <span className="text-muted-foreground block text-[11px]">比率</span>
+                  <span
+                    className="font-num text-[26px] leading-none font-extrabold"
+                    aria-label="豆と湯の比率"
+                  >
+                    {ratio ?? '—'}
+                  </span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="湯温" htmlFor={id('temp')} error={errors.water_temp_c?.message}>
+                  <div className="relative">
+                    <TextInput
+                      id={id('temp')}
+                      type="number"
+                      inputMode="numeric"
+                      placeholder="92"
+                      className="font-num pr-8"
+                      {...register('water_temp_c')}
+                    />
+                    <span className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2 text-xs">
+                      ℃
+                    </span>
+                  </div>
+                </Field>
+                <Field label="抽出時間" htmlFor={id('time')} error={errors.brew_time_sec?.message}>
+                  <div className="relative">
+                    <TextInput
+                      id={id('time')}
+                      type="number"
+                      inputMode="numeric"
+                      placeholder="180"
+                      className="font-num pr-8"
+                      {...register('brew_time_sec')}
+                    />
+                    <span className="text-muted-foreground absolute top-1/2 right-3 -translate-y-1/2 text-xs">
+                      秒
+                    </span>
+                  </div>
+                </Field>
+              </div>
+              <Field label="レシピメモ" htmlFor={id('recipe-memo')} error={errors.recipe_memo?.message}>
+                <Textarea
+                  id={id('recipe-memo')}
+                  placeholder="注ぎ方、蒸らし時間など"
+                  {...register('recipe_memo')}
+                />
+              </Field>
+            </div>
+          )}
         </div>
       )}
 
@@ -416,4 +655,10 @@ export function LogForm({
       </div>
     </form>
   );
+}
+
+function num(v: unknown): number | null {
+  if (v === null || v === undefined || v === '') return null;
+  const n = typeof v === 'number' ? v : Number(v);
+  return Number.isFinite(n) ? n : null;
 }

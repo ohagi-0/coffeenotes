@@ -20,8 +20,10 @@ import { PHASE1_STEPS, WIZARD_STEPS, WizardStepper } from '@/components/wizard-s
 import { requireUserId } from '@/features/auth/require-user-id';
 import { saveBeanImages } from '@/features/beans/images';
 import { useCreateBean } from '@/features/beans/mutations';
-import { beanKeys, useBeans } from '@/features/beans/queries';
+import { beanKeys, useBean, useBeans } from '@/features/beans/queries';
+import { latestRecipe } from '@/features/logs/aggregate';
 import { useCreateLog } from '@/features/logs/mutations';
+import { useLogsByBean } from '@/features/logs/queries';
 import {
   clearNewLogDraft,
   readNewLogDraft,
@@ -34,6 +36,8 @@ import { clearCaptureDraft, readCaptureDraft, writeCaptureDraft } from '@/featur
 import { OcrRequestError, requestBeanCardExtraction } from '@/features/ocr/extract-bean-card';
 import { extractionToBeanForm, type BeanFormPrefill } from '@/features/ocr/to-bean-form';
 import { useCreateRoaster } from '@/features/roasters/mutations';
+import { useCreateRoast } from '@/features/roasts/mutations';
+import { useRoastsByBean } from '@/features/roasts/queries';
 import { useRoasterSearch } from '@/features/roasters/queries';
 import { useCreateShop } from '@/features/shops/mutations';
 import { useShops } from '@/features/shops/queries';
@@ -396,6 +400,17 @@ function PlaceStep() {
   const createBean = useCreateBean();
   const createShop = useCreateShop();
   const createLog = useCreateLog();
+  const createRoast = useCreateRoast();
+  const existingBeanId = draft?.bean.kind === 'existing' ? draft.bean.id : null;
+  const existingBean = useBean(existingBeanId);
+  const beanLogs = useLogsByBean(existingBeanId);
+  const roasts = useRoastsByBean(existingBeanId);
+  const greenShops = useShops({ kind: 'green_bean_shop' });
+  const homeRoasted =
+    draft?.bean.kind === 'new'
+      ? draft.bean.form.source === 'home_roasted'
+      : existingBean.data?.source === 'home_roasted';
+  const lastRecipe = latestRecipe(beanLogs.data ?? []);
   const [saving, setSaving] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
 
@@ -427,6 +442,7 @@ function PlaceStep() {
         createBean: (input) => createBean.mutateAsync(input),
         createShop: (input) => createShop.mutateAsync(input),
         createLog: (input) => createLog.mutateAsync(input),
+        createRoast: (input) => createRoast.mutateAsync(input),
         saveBeanImages: async (beanId, images) => {
           const userId = await requireUserId();
           const [front, back] = await Promise.all([
@@ -469,6 +485,14 @@ function PlaceStep() {
         shopOptions={(shops.data ?? []).map((s) => ({ id: s.id, name: s.name, address: s.address }))}
         onShopSearch={setShopQuery}
         tagSuggestions={(tags.data ?? []).map((t) => t.name)}
+        lastRecipe={lastRecipe}
+        homeRoasted={!!homeRoasted}
+        roastOptions={(roasts.data ?? []).map((r) => ({
+          id: r.id,
+          roasted_on: r.roasted_on,
+          roast_level: r.roast_level,
+        }))}
+        greenShops={(greenShops.data ?? []).map((s) => ({ id: s.id, name: s.name }))}
         shopCandidates={{
           nearby: (pos) => searchNearbyPlaces(pos),
           geocode: (query, near) => geocodePlace({ query, near }),
