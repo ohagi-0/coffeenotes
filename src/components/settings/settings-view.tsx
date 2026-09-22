@@ -5,15 +5,16 @@ import { Download } from 'lucide-react';
 import { AppButton } from '@/components/app-button';
 import { SettingRow, SettingSection } from '@/components/settings/setting-row';
 import { useRatingInputMode, type RatingInputMode } from '@/features/settings/use-preferences';
+import { OCR_DAILY_LIMIT } from '@/lib/ocr';
 import { cn } from '@/lib/utils';
 
-export const OCR_DAILY_LIMIT = 50;
+export { OCR_DAILY_LIMIT };
 
 export type SettingsViewProps = {
   email: string | null;
   /** ログイン方式。Supabase の app_metadata.providers から */
   providers: string[];
-  /** 今日の OCR 実行回数。Phase 2 まで 0 */
+  /** 今日の OCR 実行回数（features/ocr の useOcrUsage から） */
   ocrUsedToday?: number;
   onSignOut: () => Promise<void> | void;
   signingOut?: boolean;
@@ -70,7 +71,7 @@ export function SettingsView({
                   aria-label="今日の読み取り回数"
                 />
               </span>
-              毎日 0 時にリセット · カード読み取りは Phase 2 で有効
+              毎日 0 時にリセット
             </span>
           }
         />

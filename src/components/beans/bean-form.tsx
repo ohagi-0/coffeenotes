@@ -8,13 +8,15 @@ import { Plus, X } from 'lucide-react';
 import { AppButton } from '@/components/app-button';
 import { EMPTY_TASTE, TasteDots, type TasteValues } from '@/components/beans/taste-dots';
 import { Field, Select, TextInput, Textarea } from '@/components/form/field';
+import { OcrField } from '@/components/logs/ocr-field';
+import type { BeanFormFieldName } from '@/features/ocr/to-bean-form';
 import { beanFormSchema, type BeanFormInput } from '@/lib/schemas/bean';
 import type { DraftBeanForm, DraftRoaster } from '@/features/logs/new-log-draft';
 import { cn } from '@/lib/utils';
 
 // 豆フォーム（S3 ②、F-BEAN-1〜11/15）。beanFormSchema を resolver に使う。
 // ロースターは共有マスタから選ぶか、無ければ名前だけ入れて「新しいロースター」として扱う（保存時に登録）。
-// OCR 結果（Phase 2）は defaultValues に流し込むだけ。確定はユーザー操作。
+// OCR 結果は defaultValues に流し込むだけ。確定はユーザー操作。confidence を渡すと、その項目は OcrField（要確認）で描く。
 
 export type RoasterOption = { id: string; name: string };
 
@@ -29,6 +31,8 @@ export type BeanFormSubmit = { form: DraftBeanForm; roaster: DraftRoaster };
 
 export type BeanFormProps = {
   defaultValues?: Partial<FormInput>;
+  /** OCR の項目ごとの信頼度 0〜1（F-OCR-5）。低い項目に「要確認」を出す。手入力では渡さない */
+  confidence?: Partial<Record<BeanFormFieldName, number>>;
   /** ロースター候補（`onRoasterSearch` の結果） */
   roasterOptions?: RoasterOption[];
   onRoasterSearch?: (query: string) => void;
@@ -48,8 +52,24 @@ const TASTE_KEYS = [
   'taste_body',
 ] as const;
 
+type OcrState = {
+  confidence?: Partial<Record<BeanFormFieldName, number>>;
+  dirtyFields: Record<string, unknown>;
+};
+type FProps = Parameters<typeof Field>[0] & { name?: BeanFormFieldName; ocr?: OcrState };
+
+// confidence のある項目は OcrField（要確認タグ + 琥珀の点線）、それ以外は通常の Field。
+// コンポーネントの外で定義する（レンダー内で定義すると毎回別の型になり、入力欄が再マウントされて入力中の状態が飛ぶ）。
+function F({ name, ocr, aside, ...props }: FProps) {
+  const c = name ? ocr?.confidence?.[name] : undefined;
+  if (c === undefined) return <Field aside={aside} {...props} />;
+  const dirty = name ? Boolean(ocr?.dirtyFields[name]) : false;
+  return <OcrField confidence={c} dirty={dirty} {...props} />;
+}
+
 export function BeanForm({
   defaultValues,
+  confidence,
   roasterOptions = [],
   onRoasterSearch,
   onSubmit,
@@ -70,7 +90,10 @@ export function BeanForm({
     },
   });
   const { register, handleSubmit, setValue, control, formState } = form;
-  const { errors } = formState;
+  const { errors, dirtyFields } = formState;
+
+  // 要確認表示に使う（F に渡す）。レンダーごとに新しいオブジェクトだが、F はトップレベルの部品なので再マウントはしない
+  const ocr: OcrState = { confidence, dirtyFields: dirtyFields as Record<string, unknown> };
 
   const flavorNotes = (useWatch({ control, name: 'flavor_notes' }) ?? []) as string[];
   const roasterName = useWatch({ control, name: 'roaster_name' }) ?? '';
@@ -123,7 +146,9 @@ export function BeanForm({
 
   return (
     <form onSubmit={submit} noValidate className={cn('flex flex-col gap-3', className)}>
-      <Field
+      <F
+        name="name"
+        ocr={ocr}
         label="豆名"
         htmlFor={id('name')}
         error={errors.name?.message}
@@ -136,9 +161,11 @@ export function BeanForm({
           aria-invalid={!!errors.name}
           {...register('name')}
         />
-      </Field>
+      </F>
 
-      <Field
+      <F
+        name="roaster_name"
+        ocr={ocr}
         label="ロースター"
         htmlFor={id('roaster')}
         error={errors.roaster_name?.message}
@@ -184,13 +211,19 @@ export function BeanForm({
             </ul>
           )}
         </div>
-      </Field>
+      </F>
 
       <div className="grid grid-cols-2 gap-3">
-        <Field label="生産国" htmlFor={id('country')} error={errors.country?.message}>
+        <F name="country" ocr={ocr} label="生産国" htmlFor={id('country')} error={errors.country?.message}>
           <TextInput id={id('country')} placeholder="Colombia" autoComplete="off" {...register('country')} />
-        </Field>
-        <Field label="標高" htmlFor={id('altitude')} error={errors.altitude_m?.message}>
+        </F>
+        <F
+          name="altitude_m"
+          ocr={ocr}
+          label="標高"
+          htmlFor={id('altitude')}
+          error={errors.altitude_m?.message}
+        >
           <div className="relative">
             <TextInput
               id={id('altitude')}
@@ -205,28 +238,34 @@ export function BeanForm({
               m
             </span>
           </div>
-        </Field>
+        </F>
       </div>
 
-      <Field label="地域" htmlFor={id('region')} error={errors.region?.message}>
+      <F name="region" ocr={ocr} label="地域" htmlFor={id('region')} error={errors.region?.message}>
         <TextInput
           id={id('region')}
           placeholder="Caicedonia, Valle del Cauca"
           autoComplete="off"
           {...register('region')}
         />
-      </Field>
+      </F>
 
       <div className="grid grid-cols-2 gap-3">
-        <Field label="品種" htmlFor={id('variety')} error={errors.variety?.message}>
+        <F name="variety" ocr={ocr} label="品種" htmlFor={id('variety')} error={errors.variety?.message}>
           <TextInput id={id('variety')} placeholder="Geisha" autoComplete="off" {...register('variety')} />
-        </Field>
-        <Field label="精製" htmlFor={id('process')} error={errors.process?.message}>
+        </F>
+        <F name="process" ocr={ocr} label="精製" htmlFor={id('process')} error={errors.process?.message}>
           <TextInput id={id('process')} placeholder="Washed" autoComplete="off" {...register('process')} />
-        </Field>
+        </F>
       </div>
 
-      <Field label="フレーバー" htmlFor={id('flavor')} error={errors.flavor_notes?.message}>
+      <F
+        name="flavor_notes"
+        ocr={ocr}
+        label="フレーバー"
+        htmlFor={id('flavor')}
+        error={errors.flavor_notes?.message}
+      >
         <div className="flex gap-2">
           <TextInput
             id={id('flavor')}
@@ -273,14 +312,26 @@ export function BeanForm({
             ))}
           </ul>
         )}
-      </Field>
+      </F>
 
-      <div className="flex flex-col gap-1">
-        <span className="text-muted-foreground text-[11px]">味覚チャート</span>
-        <TasteDots value={taste} onChange={onTaste} />
-      </div>
+      {confidence?.taste_flavor !== undefined ? (
+        <OcrField
+          label="味覚チャート"
+          confidence={confidence.taste_flavor}
+          dirty={Boolean(dirtyFields.taste_flavor)}
+        >
+          <TasteDots value={taste} onChange={onTaste} />
+        </OcrField>
+      ) : (
+        <div className="flex flex-col gap-1">
+          <span className="text-muted-foreground text-[11px]">味覚チャート</span>
+          <TasteDots value={taste} onChange={onTaste} />
+        </div>
+      )}
 
-      <Field
+      <F
+        name="price_jpy"
+        ocr={ocr}
         label="価格"
         htmlFor={id('price')}
         error={errors.price_jpy?.message ?? errors.price_grams?.message}
@@ -317,10 +368,10 @@ export function BeanForm({
             </span>
           </div>
         </div>
-      </Field>
+      </F>
 
       <div className="grid grid-cols-2 gap-3">
-        <Field label="入手区分" htmlFor={id('source')} error={errors.source?.message}>
+        <F name="source" ocr={ocr} label="入手区分" htmlFor={id('source')} error={errors.source?.message}>
           <Select id={id('source')} {...register('source')}>
             {Object.entries(SOURCE_LABELS).map(([v, l]) => (
               <option key={v} value={v}>
@@ -328,8 +379,14 @@ export function BeanForm({
               </option>
             ))}
           </Select>
-        </Field>
-        <Field label="焙煎度" htmlFor={id('roast')} error={errors.roast_level?.message}>
+        </F>
+        <F
+          name="roast_level"
+          ocr={ocr}
+          label="焙煎度"
+          htmlFor={id('roast')}
+          error={errors.roast_level?.message}
+        >
           <Select id={id('roast')} {...register('roast_level')}>
             <option value="">未設定</option>
             {Object.entries(ROAST_LABELS).map(([v, l]) => (
@@ -338,16 +395,22 @@ export function BeanForm({
               </option>
             ))}
           </Select>
-        </Field>
+        </F>
       </div>
 
-      <Field label="説明文" htmlFor={id('description')} error={errors.description?.message}>
+      <F
+        name="description"
+        ocr={ocr}
+        label="説明文"
+        htmlFor={id('description')}
+        error={errors.description?.message}
+      >
         <Textarea
           id={id('description')}
           placeholder="カードの裏の説明文。無ければ空でかまいません"
           {...register('description')}
         />
-      </Field>
+      </F>
 
       <div className="mt-2">
         <AppButton type="submit" loading={submitting}>

@@ -9,6 +9,7 @@ import { FullScreenLoading } from '@/components/full-screen-loading';
 import { LogDetail } from '@/components/logs/log-detail';
 import { LogForm } from '@/components/logs/log-form';
 import { LogListSkeleton } from '@/components/logs/log-list-item-skeleton';
+import { frontImagePath, useBeanImageUrl } from '@/features/beans/images';
 import { useDeleteLog, useUpdateLog } from '@/features/logs/mutations';
 import { formatBrewRatio, toTimelineItem } from '@/features/logs/presenters';
 import { useLog, useLogsByBean } from '@/features/logs/queries';
@@ -26,6 +27,7 @@ function LogPageInner() {
   const id = idFromSearchParams(params);
   const editing = params.get('edit') === '1';
   const log = useLog(id);
+  const image = useBeanImageUrl(frontImagePath(log.data?.bean.bean_images));
   const beanId = log.data?.bean_id ?? null;
   const siblings = useLogsByBean(beanId);
   const others = useMemo(
@@ -173,6 +175,7 @@ function LogPageInner() {
     <LogDetail
       loggedOn={l.logged_on}
       bean={{
+        imageSrc: image.data ?? null,
         id: l.bean.id,
         name: l.bean.name,
         roasterName: l.bean.roaster?.name ?? null,

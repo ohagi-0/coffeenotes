@@ -296,6 +296,27 @@ export type Database = {
           },
         ]
       }
+      ocr_usage: {
+        Row: {
+          count: number
+          updated_at: string
+          used_on: string
+          user_id: string
+        }
+        Insert: {
+          count?: number
+          updated_at?: string
+          used_on: string
+          user_id: string
+        }
+        Update: {
+          count?: number
+          updated_at?: string
+          used_on?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       roasters: {
         Row: {
           created_at: string
@@ -454,7 +475,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      consume_ocr_quota: {
+        Args: never
+        Returns: {
+          allowed: boolean
+          daily_limit: number
+          used: number
+        }[]
+      }
+      ocr_daily_limit: { Args: never; Returns: number }
+      ocr_today: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never

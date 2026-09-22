@@ -149,14 +149,16 @@ REQUIREMENTS.md §13.2 の N-1〜N-5。要点:
 ```ts
 // src/lib/ocr/index.ts
 export interface OcrProvider {
-  extractBeanCard(images: { front: Blob; back?: Blob }): Promise<BeanCardExtraction>;
+  readonly name: string;
+  extractBeanCard(images: { front: Blob; back?: Blob }): Promise<OcrResult>;
 }
+// OcrResult = { extraction: BeanCardExtraction; raw: unknown; provider; model; durationMs }
 // BeanCardExtraction は Zod スキーマ (src/lib/schemas/bean-card.ts) で定義。
-// 各項目は { value, confidence } の形で返し、UI で低信頼度を強調できるようにする。
+// 各項目は { value, confidence } の形で返し、UI で低信頼度を強調できるようにする。raw は beans.ocr_raw に保存する。
 ```
 
-- プロバイダは `src/lib/ocr/providers/claude.ts` を実装する（`OCR_PROVIDER=claude`）。他方式は将来の差し替え用にディレクトリだけ想定しておく。
-- Claude 実装の要点: モデル `claude-haiku-4-5`、表・裏を 1 リクエスト、`tool_use` で Zod スキーマ相当の JSON を強制、`max_tokens` 1,024、タイムアウト 15 秒。1 ユーザー 1 日 50 回のレート制限を `/api/ocr` に入れる。
+- プロバイダは `src/lib/ocr/providers/claude.ts`（`OCR_PROVIDER=claude`）。選択は `src/lib/ocr/factory.ts`（サーバー専用）。`none` なら `/api/ocr` は 503 `ocr_disabled` を返し、UI は手入力に切り替える。
+- Claude 実装の要点: モデル `claude-haiku-4-5`、表・裏を 1 リクエスト、`tool_use`（`strict: true`、`tool_choice` で強制）で Zod スキーマ相当の JSON を出させ、`sanitizeExtraction` で揺れを落としてから Zod 検証。`max_tokens` 1,024、タイムアウト 15 秒。1 ユーザー 1 日 50 回の上限は DB 関数 `consume_ocr_quota()`（SECURITY DEFINER、上限値は DB 側に固定、`ocr_usage` テーブル）で数え、`/api/ocr` がプロバイダを呼ぶ前に消費する。
 - **アプリ本体は `OcrProvider` 以外を import しない**。
 - 低信頼度の判定は `LOW_CONFIDENCE_THRESHOLD`（`src/lib/schemas/bean-card.ts`、現在 0.6）を使い、UI や設計書に数値を直書きしない。
 - OCR 失敗時は例外を握りつぶさず、UI は「手入力に切り替える」導線を出す。
@@ -254,6 +256,9 @@ SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=
 - [x] 公開準備: カスタム SMTP — Resend（ap-northeast-1、coffee-notes.app を DKIM/SPF 検証済み）を Supabase の SMTP に設定。送信元 `coffeenotes <login@coffee-notes.app>`、上限 30 通/時。ログインメールは日本語化し `{{ .RedirectTo }}?token_hash=…` 形式（送信時と別のブラウザで開いても通る）（2026-09-22）
 - [x] Phase 1 を本番 https://coffee-notes.app にデプロイ（UI-7〜16 + データ層 + SMTP）。品質ゲート（typecheck / lint / unit 229 / E2E 7 / build）通過（2026-09-22）
 - [ ] Phase 1: 実機（スマホ）で本番からログイン → 手入力で記録作成 → 一覧表示を確認して Phase 1 完了
+- [x] Phase 2: カード読み取り — マイグレーション 0002（`ocr_usage` + `consume_ocr_quota()`）、`providers/claude.ts`、`/api/ocr`、S3 ①撮影 / ②読み取り確認（要確認タグ、10 秒で手入力へ、失敗・上限・無効の 3 状態）、保存時に Storage へ画像と `bean_images` 行、豆詳細・一覧・記録詳細で署名付き URL を表示、設定に今日の回数（2026-09-22）
+- [ ] Phase 2: `ANTHROPIC_API_KEY` と `OCR_PROVIDER=claude` を Vercel に設定し、実 API で `tests/unit/ocr/live.test.ts` を通して応答を録画（`recorded: true`）— **API キー待ち**
+- [ ] Phase 2: 実機で撮影 → 読み取り → 保存が 1 分以内に終わることを確認（完了条件）
 - [ ] 公開準備（未着手）: Google 同意画面の本番公開、プライバシーポリシー、アカウント削除（F-AUTH-3）の繰り上げ
 
 進捗はこのチェックリストを更新して管理する。
@@ -277,5 +282,7 @@ SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=
 - マジックリンクの戻り先は要求元の `NEXT_PUBLIC_API_BASE_URL` で決まる。ローカルで要求したリンクをスマホで開いても `localhost` には繋がらない。スマホで試すときは本番 URL から要求する。
 - メール送信は Resend の SMTP 経由。Resend の API キーは Supabase の SMTP パスワードとして保存されているので、**Resend 側でそのキーを削除するとログインメールが止まる**。差し替えるときは新キーを作ってから Supabase の SMTP 設定を更新する。Cloudflare の DNS レコード（`resend._domainkey`、`send`、`rsend`）も消さない。
 - Supabase Free では、カスタム SMTP を設定して初めてメール文面を変更できる（内蔵メールのままだと Management API が 400 を返す）。
+- マイグレーションは `pnpm exec supabase db query --linked --project-ref gayhfwmvlxwyuzrvmkoy -f supabase/migrations/NNNN.sql` で本番に適用できる（CLI のトークンを使うのでキーチェーン不要）。0001 / 0002 はこの方法か SQL Editor で適用済みで、`supabase_migrations` には記録が無い。
+- 記録作成ウィザードの段階間の受け渡しは sessionStorage。撮影画像は data URL（`src/features/ocr/capture-draft.ts`）、豆の下書きは `new-log-draft.ts`。Blob は JSON にできないため。保存時に `dataUrlToBlob` で戻して Storage に上げる。
 - Supabase Free の一時停止対策として `.github/workflows/supabase-keepalive.yml` が週 2 回 REST を叩く（Secrets: `SUPABASE_URL` / `SUPABASE_ANON_KEY`）。
 - 画面設計は `docs/DESIGN.md` を正とする（トークン、書体、部品仕様、画面ごとの要素・状態・遷移）。見た目の参照はモック `docs/design/`（index = 方針・色・書体・部品、mobile = Web スマホ、desktop = Web PC、ios = iOS アプリ。共通の design.css / design.js。GitHub Pages で https://ohagi-0.github.io/coffeenotes/design/ に公開、push で更新）。リポジトリは Pages のため public（2026-09-21）。画面や部品を変えるときはモックと DESIGN.md を同じ PR で更新する。

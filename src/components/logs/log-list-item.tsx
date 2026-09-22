@@ -1,7 +1,10 @@
+'use client';
+
 import type { Route } from 'next';
 import Link from 'next/link';
 import { CardImage } from '@/components/beans/card-image';
 import { RatingStars } from '@/components/logs/rating-stars';
+import { useBeanImageUrl } from '@/features/beans/images';
 import { routes } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 
@@ -22,6 +25,8 @@ export type LogListItemProps = {
   detail?: string | null;
   flavorNotes?: string[];
   imageSrc?: string | null;
+  /** Storage 上のカード画像パス。imageSrc が無いとき署名付き URL に解決して表示する */
+  imagePath?: string | null;
   /** 遷移先を差し替える（PC の 2 ペインでは ?bean= にする）。既定は記録詳細 */
   href?: Route;
   /** 選択中（PC の 2 ペインで右に出している行） */
@@ -40,12 +45,15 @@ export function LogListItem({
   detail,
   flavorNotes = [],
   imageSrc,
+  imagePath,
   href: hrefOverride,
   selected,
   className,
 }: LogListItemProps) {
   const flavors = flavorNotes.slice(0, LOG_LIST_ITEM_MAX_FLAVORS);
   const href = hrefOverride ?? (routes.log(id) as Route);
+  const image = useBeanImageUrl(imageSrc ? null : imagePath);
+  const src = imageSrc ?? image.data ?? null;
 
   return (
     <Link
@@ -58,7 +66,7 @@ export function LogListItem({
         className,
       )}
     >
-      <CardImage src={imageSrc} beanName={beanName} roasterName={roasterName} country={country} size="sm" />
+      <CardImage src={src} beanName={beanName} roasterName={roasterName} country={country} size="sm" />
       <div className="min-w-0">
         <p className="font-display text-[21px] leading-[1.05] break-words">{beanName}</p>
         {roasterName && <p className="text-muted-foreground mt-1 text-[12px]">{roasterName}</p>}

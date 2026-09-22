@@ -5,6 +5,7 @@ import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { Coffee } from 'lucide-react';
 import { BeanDetail } from '@/components/beans/bean-detail';
+import { frontImagePath, useBeanImageUrl } from '@/features/beans/images';
 import { BeanDetailSkeleton } from '@/components/beans/bean-detail-skeleton';
 import { ErrorCallout } from '@/components/error-callout';
 import { beanSpecItems, beanTaste } from '@/features/beans/presenters';
@@ -20,6 +21,7 @@ import { routes } from '@/lib/routes';
 export function BeanDetailPane({ beanId }: { beanId: string | null }) {
   const router = useRouter();
   const bean = useBean(beanId);
+  const image = useBeanImageUrl(frontImagePath(bean.data?.bean_images));
   const logs = useLogsByBean(beanId);
   const stats = useRatingStats();
   const items = useMemo(() => (logs.data ?? []).map(toTimelineItem), [logs.data]);
@@ -52,6 +54,7 @@ export function BeanDetailPane({ beanId }: { beanId: string | null }) {
       layout="wide"
       crumb={<span>豆の詳細</span>}
       name={b.name}
+      imageSrc={image.data ?? null}
       roasterName={b.roaster?.name ?? (b.source === 'home_roasted' ? '自家焙煎' : null)}
       country={b.country}
       spec={beanSpecItems(b)}

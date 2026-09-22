@@ -154,13 +154,13 @@ shadcn/ui の生成物（`src/components/ui/`）は手で編集せず、以下�
 **① カード撮影（Phase 2）**
 - 要素: ステッパー（1 撮影）、表のタイル（撮影済みならサムネイル + 撮り直す）、裏のタイル（任意。「カメラで撮る」「写真を選ぶ」）、主ボタン「この内容で読み取る」、注記「長辺 1,600px に縮小」。Web はアプリ内カメラを持たず、OS のカメラを起動する。
 - 状態: 表が未撮影なら主ボタンは無効。カメラ権限拒否 → 「写真を選ぶ」だけを残して説明。アプリ内のガイド枠と連続撮影は iOS 版のみ（§9.3）。
-- 実装: `src/lib/platform/camera.ts` 経由。撮影後 `src/lib/image/compress.ts` で長辺 1,600px。
+- 実装: `components/logs/capture-step.tsx`。`src/lib/platform/camera.ts` 経由で OS のカメラ／写真選択を開き、撮影後 `src/lib/image/compress.ts` で長辺 1,600px。画像は data URL で sessionStorage に置いて ② へ渡す。
 - 要件: F-OCR-1 / F-BEAN-12。
 
 **② 読み取り結果の確認・修正 / 手入力フォーム**
 - 要素: ヘッダー（「やめる」）、タイトル、ステッパー（2 確認）、注記 + 「手入力に切り替える」リンク、表裏画像（2 列）、フィールド: 豆名（必須）/ ロースター（必須、共通マスタから補完）/ 生産国・標高 / 地域 / 品種・精製 / フレーバー（タグ入力、+ 追加）/ 味覚チャート / 価格・入手区分 / 説明文。主ボタン「次へ：どこで飲んだ？」。
 - 状態: OCR 実行中（画像を残したままスケルトン + 進捗バー「通常 3〜8 秒」+「スキップして手入力する」。10 秒で自動的に手入力へ）、OCR 失敗（コールアウト「文字が判別できませんでした」+ 撮り直す / 手で入力する。画像は保持）、必須未入力（豆名の下に錆色の 1 文）。
-- 実装: OCR 結果は react-hook-form の `defaultValues` に流すだけ。`confidence` はフィールドごとに `OcrField` に渡す。
+- 実装: `/logs/new?step=ocr`。`features/ocr/extract-bean-card.ts` で `/api/ocr` を呼び、`extractionToBeanForm` で `BeanForm` の `defaultValues` と `confidence` に流すだけ。`BeanForm` は `confidence` のある項目を `OcrField` で描く。上限超過（429）・無効（503）・10 秒超過は同じ画面で手入力に切り替え、画像は保持する。
 - 要件: F-OCR-2 / F-OCR-5 / F-OCR-6 / F-BEAN-1〜11。
 
 **③ 場所・日付・評価・メモ**

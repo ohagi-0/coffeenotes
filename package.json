@@ -27,6 +27,7 @@
     "prepare": "simple-git-hooks"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.127.0",
     "@base-ui/react": "^1.8.0",
     "@hookform/resolvers": "^5.2.0",
     "@supabase/ssr": "^0.7.0",
@@ -82,7 +83,7 @@
   },
   "lint-staged": {
     "*.{ts,tsx,mjs,js}": [
-      "eslint --max-warnings=0",
+      "eslint --max-warnings=0 --no-warn-ignored",
       "prettier --check"
     ],
     "*.{json,css,yml,yaml}": [

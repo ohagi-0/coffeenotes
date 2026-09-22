@@ -6,11 +6,13 @@ import { toast } from 'sonner';
 import { SettingsView } from '@/components/settings/settings-view';
 import { signOut } from '@/features/auth/sign-in';
 import { useSession } from '@/features/auth/use-session';
+import { useOcrUsage } from '@/features/ocr/queries';
 
 // S9 設定。表示は SettingsView（props 駆動）に任せ、ここではセッションとログアウトをつなぐ。
 export default function SettingsPage() {
   const router = useRouter();
   const { session } = useSession();
+  const ocrUsage = useOcrUsage();
   const [busy, setBusy] = useState(false);
 
   async function handleSignOut() {
@@ -30,6 +32,7 @@ export default function SettingsPage() {
     <SettingsView
       email={session?.user.email ?? null}
       providers={providers}
+      ocrUsedToday={ocrUsage.data?.used ?? 0}
       onSignOut={handleSignOut}
       signingOut={busy}
     />

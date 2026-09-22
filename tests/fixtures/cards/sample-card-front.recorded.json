@@ -1,0 +1,40 @@
+{
+  "recorded": false,
+  "note": "手書きの想定応答。実 API で録画したら recorded を true にして recordedAt を入れる",
+  "recordedAt": null,
+  "response": {
+    "id": "msg_fixture_sample_card_front",
+    "type": "message",
+    "role": "assistant",
+    "model": "claude-haiku-4-5",
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "usage": { "input_tokens": 1700, "output_tokens": 290 },
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_fixture_01",
+        "name": "record_bean_card",
+        "input": {
+          "name": { "value": "Lusitania Lime Geisha", "confidence": 0.98 },
+          "roaster": { "value": "KIELO COFFEE", "confidence": 0.97 },
+          "country": { "value": "Colombia", "confidence": 0.95 },
+          "region": { "value": "Caicedonia, Valle del Cauca", "confidence": 0.9 },
+          "variety": { "value": "Geisha", "confidence": 0.96 },
+          "process": { "value": "Lime infused", "confidence": 0.88 },
+          "altitudeM": { "value": 1650, "confidence": 0.93 },
+          "flavorNotes": { "value": ["Lime", "Bergamot", "Laurier"], "confidence": 0.9 },
+          "description": { "value": null, "confidence": 0 },
+          "taste": {
+            "value": { "flavor": 5, "sweetness": 3, "acidity": 5, "aftertaste": 3, "body": 3 },
+            "confidence": 0.55
+          },
+          "priceJpy": { "value": 3800, "confidence": 0.92 },
+          "priceGrams": { "value": 100, "confidence": 0.92 },
+          "roastLevel": { "value": null, "confidence": 0 },
+          "referenceUrl": { "value": "kielocoffee.com/lusitania", "confidence": 0.4 }
+        }
+      }
+    ]
+  }
+}

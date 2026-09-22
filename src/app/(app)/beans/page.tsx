@@ -5,6 +5,7 @@ import type { Route } from 'next';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { BeanDetail } from '@/components/beans/bean-detail';
+import { frontImagePath, useBeanImageUrl } from '@/features/beans/images';
 import { BeanDetailSkeleton } from '@/components/beans/bean-detail-skeleton';
 import { BeanForm, type BeanFormSubmit } from '@/components/beans/bean-form';
 import { ErrorCallout } from '@/components/error-callout';
@@ -27,6 +28,7 @@ function BeanPageInner() {
   const id = idFromSearchParams(params);
   const editing = params.get('edit') === '1';
   const bean = useBean(id);
+  const image = useBeanImageUrl(frontImagePath(bean.data?.bean_images));
   const logs = useLogsByBean(id);
   const stats = useRatingStats();
   const items = useMemo(() => (logs.data ?? []).map(toTimelineItem), [logs.data]);
@@ -153,6 +155,7 @@ function BeanPageInner() {
   return (
     <BeanDetail
       name={b.name}
+      imageSrc={image.data ?? null}
       roasterName={b.roaster?.name ?? (b.source === 'home_roasted' ? '自家焙煎' : null)}
       country={b.country}
       spec={beanSpecItems(b)}

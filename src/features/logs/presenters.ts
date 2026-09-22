@@ -1,4 +1,5 @@
 import type { LogListItemProps } from '@/components/logs/log-list-item';
+import { frontImagePath } from '@/features/beans/images';
 import type { LogFilters, LogWithRelations } from './queries';
 
 // DB の行（LogWithRelations）を表示用の平らな型に変換する純関数（Issue #17 段階 2）。
@@ -44,8 +45,9 @@ export function toTimelineItem(log: LogWithRelations): TimelineItem {
     shopName: log.shop?.name ?? null,
     detail: formatLogDetail(log),
     flavorNotes: [],
-    // カード画像は Phase 2（F-BEAN-12）で署名付き URL に置き換える。それまでは印刷物風のプレースホルダ
+    // カード画像は行（LogListItem）が imagePath から署名付き URL を引く。無ければ印刷物風のプレースホルダ
     imageSrc: null,
+    imagePath: frontImagePath(log.bean.bean_images),
   };
 }
 
