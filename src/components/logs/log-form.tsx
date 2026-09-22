@@ -9,6 +9,7 @@ import { ChevronRight, Plus, Store, X } from 'lucide-react';
 import { AppButton } from '@/components/app-button';
 import { Field, TextInput, Textarea } from '@/components/form/field';
 import { PlaceSegment } from '@/components/logs/place-segment';
+import { ShopCandidateTools, type ShopCandidate } from '@/components/shops/shop-candidate-tools';
 import { RatingStars } from '@/components/logs/rating-stars';
 import { useRatingInputMode } from '@/features/settings/use-preferences';
 import type { LogFormDraft } from '@/features/logs/save-new-log';
@@ -17,7 +18,7 @@ import { cn } from '@/lib/utils';
 
 // ③ 店・日付・評価・メモ（S3 ③、F-LOG-2/3/4/8、F-SHOP-2/6、F-TAG-1/2）。
 // 星とメモだけでも保存できる。店は既存から選ぶか、名前だけ手入力して新規にする（候補検索は Phase 3）。
-// レシピ（自宅）と焙煎バッチは Phase 4 まで出さない。
+// 店の候補（現在地から / 店名で検索 / 地図で指定）は ShopCandidateTools に任せ、選んだ候補の座標は shopMeta に持って submit に含める。
 
 export type ShopOption = { id: string; name: string; address?: string | null };
 
@@ -35,6 +36,11 @@ export type LogFormProps = {
   onShopSearch?: (query: string) => void;
   /** 過去に使ったタグ（候補として点線で出す） */
   tagSuggestions?: string[];
+  /** 店の候補検索（F-SHOP-3/4）。渡さなければチップを出さない */
+  shopCandidates?: {
+    nearby: (pos: { lat: number; lng: number }) => Promise<ShopCandidate[]>;
+    geocode: (query: string, near?: { lat: number; lng: number }) => Promise<ShopCandidate[]>;
+  };
   defaultValues?: Partial<FormInput>;
   onSubmit: (values: LogFormDraft) => void;
   submitting?: boolean;
@@ -50,6 +56,7 @@ export function LogForm({
   shopOptions = [],
   onShopSearch,
   tagSuggestions = [],
+  shopCandidates,
   defaultValues,
   onSubmit,
   submitting,
@@ -84,6 +91,13 @@ export function LogForm({
   const brewMethod = useWatch({ control, name: 'brew_method' });
 
   const [shopPicking, setShopPicking] = useState(false);
+  /** 候補や地図で決めた新規店の付帯情報（既存の店を選んだら null） */
+  const [shopMeta, setShopMeta] = useState<{
+    address: string | null;
+    lat: number | null;
+    lng: number | null;
+    externalPlaceId: string | null;
+  } | null>(null);
   const [tagDraft, setTagDraft] = useState('');
   const brewIsOther =
     typeof brewMethod === 'string' &&
@@ -96,11 +110,23 @@ export function LogForm({
   function pickShop(s: ShopOption) {
     setValue('shop_id', s.id, { shouldDirty: true });
     setValue('shop_name', s.name, { shouldDirty: true });
+    setShopMeta(null);
     setShopPicking(false);
+  }
+  function pickCandidate(c: ShopCandidate) {
+    setValue('shop_id', null);
+    setValue('shop_name', c.name, { shouldDirty: true, shouldValidate: true });
+    setShopMeta({ address: c.address, lat: c.lat, lng: c.lng, externalPlaceId: c.externalPlaceId });
+    setShopPicking(false);
+  }
+  function pickPosition(pos: { lat: number; lng: number }) {
+    setValue('shop_id', null);
+    setShopMeta((m) => ({ address: m?.address ?? null, externalPlaceId: null, lat: pos.lat, lng: pos.lng }));
   }
   function clearShop() {
     setValue('shop_id', null);
     setValue('shop_name', '');
+    setShopMeta(null);
     onShopSearch?.('');
     setShopPicking(true);
   }
@@ -120,7 +146,10 @@ export function LogForm({
     const { shop_id, shop_name, ...fields } = values;
     onSubmit({
       fields,
-      shop: fields.place === 'shop' && (shop_id || shop_name) ? { id: shop_id, name: shop_name } : null,
+      shop:
+        fields.place === 'shop' && (shop_id || shop_name)
+          ? { id: shop_id, name: shop_name, ...(shop_id ? {} : (shopMeta ?? {})) }
+          : null,
     });
   });
 
@@ -155,7 +184,11 @@ export function LogForm({
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-bold">{shopName}</span>
                 <span className="text-muted-foreground block text-xs">
-                  {shopId ? '登録済みの店' : '新しい店として登録します'}
+                  {shopId
+                    ? '登録済みの店'
+                    : shopMeta?.lat != null
+                      ? `新しい店として登録します（座標あり${shopMeta.address ? ` · ${shopMeta.address}` : ''}）`
+                      : '新しい店として登録します'}
                 </span>
               </span>
               <ChevronRight className="text-muted-foreground size-[18px]" aria-hidden />
@@ -208,8 +241,22 @@ export function LogForm({
               )}
             </div>
           )}
+          {!shopId && (
+            <ShopCandidateTools
+              query={shopName}
+              nearby={shopCandidates?.nearby}
+              geocode={shopCandidates?.geocode}
+              onPick={pickCandidate}
+              onPickPosition={pickPosition}
+              position={
+                shopMeta?.lat != null && shopMeta.lng != null
+                  ? { lat: shopMeta.lat, lng: shopMeta.lng }
+                  : null
+              }
+            />
+          )}
           <p className="text-muted-foreground text-xs">
-            店は後から付けることもできます。現在地からの候補と地図での指定は Phase 3 で。
+            店は後から付けることもできます。座標が無くても保存できます。
           </p>
         </div>
       )}

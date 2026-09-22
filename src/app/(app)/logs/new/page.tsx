@@ -29,6 +29,7 @@ import {
   type DraftImages,
 } from '@/features/logs/new-log-draft';
 import { saveNewLog, type LogFormDraft } from '@/features/logs/save-new-log';
+import { geocodePlace, searchNearbyPlaces } from '@/features/geo/search';
 import { clearCaptureDraft, readCaptureDraft, writeCaptureDraft } from '@/features/ocr/capture-draft';
 import { OcrRequestError, requestBeanCardExtraction } from '@/features/ocr/extract-bean-card';
 import { extractionToBeanForm, type BeanFormPrefill } from '@/features/ocr/to-bean-form';
@@ -468,6 +469,10 @@ function PlaceStep() {
         shopOptions={(shops.data ?? []).map((s) => ({ id: s.id, name: s.name, address: s.address }))}
         onShopSearch={setShopQuery}
         tagSuggestions={(tags.data ?? []).map((t) => t.name)}
+        shopCandidates={{
+          nearby: (pos) => searchNearbyPlaces(pos),
+          geocode: (query, near) => geocodePlace({ query, near }),
+        }}
         onSubmit={onSubmit}
         submitting={saving}
       />

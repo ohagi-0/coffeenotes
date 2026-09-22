@@ -10,6 +10,7 @@ import { FilterChips, type FilterChip } from '@/components/filter-chips';
 import { FullScreenLoading } from '@/components/full-screen-loading';
 import { ShopForm } from '@/components/shops/shop-form';
 import { ShopList } from '@/components/shops/shop-list';
+import { geocodePlace, searchNearbyPlaces } from '@/features/geo/search';
 import { useRatingStats } from '@/features/logs/queries';
 import { useCreateShop } from '@/features/shops/mutations';
 import { sortShopRows, toShopRow, type ShopSort } from '@/features/shops/presenters';
@@ -34,6 +35,13 @@ function ShopsInner() {
   const pathname = usePathname();
   const params = useSearchParams();
   const showNew = params.get('new') === '1';
+  // 地図の長押しから来たときは ?lat&lng に座標が入っている（F-SHOP-7）
+  const presetLat = Number(params.get('lat'));
+  const presetLng = Number(params.get('lng'));
+  const preset =
+    params.get('lat') && params.get('lng') && Number.isFinite(presetLat) && Number.isFinite(presetLng)
+      ? { lat: presetLat, lng: presetLng }
+      : undefined;
   const chip = params.get('f') ?? 'all';
   const [search, setSearch] = useState('');
 
@@ -73,6 +81,11 @@ function ShopsInner() {
           />
         )}
         <ShopForm
+          defaultValues={preset}
+          candidates={{
+            nearby: (pos) => searchNearbyPlaces(pos),
+            geocode: (query, near) => geocodePlace({ query, near }),
+          }}
           submitting={createShop.isPending}
           onSubmit={(values) =>
             createShop.mutate(values, {
