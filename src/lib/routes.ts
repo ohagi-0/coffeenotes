@@ -13,6 +13,8 @@ export const routes = {
   map: '/map',
   stats: '/stats',
   settings: '/settings',
+  privacy: '/privacy',
+  terms: '/terms',
   /** 豆詳細（S4） */
   bean: (id: string) => withId('/beans', id),
   /** 記録詳細・編集（S5） */

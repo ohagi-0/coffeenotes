@@ -1,5 +1,8 @@
 'use client';
 
+import Link from 'next/link';
+import { routes } from '@/lib/routes';
+
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -153,6 +156,17 @@ export default function LoginPage() {
         パスワードはありません。届いたリンクを開くとログインできます。
         <br />
         同じメールアドレスなら Google でも同じ記録帳が開きます。
+      </p>
+      <p className="text-muted-foreground mt-3 text-center text-[11px]">
+        ログインすると
+        <Link href={routes.terms} className="underline underline-offset-2">
+          利用規約
+        </Link>
+        と
+        <Link href={routes.privacy} className="underline underline-offset-2">
+          プライバシーポリシー
+        </Link>
+        に同意したことになります。
       </p>
     </main>
   );

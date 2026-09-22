@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import { Download } from 'lucide-react';
 import { AppButton } from '@/components/app-button';
+import { TextInput } from '@/components/form/field';
+import { routes } from '@/lib/routes';
+import Link from 'next/link';
 import { SettingRow, SettingSection } from '@/components/settings/setting-row';
 import { useRatingInputMode, type RatingInputMode } from '@/features/settings/use-preferences';
 import { OCR_DAILY_LIMIT } from '@/lib/ocr';
@@ -18,6 +21,8 @@ export type SettingsViewProps = {
   ocrUsedToday?: number;
   onSignOut: () => Promise<void> | void;
   signingOut?: boolean;
+  /** アカウントと全データの削除（F-AUTH-3）。成功したら呼び出し側でログイン画面へ */
+  onDeleteAccount?: () => Promise<void>;
 };
 
 const PROVIDER_LABEL: Record<string, string> = { google: 'Google', email: 'メールリンク' };
@@ -29,9 +34,14 @@ export function SettingsView({
   ocrUsedToday = 0,
   onSignOut,
   signingOut,
+  onDeleteAccount,
 }: SettingsViewProps) {
   const [ratingInput, setRatingInput] = useRatingInputMode();
-  const [deleteNotice, setDeleteNotice] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [confirmEmail, setConfirmEmail] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const emailMatches = !!email && confirmEmail.trim().toLowerCase() === email.toLowerCase();
   const initial = (email?.[0] ?? '?').toUpperCase();
   const providerText = providers.map((p) => PROVIDER_LABEL[p] ?? p).join(' / ') || '—';
   const ocrPercent = Math.min(100, Math.round((ocrUsedToday / OCR_DAILY_LIMIT) * 100));
@@ -139,20 +149,84 @@ export function SettingsView({
       </SettingSection>
 
       <div className="mt-8 flex flex-col gap-2.5">
-        <AppButton variant="destructive" onClick={() => setDeleteNotice(true)}>
+        <AppButton variant="destructive" onClick={() => setConfirming(true)} disabled={confirming}>
           アカウントと全データを削除
         </AppButton>
         <p className="text-muted-foreground text-center text-[11px] leading-relaxed">
           画像を含むすべての記録を削除します。元に戻せません。
         </p>
-        {deleteNotice && (
-          <div role="alert" className="border-border bg-card rounded-[14px] border p-3.5 text-sm">
-            <p className="font-bold">削除はまだ使えません</p>
-            <p className="text-muted-foreground mt-0.5 text-xs leading-relaxed">
-              アカウント削除（F-AUTH-3）は後の段階で有効になります。それまでに削除したい場合はお問い合わせください。
+        {confirming && (
+          <div
+            role="dialog"
+            aria-label="アカウント削除の確認"
+            className="border-destructive bg-destructive/10 flex flex-col gap-3 rounded-[14px] border p-3.5 text-sm"
+          >
+            <p className="text-destructive font-bold">本当に削除しますか？</p>
+            <p className="text-[13px] leading-relaxed">
+              記録・豆・店・タグ・カード画像をすべて削除し、ログインできなくなります。元に戻せません。
+              ロースター名の共有マスタは残ります。
             </p>
+            <label className="flex flex-col gap-1 text-[11px]">
+              <span className="text-muted-foreground">確認のため、ログイン中のメールアドレスを入力</span>
+              <TextInput
+                type="email"
+                inputMode="email"
+                autoComplete="off"
+                placeholder={email ?? 'you@example.com'}
+                value={confirmEmail}
+                onChange={(e) => setConfirmEmail(e.target.value)}
+                aria-label="確認用メールアドレス"
+              />
+            </label>
+            {deleteError && (
+              <p role="alert" className="text-destructive text-[12px]">
+                {deleteError}
+              </p>
+            )}
+            <div className="grid grid-cols-2 gap-2">
+              <AppButton
+                variant="ghost"
+                size="md"
+                onClick={() => {
+                  setConfirming(false);
+                  setConfirmEmail('');
+                  setDeleteError(null);
+                }}
+                disabled={deleting}
+              >
+                やめる
+              </AppButton>
+              <AppButton
+                variant="destructive"
+                size="md"
+                disabled={!emailMatches || !onDeleteAccount}
+                loading={deleting}
+                onClick={async () => {
+                  if (!onDeleteAccount) return;
+                  setDeleting(true);
+                  setDeleteError(null);
+                  try {
+                    await onDeleteAccount();
+                  } catch (e) {
+                    setDeleteError(e instanceof Error ? e.message : '削除できませんでした');
+                    setDeleting(false);
+                  }
+                }}
+              >
+                削除する
+              </AppButton>
+            </div>
           </div>
         )}
+        <p className="text-muted-foreground mt-2 text-center text-[11px]">
+          <Link href={routes.privacy} className="underline underline-offset-2">
+            プライバシーポリシー
+          </Link>
+          {' · '}
+          <Link href={routes.terms} className="underline underline-offset-2">
+            利用規約
+          </Link>
+        </p>
       </div>
     </div>
   );

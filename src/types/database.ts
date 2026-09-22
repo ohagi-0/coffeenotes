@@ -483,6 +483,7 @@ export type Database = {
           used: number
         }[]
       }
+      delete_my_account: { Args: never; Returns: undefined }
       ocr_daily_limit: { Args: never; Returns: number }
       ocr_today: { Args: never; Returns: string }
     }

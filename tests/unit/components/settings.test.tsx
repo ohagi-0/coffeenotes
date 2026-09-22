@@ -55,6 +55,7 @@ describe('SettingsView', () => {
     fireEvent.click(screen.getByRole('radio', { name: 'スライダー' }));
     expect(screen.getByRole('radio', { name: 'スライダー' })).toHaveAttribute('aria-checked', 'true');
     fireEvent.click(screen.getByRole('button', { name: 'アカウントと全データを削除' }));
-    expect(screen.getByRole('alert')).toHaveTextContent('削除はまだ使えません');
+    expect(screen.getByRole('dialog', { name: 'アカウント削除の確認' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '削除する' })).toBeDisabled();
   });
 });

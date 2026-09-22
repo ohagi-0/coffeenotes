@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { NAV_ITEMS } from '@/components/nav';
+import { routes } from '@/lib/routes';
 
 // サイトのフッター（DESIGN.md §3）。各ページの末尾。ここからも 5 ページへ移動できる。
 export function SiteFooter() {
@@ -19,7 +20,18 @@ export function SiteFooter() {
         </li>
       </ul>
       <div>
-        © 2026 Coffeenotes · <span>プライバシー</span> · <span>お問い合わせ</span>
+        © 2026 Coffeenotes ·{' '}
+        <Link href={routes.privacy} className="text-foreground">
+          プライバシー
+        </Link>{' '}
+        ·{' '}
+        <Link href={routes.terms} className="text-foreground">
+          利用規約
+        </Link>{' '}
+        ·{' '}
+        <a href="https://github.com/ohagi-0/coffeenotes/issues" className="text-foreground" rel="noreferrer">
+          お問い合わせ
+        </a>
       </div>
     </footer>
   );

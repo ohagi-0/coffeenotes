@@ -6,13 +6,18 @@ import { toast } from 'sonner';
 import { SettingsView } from '@/components/settings/settings-view';
 import { signOut } from '@/features/auth/sign-in';
 import { useSession } from '@/features/auth/use-session';
+import { useQueryClient } from '@tanstack/react-query';
+import { deleteMyAccount } from '@/features/account/delete-account';
+import { requireUserId } from '@/features/auth/require-user-id';
 import { useOcrUsage } from '@/features/ocr/queries';
+import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 
 // S9 設定。表示は SettingsView（props 駆動）に任せ、ここではセッションとログアウトをつなぐ。
 export default function SettingsPage() {
   const router = useRouter();
   const { session } = useSession();
   const ocrUsage = useOcrUsage();
+  const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false);
 
   async function handleSignOut() {
@@ -35,6 +40,12 @@ export default function SettingsPage() {
       ocrUsedToday={ocrUsage.data?.used ?? 0}
       onSignOut={handleSignOut}
       signingOut={busy}
+      onDeleteAccount={async () => {
+        await deleteMyAccount(getSupabaseBrowserClient(), await requireUserId());
+        queryClient.clear();
+        toast.success('アカウントを削除しました');
+        router.replace('/login');
+      }}
     />
   );
 }
