@@ -62,38 +62,45 @@ REQUIREMENTS.md §13.2 の N-1〜N-5。要点:
 ├── CLAUDE.md
 ├── docs/
 │   ├── REQUIREMENTS.md        # 要件定義書（正）
+│   ├── DESIGN.md              # 画面の基本設計（トークン・部品・画面仕様）。design/ はモック（GitHub Pages）
+│   ├── USER-SETUP.md          # ユーザー側の設定手順（API キー、Google ログイン、実機確認、Vercel×GitHub）
+│   ├── worklog/               # UI 実装の作業ログ（履歴。読むのは経緯を調べるときだけ）
 │   └── decisions/             # ADR: 決めたことを 1 ファイル 1 決定で残す
 ├── src/
 │   ├── app/                   # App Router（route ごとにフォルダ）
 │   │   ├── (auth)/login/
 │   │   ├── (legal)/           # /privacy /terms（ログイン不要。Google 同意画面・App Store 申請の参照先）
-│   │   ├── (app)/             # ログイン後。layout に認証ガード + ナビ（Web はサイトヘッダー + ドロワー。現状の bottom-nav.tsx は Phase 0 の暫定で、DESIGN.md §3 に置き換える）
+│   │   ├── (app)/             # ログイン後。layout に認証ガード + ナビ（Web はサイトヘッダー + ドロワー、PC はサイドバー、下タブは iOS 版のみ）
 │   │   │   ├── page.tsx       # ホーム（タイムライン）
 │   │   │   ├── logs/new/      # 記録作成ウィザード
 │   │   │   ├── logs/              # 記録詳細・編集 `/logs?id=…`（ADR 0008。[id] は使わない）
 │   │   │   ├── beans/             # 豆詳細 `/beans?id=…`
 │   │   │   ├── shops/             # 一覧。詳細は shops/detail/ `/shops/detail?id=…`
-│   │   │   ├── map/
-│   │   │   ├── stats/
-│   │   │   └── settings/
+│   │   │   ├── map/               # 地図 `/map?shop=…`（Leaflet は dynamic import）
+│   │   │   ├── stats/             # 好みの分析 `/stats?p=…`
+│   │   │   ├── settings/
+│   │   │   └── dev/components/    # 部品カタログ。本番は notFound()
+│   │   ├── auth/callback/     # マジックリンク・OAuth の戻り先（ガードの外）
+│   │   ├── sw.ts              # Service Worker（serwist）。public/sw.js に生成される
 │   │   └── api/               # Route Handler。ocr/route.ts（Claude Haiku）、geo/route.ts（店候補）。静的出力からは除外される
 │   │       ├── ocr/route.ts   # OCR 実行（API キーはここでのみ使う）
 │   │       └── geo/route.ts   # 店候補・ジオコーディング
 │   ├── components/
 │   │   ├── ui/                # shadcn/ui 生成物（手で編集しない）
-│   │   ├── beans/  logs/  shops/  map/  stats/
+│   │   ├── beans/  logs/  shops/  map/  roasts/  settings/  form/
 │   ├── features/              # ドメインごとのロジック（hooks, queries, mutations）
-│   │   ├── beans/  logs/  shops/  roasters/  tags/  auth/  geo/
+│   │   ├── beans/  logs/  shops/  roasters/  roasts/  tags/  auth/  geo/  stats/  export/  settings/
 │   │   ├── ocr/               # /api/ocr の呼び出し、抽出→フォーム変換、撮影画像の受け渡し、今日の回数
 │   │   ├── account/           # アカウント削除（Storage 掃除 → delete_my_account()）
 │   ├── lib/
 │   │   ├── supabase/          # client.ts（ブラウザ、シングルトン）/ server.ts（Route Handler 用）。middleware.ts は作らない
 │   │   ├── ocr/               # index.ts(インターフェース) + providers/
 │   │   ├── geo/               # index.ts(インターフェース) + providers/
-│   │   ├── image/             # ブラウザ側圧縮・リサイズ
+│   │   ├── image/             # compress.ts（長辺 1,600px）/ data-url.ts / qr.ts（@zxing/browser）
 │   │   ├── storage/           # Supabase Storage（カード画像の保存・署名付き URL）
-│   │   ├── platform/          # camera.ts / geolocation.ts / share.ts（Web と Capacitor の差を吸収）
-│   │   └── schemas/           # Zod スキーマ（DB 型と対応）
+│   │   ├── platform/          # camera / geolocation / share / network / download（ブラウザ API はここだけ。Capacitor で差し替える）
+│   │   ├── routes.ts          # 画面 URL の組み立て（詳細ページはクエリ形式。ADR 0008）
+│   │   └── schemas/           # Zod スキーマ（DB 型と対応。フォーム用と DB 投入用を分ける）
 │   └── types/
 │       └── database.ts        # `supabase gen types` の生成物（手で編集しない）
 ├── supabase/
@@ -234,7 +241,7 @@ SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=
 6. 決定事項（技術選定、方式変更）は `docs/decisions/NNNN-title.md` に ADR として残す（背景 / 選択肢 / 決定 / 理由 の 4 節）。
 7. 作業報告は「分かったこと」と「やったこと／次にやること」を分けて書き、最後に該当フェーズの進捗率を書く。
 8. 外部サービスの料金・仕様に依存する判断は、確認した日付と出典を ADR に添える。
-9. 秘密情報（API キー、Supabase の service role キー）をコード・ログ・テストフィクスチャに含めない。
+9. 秘密情報（API キー、Supabase の service role キー）をコード・ログ・テストフィクスチャに含めない。ユーザーから鍵を受け取るときは会話に貼らせず、`~/.coffeenotes-secrets/<name>.txt` に置いてもらい、ファイル経由で使って終わったら削除する（手順は `docs/USER-SETUP.md`）。
 10. コミットは Conventional Commits（`feat:` `fix:` `chore:` `docs:`）。日本語の本文可。
 
 ## 8. 現在の状態と次のタスク
@@ -266,7 +273,7 @@ SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=
 - [x] Phase 1 を本番 https://coffee-notes.app にデプロイ（UI-7〜16 + データ層 + SMTP）。品質ゲート（typecheck / lint / unit 229 / E2E 7 / build）通過（2026-09-22）
 - [ ] Phase 1: 実機（スマホ）で本番からログイン → 手入力で記録作成 → 一覧表示を確認して Phase 1 完了
 - [x] Phase 2: カード読み取り — マイグレーション 0002（`ocr_usage` + `consume_ocr_quota()`）、`providers/claude.ts`、`/api/ocr`、S3 ①撮影 / ②読み取り確認（要確認タグ、10 秒で手入力へ、失敗・上限・無効の 3 状態）、保存時に Storage へ画像と `bean_images` 行、豆詳細・一覧・記録詳細で署名付き URL を表示、設定に今日の回数（2026-09-22）
-- [ ] Phase 2: `ANTHROPIC_API_KEY` と `OCR_PROVIDER=claude` を Vercel に設定し、実 API で `tests/unit/ocr/live.test.ts` を通して応答を録画（`recorded: true`）— **API キー待ち**
+- [ ] Phase 2: `ANTHROPIC_API_KEY` と `OCR_PROVIDER=claude` を Vercel に設定し、実 API で `tests/unit/ocr/live.test.ts` を通して応答を録画（`recorded: true`）— **API キー待ち。ユーザーの手順は `docs/USER-SETUP.md` の 1**
 - [ ] Phase 2: 実機で撮影 → 読み取り → 保存が 1 分以内に終わることを確認（完了条件）
 - [x] F-AUTH-3 アカウント削除（0003_delete_my_account.sql、設定画面の確認ブロック）と /privacy /terms（2026-09-22）
 - [ ] 公開準備（ユーザー作業）: Google Cloud で OAuth クライアント作成 → Supabase Providers で Google 有効化 → 同意画面を本番公開。Vercel と GitHub の連携（任意）
@@ -282,7 +289,7 @@ SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=
 - 画像圧縮は Canvas 系 API を使うため jsdom では検証できない。寸法計算 `fitWithin` を純粋関数として単体テストし、実ブラウザでの挙動は `tests/e2e/image-compress.spec.ts` で確認する（compress.ts の関数を `toString()` でページに流し込んで実行する）。
 - `uploadBeanImage` は Storage への保存だけを行い、`bean_images` 行の作成は features 層の責務にしている。バケットは非公開なので表示は `getBeanImageUrl` の署名付き URL を使う。
 
-### 8.1 実装上のメモ（Phase 0 で決めた細部）
+### 8.1 実装・運用上のメモ（フェーズをまたいで効く細部）
 
 - 認証ガードはミドルウェアではなく `(app)/layout.tsx` でクライアント側判定する（静的出力・Capacitor 対応のため）。`src/lib/supabase/middleware.ts` は作らない。
 - `next.config.ts` に `output: 'export'` は付けていない（`/api/*` を同居させるため。ADR 0002）。
