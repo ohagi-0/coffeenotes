@@ -18,18 +18,20 @@ async function fetchLog(id: string): Promise<LogWithRelations> {
   return data;
 }
 
-/** 記録を作る（F-LOG-1〜3/8、F-TAG-1）。タグは名前で渡し、無ければ作られる。 */
+/**
+ * 記録を作る（F-LOG-1〜3/8、F-TAG-1）。タグは名前で渡し、無ければ作られる。
+ * 作成後に記録を読み直さない（保存の待ち時間を縮める）。一覧・詳細は無効化で次に開いたときに取り直す。
+ */
 export function useCreateLog() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: LogFormInput): Promise<LogWithRelations> => {
+    mutationFn: async (input: LogFormInput): Promise<{ id: string }> => {
       const id = await createLogWithTags(getSupabaseBrowserClient(), input, await requireUserId());
-      return fetchLog(id);
+      return { id };
     },
-    onSuccess: (log) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: logKeys.all });
       queryClient.invalidateQueries({ queryKey: tagKeys.all });
-      queryClient.setQueryData(logKeys.detail(log.id), log);
     },
   });
 }

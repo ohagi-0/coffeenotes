@@ -26,6 +26,9 @@ export type LogFormDraft = {
   newRoast?: RoastFormValues | null;
 };
 
+/** 進捗の段階（UI の「〜しています」表示用） */
+export type SaveNewLogStage = 'bean' | 'images' | 'shop' | 'roast' | 'log';
+
 export type SaveNewLogDeps = {
   createRoaster: (input: RoasterFormInput) => Promise<{ id: string }>;
   createBean: (input: CreateBeanInput) => Promise<{ id: string }>;
@@ -34,6 +37,8 @@ export type SaveNewLogDeps = {
   createRoast?: (input: RoastFormValues & { bean_id: string }) => Promise<{ id: string }>;
   /** カード画像の保存（F-BEAN-12）。渡さなければ画像は保存しない */
   saveBeanImages?: (beanId: string, images: DraftImages) => Promise<void>;
+  /** 段階が進むたびに呼ぶ（任意） */
+  onProgress?: (stage: SaveNewLogStage) => void;
 };
 
 export type SaveNewLogResult = {
@@ -49,12 +54,16 @@ export async function saveNewLog(
   log: LogFormDraft,
   deps: SaveNewLogDeps,
 ): Promise<SaveNewLogResult> {
+  const progress = deps.onProgress ?? (() => {});
   // 1. 豆（新規なら、先にロースターを解決する）
   let beanId: string;
   let imageError: string | undefined;
+  /** 画像のアップロードは店・焙煎・記録の作成と並列に走らせ、最後に待つ（一番時間がかかる処理なので直列にしない） */
+  let imagesDone: Promise<void> | null = null;
   if (draft.bean.kind === 'existing') {
     beanId = draft.bean.id;
   } else {
+    progress('bean');
     const roasterId =
       draft.bean.roaster.id ?? (await deps.createRoaster({ name: draft.bean.roaster.name })).id;
     beanId = (
@@ -66,17 +75,17 @@ export async function saveNewLog(
     ).id;
     // 1'. カード画像。失敗しても豆と記録の保存は続ける（画像は後から撮り直せる）
     if (draft.bean.images && deps.saveBeanImages) {
-      try {
-        await deps.saveBeanImages(beanId, draft.bean.images);
-      } catch (e) {
+      progress('images');
+      imagesDone = deps.saveBeanImages(beanId, draft.bean.images).catch((e: unknown) => {
         imageError = e instanceof Error ? e.message : 'カード画像を保存できませんでした';
-      }
+      });
     }
   }
 
   // 2. 店（自宅なら付けない。DB の CHECK 制約と同じ）
   let shopId: string | null = null;
   if (log.fields.place === 'shop' && log.shop) {
+    if (!log.shop.id && log.shop.name.trim()) progress('shop');
     shopId =
       log.shop.id ??
       (log.shop.name.trim()
@@ -97,11 +106,18 @@ export async function saveNewLog(
   // 3. 焙煎バッチ（新規なら豆の後に作り、記録に付ける）
   let roastId = log.fields.roast_id ?? null;
   if (log.newRoast && deps.createRoast) {
+    progress('roast');
     roastId = (await deps.createRoast({ ...log.newRoast, bean_id: beanId })).id;
   }
 
   // 4. 記録
+  progress('log');
   const logId = (await deps.createLog({ ...log.fields, bean_id: beanId, shop_id: shopId, roast_id: roastId }))
     .id;
+  // 5. 画像が終わるのを待つ（並列で走らせていた分）
+  if (imagesDone) {
+    progress('images');
+    await imagesDone;
+  }
   return { beanId, logId, shopId, ...(imageError ? { imageError } : {}) };
 }

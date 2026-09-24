@@ -30,7 +30,7 @@ import {
   writeNewLogDraft,
   type DraftImages,
 } from '@/features/logs/new-log-draft';
-import { saveNewLog, type LogFormDraft } from '@/features/logs/save-new-log';
+import { saveNewLog, type SaveNewLogStage, type LogFormDraft } from '@/features/logs/save-new-log';
 import { geocodePlace, searchNearbyPlaces } from '@/features/geo/search';
 import { clearCaptureDraft, readCaptureDraft, writeCaptureDraft } from '@/features/ocr/capture-draft';
 import { OcrRequestError, requestBeanCardExtraction } from '@/features/ocr/extract-bean-card';
@@ -406,6 +406,14 @@ function BeanStep() {
   );
 }
 
+const SAVE_STAGE_TEXT: Record<SaveNewLogStage, string> = {
+  bean: '豆を保存しています…',
+  images: 'カード画像を保存しています…',
+  shop: '店を登録しています…',
+  roast: '焙煎バッチを登録しています…',
+  log: '記録を保存しています…',
+};
+
 function PlaceStep() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -429,6 +437,7 @@ function PlaceStep() {
       : existingBean.data?.source === 'home_roasted';
   const lastRecipe = latestRecipe(beanLogs.data ?? []);
   const [saving, setSaving] = useState(false);
+  const [stage, setStage] = useState<SaveNewLogStage | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
 
   if (!draft) {
@@ -452,9 +461,11 @@ function PlaceStep() {
   async function onSubmit(values: LogFormDraft) {
     if (!draft) return;
     setSaving(true);
+    setStage(null);
     setFailure(null);
     try {
       const result = await saveNewLog(draft, values, {
+        onProgress: setStage,
         createRoaster: (input) => createRoaster.mutateAsync(input),
         createBean: (input) => createBean.mutateAsync(input),
         createShop: (input) => createShop.mutateAsync(input),
@@ -516,6 +527,7 @@ function PlaceStep() {
         }}
         onSubmit={onSubmit}
         submitting={saving}
+        submittingText={stage ? SAVE_STAGE_TEXT[stage] : null}
       />
     </div>
   );

@@ -25,13 +25,17 @@ export async function saveBeanImages(
 ): Promise<void> {
   const sides: [BeanImageSide, Blob][] = [['front', images.front]];
   if (images.back) sides.push(['back', images.back]);
-  for (const [side, blob] of sides) {
-    const storage_path = await uploadBeanImage({ userId, beanId, side, blob }, client);
-    const { error } = await client
-      .from('bean_images')
-      .upsert({ user_id: userId, bean_id: beanId, side, storage_path }, { onConflict: 'bean_id,side' });
-    if (error) throw error;
-  }
+  // 表・裏は並列に上げ、bean_images の行は 1 回の upsert にまとめる（保存の待ち時間を縮める）
+  const rows = await Promise.all(
+    sides.map(async ([side, blob]) => ({
+      user_id: userId,
+      bean_id: beanId,
+      side,
+      storage_path: await uploadBeanImage({ userId, beanId, side, blob }, client),
+    })),
+  );
+  const { error } = await client.from('bean_images').upsert(rows, { onConflict: 'bean_id,side' });
+  if (error) throw error;
 }
 
 /** 表面の storage_path を取り出す（豆の関連 bean_images から）。 */

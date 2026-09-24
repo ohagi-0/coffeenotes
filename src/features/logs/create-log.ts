@@ -21,8 +21,24 @@ export async function createLogWithTags(
   });
   const inserted = await client.from('logs').insert(values).select('id').single();
   if (inserted.error) throw inserted.error;
-  await syncLogTags(client, inserted.data.id, tag_names, userId);
+  // 作ったばかりの記録にはタグが無いので、差分を取らずにそのまま付ける（往復 1 回分を節約）
+  await attachTags(client, inserted.data.id, tag_names, userId);
   return inserted.data.id;
+}
+
+/** 新しい記録にタグを付ける（既存のタグは見ない）。tag_names が空なら何もしない。 */
+export async function attachTags(
+  client: SupabaseClient<Database>,
+  logId: string,
+  tagNames: readonly string[],
+  userId: string,
+): Promise<void> {
+  const tags = await ensureTags(client, tagNames, userId);
+  if (tags.length === 0) return;
+  const added = await client
+    .from('log_tags')
+    .insert(tags.map((t) => ({ log_id: logId, tag_id: t.id, user_id: userId })));
+  if (added.error) throw added.error;
 }
 
 export type LogPatch = Partial<LogFormInput>;

@@ -56,6 +56,8 @@ export type LogFormProps = {
   defaultValues?: Partial<FormInput>;
   onSubmit: (values: LogFormDraft) => void;
   submitting?: boolean;
+  /** 保存中の段階（「画像を保存しています…」など）。ボタンの下に出す */
+  submittingText?: string | null;
   submitLabel?: string;
   className?: string;
 };
@@ -76,6 +78,7 @@ export function LogForm({
   defaultValues,
   onSubmit,
   submitting,
+  submittingText,
   submitLabel = '保存する',
   className,
 }: LogFormProps) {
@@ -648,10 +651,15 @@ export function LogForm({
         )}
       </div>
 
-      <div className="mt-2">
+      <div className="mt-2 flex flex-col gap-1.5">
         <AppButton type="submit" loading={submitting}>
           {submitLabel}
         </AppButton>
+        {submitting && submittingText && (
+          <p role="status" className="text-muted-foreground text-center text-xs">
+            {submittingText}
+          </p>
+        )}
       </div>
     </form>
   );

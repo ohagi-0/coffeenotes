@@ -12,7 +12,7 @@ describe('createLogWithTags', () => {
   it('自宅の記録は店を落として保存し、タグを付ける', async () => {
     const { client, calls } = fakeClient({
       inserts: [ok({ id: 'log1' }), ok(tag('t1', '朝')), ok(null)],
-      selects: [ok([]), ok([])],
+      selects: [ok([])],
     });
     const id = await createLogWithTags(
       client,
@@ -33,21 +33,20 @@ describe('createLogWithTags', () => {
       'logs.insert',
       'tags.select',
       'tags.insert',
-      'log_tags.select',
       'log_tags.insert',
     ]);
-    expect(calls[4]?.payload).toEqual([{ log_id: 'log1', tag_id: 't1', user_id: UID }]);
+    expect(calls[3]?.payload).toEqual([{ log_id: 'log1', tag_id: 't1', user_id: UID }]);
   });
 
   it('店の記録は shop_id を保持し、タグなしなら log_tags を触らない', async () => {
-    const { client, calls } = fakeClient({ inserts: [ok({ id: 'log2' })], selects: [ok([])] });
+    const { client, calls } = fakeClient({ inserts: [ok({ id: 'log2' })] });
     await createLogWithTags(
       client,
       { bean_id: BEAN, place: 'shop', shop_id: SHOP, logged_on: '2026-09-21' },
       UID,
     );
     expect(calls[0]?.payload).toMatchObject({ shop_id: SHOP, kind: 'drank' });
-    expect(calls.map((c) => `${c.table}.${c.op}`)).toEqual(['logs.insert', 'log_tags.select']);
+    expect(calls.map((c) => `${c.table}.${c.op}`)).toEqual(['logs.insert']);
   });
 
   it('不正な入力は DB に行かずに落ちる', async () => {
