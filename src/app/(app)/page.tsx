@@ -116,7 +116,7 @@ function CollectionInner() {
 
   return (
     <div className="pb-2">
-      <div className="pt-2 pb-3">
+      <div className="pt-5 pb-4">
         <h1 className="text-2xl font-bold">豆のコレクション</h1>
         <p className="text-muted-foreground font-num text-xs">
           {logs.data
@@ -146,6 +146,8 @@ function CollectionInner() {
 
       {logs.data && items.length === 0 && (
         <>
+          {/* 棚板は袋の下に食い込む前提（mt-[-14px]）なので、空状態では上に余白を置いて小見出しから離す */}
+          <div className="h-8" aria-hidden />
           <ShelfPlank />
           <EmptyState
             icon={Package}
