@@ -29,6 +29,7 @@ const eslintConfig = [
       'next-env.d.ts',
       'src/components/ui/**',
       'src/types/database.ts',
+      'public/sw.js', // serwist の生成物（.gitignore 済み）
       'playwright-report/**',
       'test-results/**',
     ],

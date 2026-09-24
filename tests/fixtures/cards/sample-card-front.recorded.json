@@ -1,38 +1,68 @@
 {
-  "recorded": false,
-  "note": "手書きの想定応答。実 API で録画したら recorded を true にして recordedAt を入れる",
-  "recordedAt": null,
+  "recorded": true,
+  "note": "実 API の応答を録画したもの（合成カード画像に対する Claude Haiku 4.5 の出力）",
+  "recordedAt": "2026-09-24T03:32:12.973Z",
   "response": {
-    "id": "msg_fixture_sample_card_front",
+    "id": "msg_011CfMZQ29X9Xs7CgbpQmgc8",
     "type": "message",
     "role": "assistant",
-    "model": "claude-haiku-4-5",
+    "model": "claude-haiku-4-5-20251001",
     "stop_reason": "tool_use",
     "stop_sequence": null,
-    "usage": { "input_tokens": 1700, "output_tokens": 290 },
+    "usage": {
+      "input_tokens": 4740,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation": {
+        "ephemeral_5m_input_tokens": 0,
+        "ephemeral_1h_input_tokens": 0
+      },
+      "output_tokens": 477,
+      "service_tier": "standard",
+      "inference_geo": "not_available"
+    },
     "content": [
       {
         "type": "tool_use",
-        "id": "toolu_fixture_01",
+        "id": "toolu_recorded",
         "name": "record_bean_card",
         "input": {
-          "name": { "value": "Lusitania Lime Geisha", "confidence": 0.98 },
-          "roaster": { "value": "KIELO COFFEE", "confidence": 0.97 },
-          "country": { "value": "Colombia", "confidence": 0.95 },
-          "region": { "value": "Caicedonia, Valle del Cauca", "confidence": 0.9 },
-          "variety": { "value": "Geisha", "confidence": 0.96 },
-          "process": { "value": "Lime infused", "confidence": 0.88 },
-          "altitudeM": { "value": 1650, "confidence": 0.93 },
-          "flavorNotes": { "value": ["Lime", "Bergamot", "Laurier"], "confidence": 0.9 },
-          "description": { "value": null, "confidence": 0 },
+          "name": "Lusitania Lime Geisha",
+          "roaster": "KIELO COFFEE",
+          "country": "Colombia",
+          "region": "Caicedonia, Valle del Cauca",
+          "variety": "Geisha",
+          "process": "Lime infused",
+          "altitudeM": 1650,
+          "flavorNotes": ["Lime", "Bergamot", "Laurier"],
+          "description": null,
           "taste": {
-            "value": { "flavor": 5, "sweetness": 3, "acidity": 5, "aftertaste": 3, "body": 3 },
-            "confidence": 0.55
+            "flavor": 5,
+            "sweetness": 3,
+            "acidity": 5,
+            "aftertaste": 3,
+            "body": 3
           },
-          "priceJpy": { "value": 3800, "confidence": 0.92 },
-          "priceGrams": { "value": 100, "confidence": 0.92 },
-          "roastLevel": { "value": null, "confidence": 0 },
-          "referenceUrl": { "value": "kielocoffee.com/lusitania", "confidence": 0.4 }
+          "priceJpy": 3800,
+          "priceGrams": 100,
+          "roastLevel": null,
+          "referenceUrl": "https://kielocoffee.com/lusitania",
+          "confidence": {
+            "name": 1,
+            "roaster": 1,
+            "country": 1,
+            "region": 1,
+            "variety": 1,
+            "process": 1,
+            "altitudeM": 1,
+            "flavorNotes": 1,
+            "description": 0,
+            "taste": 1,
+            "priceJpy": 1,
+            "priceGrams": 1,
+            "roastLevel": 0,
+            "referenceUrl": 0.5
+          }
         }
       }
     ]

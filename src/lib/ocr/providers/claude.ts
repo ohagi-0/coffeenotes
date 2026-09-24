@@ -17,45 +17,67 @@ function isImageMediaType(v: string): v is ImageMediaType {
   return (IMAGE_MEDIA_TYPES as readonly string[]).includes(v);
 }
 
-/** { value, confidence } の 1 項目分の JSON Schema */
-function field(value: Record<string, unknown>, description: string) {
-  return {
-    type: 'object',
-    description,
-    properties: {
-      value,
-      confidence: { type: 'number', description: '0〜1。読み取れなかった・推測なら 0 に近く' },
-    },
-    required: ['value', 'confidence'],
-    additionalProperties: false,
-  } as const;
+/** 値の型に説明を付ける（strict モードの文法を小さく保つため、項目ごとの入れ子は作らない） */
+function withDesc<T extends Record<string, unknown>>(schema: T, description: string) {
+  return { ...schema, description } as const;
 }
 const nullableString = { type: ['string', 'null'] } as const;
 const nullableInteger = { type: ['integer', 'null'] } as const;
-const nullableScore = { type: ['integer', 'null'], enum: [1, 2, 3, 4, 5, null] } as const;
+// strict モードは配列型（['integer','null']）と enum の併用を 400 で拒否するため、anyOf で null を分ける（2026-09-24 実 API で確認）
+const nullableScore = {
+  anyOf: [{ type: 'integer', enum: [1, 2, 3, 4, 5] }, { type: 'null' }],
+} as const;
+const nullableRoastLevel = {
+  anyOf: [{ type: 'string', enum: ['light', 'medium', 'dark'] }, { type: 'null' }],
+} as const;
+const confidenceNumber = { type: 'number' } as const;
 
-/** bean-card.ts の Zod スキーマと 1 対 1 に対応する tool の input_schema */
+/** 値を持つ項目名（confidence オブジェクトのキーと一致させる） */
+export const BEAN_CARD_FIELDS = [
+  'name',
+  'roaster',
+  'country',
+  'region',
+  'variety',
+  'process',
+  'altitudeM',
+  'flavorNotes',
+  'description',
+  'taste',
+  'priceJpy',
+  'priceGrams',
+  'roastLevel',
+  'referenceUrl',
+] as const;
+type BeanCardField = (typeof BEAN_CARD_FIELDS)[number];
+
+/**
+ * bean-card.ts の Zod スキーマに対応する tool の input_schema。
+ * アプリ側の形（項目ごとの { value, confidence }）とは違い、値はフラットに、confidence は別オブジェクトにまとめる。
+ * 項目ごとに { value, confidence } を入れ子にすると strict モードの文法コンパイルが
+ * 「The compiled grammar is too large」で 400 になるため（2026-09-24 実 API で確認）。sanitizeExtraction でアプリ側の形へ戻す。
+ */
 export const BEAN_CARD_TOOL: Anthropic.Tool = {
   name: TOOL_NAME,
   description:
-    'コーヒーのテイスティングカード（表・裏）から読み取った項目を記録する。読み取れない項目は value を null、confidence を 0 にする。',
+    'コーヒーのテイスティングカード（表・裏）から読み取った項目を記録する。読み取れない項目は null にし、confidence の同じ名前のキーを 0 にする。',
   strict: true,
   input_schema: {
     type: 'object',
     properties: {
-      name: field(nullableString, '豆の名前。カードの表記のまま（言語を変えない）'),
-      roaster: field(nullableString, 'ロースター（焙煎所・店）の名前'),
-      country: field(nullableString, '生産国。英語表記のまま'),
-      region: field(nullableString, '地域・農園'),
-      variety: field(nullableString, '品種（Geisha, Bourbon など）'),
-      process: field(nullableString, '精製方法（Washed, Natural, Lime infused など）'),
-      altitudeM: field(nullableInteger, '標高（メートル）。"1,650m" は 1650。範囲表記は下限'),
-      flavorNotes: field(
+      name: withDesc(nullableString, '豆の名前。カードの表記のまま（言語を変えない）'),
+      roaster: withDesc(nullableString, 'ロースター（焙煎所・店）の名前'),
+      country: withDesc(nullableString, '生産国。英語表記のまま'),
+      region: withDesc(nullableString, '地域・農園'),
+      variety: withDesc(nullableString, '品種（Geisha, Bourbon など）'),
+      process: withDesc(nullableString, '精製方法（Washed, Natural, Lime infused など）'),
+      altitudeM: withDesc(nullableInteger, '標高（メートル）。"1,650m" は 1650。範囲表記は下限'),
+      flavorNotes: withDesc(
         { type: 'array', items: { type: 'string' } },
-        'フレーバーノート。カンマや改行で区切られた語を配列に',
+        'フレーバーノート。カンマや改行で区切られた語を配列に。無ければ空配列',
       ),
-      description: field(nullableString, '説明文。書いてある言語のまま全文'),
-      taste: field(
+      description: withDesc(nullableString, '説明文。書いてある言語のまま全文'),
+      taste: withDesc(
         {
           type: ['object', 'null'],
           properties: {
@@ -70,34 +92,30 @@ export const BEAN_CARD_TOOL: Anthropic.Tool = {
         },
         '味覚チャート。塗りつぶされたドットの数（1〜5）。軸が無ければ null',
       ),
-      priceJpy: field(nullableInteger, '価格（円、税込か不明ならそのまま）。"¥3,800" は 3800'),
-      priceGrams: field(nullableInteger, '価格に対応するグラム数。"/100g" は 100'),
-      roastLevel: field({ type: ['string', 'null'], enum: ['light', 'medium', 'dark', null] }, '焙煎度'),
-      referenceUrl: field(nullableString, 'カードに印字された URL（QR の下の文字列など）。無ければ null'),
+      priceJpy: withDesc(nullableInteger, '価格（円、税込か不明ならそのまま）。"¥3,800" は 3800'),
+      priceGrams: withDesc(nullableInteger, '価格に対応するグラム数。"/100g" は 100'),
+      roastLevel: withDesc(nullableRoastLevel, '焙煎度'),
+      referenceUrl: withDesc(
+        nullableString,
+        'カードに印字された URL（QR の下の文字列など）。https:// が無ければ補う。無ければ null',
+      ),
+      confidence: {
+        type: 'object',
+        description:
+          '各項目の自信度（0〜1）。キーは値の項目名と同じ。1 = はっきり読めた、0.5 = かすれ・傾きで自信がない、0 = 無い・読めない',
+        properties: Object.fromEntries(BEAN_CARD_FIELDS.map((k) => [k, confidenceNumber])),
+        required: [...BEAN_CARD_FIELDS],
+        additionalProperties: false,
+      },
     },
-    required: [
-      'name',
-      'roaster',
-      'country',
-      'region',
-      'variety',
-      'process',
-      'altitudeM',
-      'flavorNotes',
-      'description',
-      'taste',
-      'priceJpy',
-      'priceGrams',
-      'roastLevel',
-      'referenceUrl',
-    ],
+    required: [...BEAN_CARD_FIELDS, 'confidence'],
     additionalProperties: false,
   },
 };
 
 const SYSTEM_PROMPT = `あなたはスペシャルティコーヒーのテイスティングカードを読み取る係です。
 渡された画像（1 枚目が表、2 枚目があれば裏）から項目を抜き出し、必ずツール ${TOOL_NAME} で記録してください。
-- 書いてあることだけを書く。書いていない項目は value を null、confidence を 0 にする。推測で埋めない。
+- 書いてあることだけを書く。書いていない項目は null にし、confidence の同じ名前のキーを 0 にする。推測で埋めない。
 - 固有名詞（豆名・ロースター・地域・品種）は表記と言語をそのまま写す。
 - 味覚チャートは、塗りつぶされた丸の数を数えて 1〜5 にする。読めない軸は null。
 - 価格は円の整数、標高はメートルの整数。単位や記号は数値に含めない。
@@ -117,8 +135,14 @@ function scoreOrNull(v: unknown): number | null {
 }
 function urlOrNull(v: unknown): string | null {
   if (typeof v !== 'string') return null;
+  const t = v.trim();
+  if (t === '') return null;
+  // カードには "kielocoffee.com/lusitania" のようにスキーム無しで印字されることが多いので https:// を補う
+  const withScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(t) ? t : `https://${t}`;
   try {
-    return new URL(v.trim()).toString();
+    const url = new URL(withScheme);
+    if (!/^https?:$/.test(url.protocol) || !url.hostname.includes('.')) return null;
+    return url.toString();
   } catch {
     return null;
   }
@@ -126,9 +150,18 @@ function urlOrNull(v: unknown): string | null {
 function asRecord(v: unknown): Record<string, unknown> {
   return typeof v === 'object' && v !== null ? (v as Record<string, unknown>) : {};
 }
-function pick(input: Record<string, unknown>, key: string): { value: unknown; confidence: number } {
-  const f = asRecord(input[key]);
-  return { value: f.value ?? null, confidence: clamp01(f.confidence) };
+/**
+ * 1 項目の値と自信度を取り出す。
+ * 本来の形はフラットな値 + `confidence` オブジェクト（BEAN_CARD_TOOL）だが、
+ * 旧形式の { value, confidence } 入れ子で返ってきても読めるようにしておく（録画済みの応答・モデルの揺れ対策）。
+ */
+function pick(input: Record<string, unknown>, key: BeanCardField): { value: unknown; confidence: number } {
+  const raw = input[key];
+  if (typeof raw === 'object' && raw !== null && !Array.isArray(raw) && 'value' in raw) {
+    const f = raw as Record<string, unknown>;
+    return { value: f.value ?? null, confidence: clamp01(f.confidence) };
+  }
+  return { value: raw ?? null, confidence: clamp01(asRecord(input.confidence)[key]) };
 }
 
 /**
@@ -138,12 +171,12 @@ function pick(input: Record<string, unknown>, key: string): { value: unknown; co
  */
 export function sanitizeExtraction(input: unknown): unknown {
   const i = asRecord(input);
-  const str = (k: string) => {
+  const str = (k: BeanCardField) => {
     const f = pick(i, k);
     const v = typeof f.value === 'string' && f.value.trim() !== '' ? f.value.trim() : null;
     return { value: v, confidence: v === null ? 0 : f.confidence };
   };
-  const int = (k: string, min = 0) => {
+  const int = (k: BeanCardField, min = 0) => {
     const f = pick(i, k);
     const v = intOrNull(f.value);
     const ok = v !== null && v >= min;

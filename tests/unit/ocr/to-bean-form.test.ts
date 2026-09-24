@@ -20,8 +20,10 @@ describe('extractionToBeanForm', () => {
     expect(values.price_jpy).toBe(3800);
     expect('description' in values).toBe(false);
     expect('roast_level' in values).toBe(false);
-    expect(confidence.name).toBeCloseTo(0.98);
-    expect(confidence.taste_body).toBeCloseTo(0.55);
+    // 信頼度は録画済み応答の confidence オブジェクトの値がそのまま写る
+    const recorded = fixture.response.content[0].input.confidence;
+    expect(confidence.name).toBeCloseTo(recorded.name);
+    expect(confidence.taste_body).toBeCloseTo(recorded.taste);
     expect(confidence.description).toBeUndefined();
   });
   it('初期値は豆フォームのスキーマに（ロースター ID を足せば）通る', () => {

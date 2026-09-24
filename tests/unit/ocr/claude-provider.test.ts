@@ -37,11 +37,12 @@ describe('createClaudeOcrProvider', () => {
     const { client } = fakeClient(() => fixture.response);
     const r = await createClaudeOcrProvider({ client }).extractBeanCard({ front: jpeg() });
     expect(r.provider).toBe('claude');
-    expect(r.model).toBe('claude-haiku-4-5');
+    // model は API が実際に応答したモデル（日付付き ID）をそのまま返す
+    expect(r.model).toBe(fixture.response.model);
     expect(r.extraction.name.value).toBe('Lusitania Lime Geisha');
+    expect(r.extraction.roaster.value).toBe('KIELO COFFEE');
     expect(r.extraction.taste.value?.flavor).toBe(5);
-    // URL でない参照先は null に落ちる（1 項目の揺れで全体を失敗させない）
-    expect(r.extraction.referenceUrl.value).toBeNull();
+    expect(r.extraction.referenceUrl.value).toBe('https://kielocoffee.com/lusitania');
     expect((r.raw as { input: unknown }).input).toBeDefined();
     expect(r.durationMs).toBeGreaterThanOrEqual(0);
   });
@@ -109,6 +110,36 @@ describe('sanitizeExtraction', () => {
     expect(out.priceGrams).toEqual({ value: null, confidence: 0 });
     expect(out.flavorNotes).toEqual({ value: ['Lime', 'Bergamot'], confidence: 0.9 });
     expect(out.roastLevel).toEqual({ value: null, confidence: 0 });
+    expect(out.roaster).toEqual({ value: null, confidence: 0 });
+  });
+  it('本来の形（フラットな値 + confidence オブジェクト）を項目ごとの { value, confidence } に戻す', () => {
+    const out = sanitizeExtraction({
+      name: 'Lusitania Lime Geisha',
+      country: null,
+      altitudeM: 1650,
+      flavorNotes: ['Lime'],
+      taste: { flavor: 5, sweetness: 3, acidity: 5, aftertaste: 3, body: 3 },
+      roastLevel: 'light',
+      referenceUrl: 'kielocoffee.com/lusitania',
+      confidence: {
+        name: 0.9,
+        country: 0,
+        altitudeM: 1,
+        flavorNotes: 0.8,
+        taste: 0.7,
+        roastLevel: 0.6,
+        referenceUrl: 0.5,
+      },
+    }) as Record<string, { value: unknown; confidence: number }>;
+    expect(out.name).toEqual({ value: 'Lusitania Lime Geisha', confidence: 0.9 });
+    expect(out.country).toEqual({ value: null, confidence: 0 });
+    expect(out.altitudeM).toEqual({ value: 1650, confidence: 1 });
+    expect(out.flavorNotes).toEqual({ value: ['Lime'], confidence: 0.8 });
+    expect(out.taste!.value).toEqual({ flavor: 5, sweetness: 3, acidity: 5, aftertaste: 3, body: 3 });
+    expect(out.roastLevel).toEqual({ value: 'light', confidence: 0.6 });
+    // スキーム無しの URL は https:// を補う（カードの印字はたいてい省略されている）
+    expect(out.referenceUrl).toEqual({ value: 'https://kielocoffee.com/lusitania', confidence: 0.5 });
+    // confidence オブジェクトに無い項目は 0
     expect(out.roaster).toEqual({ value: null, confidence: 0 });
   });
   it('confidence は 0〜1 に丸める', () => {

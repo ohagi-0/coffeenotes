@@ -171,7 +171,7 @@ export interface OcrProvider {
 ```
 
 - プロバイダは `src/lib/ocr/providers/claude.ts`（`OCR_PROVIDER=claude`）。選択は `src/lib/ocr/factory.ts`（サーバー専用）。`none` なら `/api/ocr` は 503 `ocr_disabled` を返し、UI は手入力に切り替える。
-- Claude 実装の要点: モデル `claude-haiku-4-5`、表・裏を 1 リクエスト、`tool_use`（`strict: true`、`tool_choice` で強制）で Zod スキーマ相当の JSON を出させ、`sanitizeExtraction` で揺れを落としてから Zod 検証。`max_tokens` 1,024、タイムアウト 15 秒。1 ユーザー 1 日 50 回の上限は DB 関数 `consume_ocr_quota()`（SECURITY DEFINER、上限値は DB 側に固定、`ocr_usage` テーブル）で数え、`/api/ocr` がプロバイダを呼ぶ前に消費する。
+- Claude 実装の要点: モデル `claude-haiku-4-5`、表・裏を 1 リクエスト、`tool_use`（`strict: true`、`tool_choice` で強制）で JSON を出させ、`sanitizeExtraction` で揺れを落としてから Zod 検証。**ツールの input_schema は「値はフラット + `confidence` オブジェクト」**（`BEAN_CARD_FIELDS`）。アプリ側の項目ごと `{ value, confidence }` の形を入れ子のまま strict に渡すと「compiled grammar is too large」で 400、配列型 `['integer','null']` と `enum` の併用も 400 になる（2026-09-24 実 API で確認）。strict スキーマは初回に文法コンパイルが走り 15 秒を超えることがあるが、SDK のリトライ 1 回で通り、以後 24 時間はキャッシュされる。`max_tokens` 1,024、タイムアウト 15 秒。1 ユーザー 1 日 50 回の上限は DB 関数 `consume_ocr_quota()`（SECURITY DEFINER、上限値は DB 側に固定、`ocr_usage` テーブル）で数え、`/api/ocr` がプロバイダを呼ぶ前に消費する。
 - **アプリ本体は `OcrProvider` 以外を import しない**。
 - 低信頼度の判定は `LOW_CONFIDENCE_THRESHOLD`（`src/lib/schemas/bean-card.ts`、現在 0.6）を使い、UI や設計書に数値を直書きしない。
 - OCR 失敗時は例外を握りつぶさず、UI は「手入力に切り替える」導線を出す。
@@ -273,7 +273,7 @@ SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=
 - [x] Phase 1 を本番 https://coffee-notes.app にデプロイ（UI-7〜16 + データ層 + SMTP）。品質ゲート（typecheck / lint / unit 229 / E2E 7 / build）通過（2026-09-22）
 - [ ] Phase 1: 実機（スマホ）で本番からログイン → 手入力で記録作成 → 一覧表示を確認して Phase 1 完了
 - [x] Phase 2: カード読み取り — マイグレーション 0002（`ocr_usage` + `consume_ocr_quota()`）、`providers/claude.ts`、`/api/ocr`、S3 ①撮影 / ②読み取り確認（要確認タグ、10 秒で手入力へ、失敗・上限・無効の 3 状態）、保存時に Storage へ画像と `bean_images` 行、豆詳細・一覧・記録詳細で署名付き URL を表示、設定に今日の回数（2026-09-22）
-- [ ] Phase 2: `ANTHROPIC_API_KEY` と `OCR_PROVIDER=claude` を Vercel に設定し、実 API で `tests/unit/ocr/live.test.ts` を通して応答を録画（`recorded: true`）— **API キー待ち。ユーザーの手順は `docs/USER-SETUP.md` の 1**
+- [x] Phase 2: `ANTHROPIC_API_KEY` と `OCR_PROVIDER=claude` を Vercel（Production / Preview）に設定し、実 API で `tests/unit/ocr/live.test.ts` を通して応答を録画（`recorded: true`、合成カードで 4.5 秒・入力 4,740 トークン）（2026-09-24）
 - [ ] Phase 2: 実機で撮影 → 読み取り → 保存が 1 分以内に終わることを確認（完了条件）
 - [x] F-AUTH-3 アカウント削除（0003_delete_my_account.sql、設定画面の確認ブロック）と /privacy /terms（2026-09-22）
 - [ ] 公開準備（ユーザー作業）: Google Cloud で OAuth クライアント作成 → Supabase Providers で Google 有効化 → 同意画面を本番公開。Vercel と GitHub の連携（任意）
