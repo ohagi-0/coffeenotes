@@ -3,10 +3,14 @@
 // このファイルはサーバー専用（API キーを扱う）。ブラウザから import しない。
 import Anthropic from '@anthropic-ai/sdk';
 import { beanCardExtractionSchema, type BeanCardExtraction } from '@/lib/schemas/bean-card';
-import { OcrError, type OcrImages, type OcrProvider, type OcrResult } from '@/lib/ocr';
+import { OcrError, type OcrImages, type OcrProvider, type OcrResult, type OcrWarmUpResult } from '@/lib/ocr';
 
 export const CLAUDE_OCR_MODEL = 'claude-haiku-4-5';
-export const CLAUDE_OCR_TIMEOUT_MS = 15_000;
+// 読み取り本体のタイムアウト。strict スキーマの文法コンパイル（初回のみ 15〜30 秒）が 1 回目に重なっても
+// リトライ無しで通るよう 30 秒にしている（2026-09-24。キャッシュが温まっていれば 4〜5 秒）
+export const CLAUDE_OCR_TIMEOUT_MS = 30_000;
+/** ウォームアップは裏で走るので長めに待つ（コンパイルが終わるまで） */
+export const CLAUDE_OCR_WARMUP_TIMEOUT_MS = 90_000;
 export const CLAUDE_OCR_MAX_TOKENS = 1024;
 export const TOOL_NAME = 'record_bean_card';
 
@@ -273,7 +277,11 @@ export function createClaudeOcrProvider(options: ClaudeOcrOptions = {}): OcrProv
         });
       } catch (err) {
         if (err instanceof Anthropic.APIConnectionTimeoutError) {
-          throw new OcrError('読み取りが 15 秒以内に終わりませんでした', 'timeout', err);
+          throw new OcrError(
+            `読み取りが ${Math.round(timeout / 1000)} 秒以内に終わりませんでした`,
+            'timeout',
+            err,
+          );
         }
         if (err instanceof Anthropic.APIError) {
           throw new OcrError(`読み取りサービスがエラーを返しました（${err.status ?? '?'}）`, 'provider', err);
@@ -309,6 +317,40 @@ export function createClaudeOcrProvider(options: ClaudeOcrOptions = {}): OcrProv
         model: response.model,
         durationMs: Date.now() - started,
       };
+    },
+
+    // 画像なしの短い文で、本番と同じ tools / tool_choice / system を送る。
+    // 文法キャッシュはスキーマ（とモデル）単位なので、これで次の実リクエストの初回コンパイルが省ける。
+    async warmUp(): Promise<OcrWarmUpResult> {
+      const started = Date.now();
+      try {
+        const response = await client.messages.create(
+          {
+            model,
+            max_tokens: CLAUDE_OCR_MAX_TOKENS,
+            system: SYSTEM_PROMPT,
+            tools: [BEAN_CARD_TOOL],
+            tool_choice: { type: 'tool', name: TOOL_NAME },
+            messages: [
+              {
+                role: 'user',
+                content:
+                  '（ウォームアップ）画像はありません。すべての項目を null、flavorNotes を空配列、confidence をすべて 0 にして記録してください。',
+              },
+            ],
+          },
+          { timeout: CLAUDE_OCR_WARMUP_TIMEOUT_MS, maxRetries: 0 },
+        );
+        return { provider: 'claude', model: response.model, durationMs: Date.now() - started };
+      } catch (err) {
+        if (err instanceof Anthropic.APIConnectionTimeoutError) {
+          throw new OcrError('ウォームアップが時間内に終わりませんでした', 'timeout', err);
+        }
+        if (err instanceof Anthropic.APIError) {
+          throw new OcrError(`読み取りサービスがエラーを返しました（${err.status ?? '?'}）`, 'provider', err);
+        }
+        throw new OcrError('読み取りサービスに接続できませんでした', 'provider', err);
+      }
     },
   };
 }

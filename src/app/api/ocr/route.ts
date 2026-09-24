@@ -15,6 +15,8 @@ import { createRouteClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+// プロバイダのタイムアウト 30 秒 × SDK のリトライ 1 回に収まるように
+export const maxDuration = 60;
 
 function fail(status: number, code: OcrApiErrorCode, message: string, usage?: OcrUsage): Response {
   const body: OcrErrorResponse = { error: { code, message }, ...(usage ? { usage } : {}) };

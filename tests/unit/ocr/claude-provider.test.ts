@@ -5,6 +5,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { OcrError } from '@/lib/ocr';
 import {
   BEAN_CARD_TOOL,
+  CLAUDE_OCR_TIMEOUT_MS,
   TOOL_NAME,
   createClaudeOcrProvider,
   sanitizeExtraction,
@@ -45,6 +46,24 @@ describe('createClaudeOcrProvider', () => {
     expect(r.extraction.referenceUrl.value).toBe('https://kielocoffee.com/lusitania');
     expect((r.raw as { input: unknown }).input).toBeDefined();
     expect(r.durationMs).toBeGreaterThanOrEqual(0);
+  });
+
+  it('warmUp は画像なしで本番と同じ tools / tool_choice を送り、リトライしない', async () => {
+    const { client, create } = fakeClient(() => fixture.response);
+    const provider = createClaudeOcrProvider({ client });
+    const r = await provider.warmUp!();
+    expect(r.provider).toBe('claude');
+    expect(r.model).toBe(fixture.response.model);
+    const [params, options] = create.mock.calls[0] as unknown as [
+      Anthropic.MessageCreateParams,
+      { timeout: number; maxRetries: number },
+    ];
+    expect(params.tools).toEqual([BEAN_CARD_TOOL]);
+    expect(params.tool_choice).toEqual({ type: 'tool', name: TOOL_NAME });
+    const content = params.messages[0]!.content;
+    expect(typeof content).toBe('string');
+    expect(options.maxRetries).toBe(0);
+    expect(options.timeout).toBeGreaterThan(CLAUDE_OCR_TIMEOUT_MS);
   });
 
   it('画像形式が対応外なら unsupported_image', async () => {

@@ -16,6 +16,8 @@ const serverEnvSchema = z
     ANTHROPIC_API_KEY: z.string().min(1).optional(),
     GEO_PROVIDER: z.enum(['nominatim', 'google']).default('nominatim'),
     GOOGLE_MAPS_API_KEY: z.string().min(1).optional(),
+    // /api/ocr/warm を叩く定期ジョブ（GitHub Actions）の合言葉。未設定ならそのルートは 503
+    CRON_SECRET: z.string().min(16).optional(),
   })
   .refine((v) => v.OCR_PROVIDER !== 'claude' || !!v.ANTHROPIC_API_KEY, {
     message: 'OCR_PROVIDER=claude のときは ANTHROPIC_API_KEY が必要です',
@@ -53,6 +55,7 @@ export function getServerEnv(): ServerEnv {
     ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || undefined,
     GEO_PROVIDER: process.env.GEO_PROVIDER || undefined,
     GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY || undefined,
+    CRON_SECRET: process.env.CRON_SECRET || undefined,
   });
   return serverEnvCache;
 }

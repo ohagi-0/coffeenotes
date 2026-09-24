@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - 開発者: 個人（Kota）。レビュー相手は Claude Code。
 - 規模目標: 個人〜数十ユーザー。ランニングコストは月 0〜数百円。
-- 現在のフェーズ: **Phase 0〜5 の実装が完了**（2026-09-22）。残りはユーザー側の設定（Anthropic API キー、Google OAuth）と実機確認、UI の微調整、Phase 6（Capacitor）。フェーズ定義は REQUIREMENTS.md §10。
+- 現在のフェーズ: **Phase 0〜5 の実装が完了**（2026-09-22）。ユーザー側の設定（Anthropic API キー、Google OAuth）は 2026-09-24 に完了。残りは実機確認、UI の微調整、Phase 6（Capacitor）。フェーズ定義は REQUIREMENTS.md §10。
 - 作業の分担: UI / 非 UI の並行作業は 2026-09-22 に終了し、いまは 1 つのウィンドウで全部を扱う。Issue は完了済み（#4〜#24）。同じワーキングツリーで別ウィンドウが動くときは §3.1「並行作業の注意」に従う。
 
 ## 2. 技術スタック（確定分）
@@ -30,7 +30,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | テスト | Vitest（単体）+ Playwright（E2E、主要フローのみ） | |
 | Lint / Format | ESLint（next/core-web-vitals）+ Prettier | コミット前に `pnpm lint && pnpm typecheck` |
 | パッケージ管理 | pnpm | `npm` / `yarn` を混ぜない |
-| ホスティング | Vercel Hobby | 本番 **https://coffee-notes.app**（Cloudflare Registrar で取得、DNS は Cloudflare、プロキシ OFF）。旧 URL https://coffeenotes-red.vercel.app は本体へ転送。プロジェクト `coffeenotes`。デプロイは `vercel deploy --prod`。**GitHub 連携は未接続**なので push しても自動デプロイされない |
+| ホスティング | Vercel Hobby | 本番 **https://coffee-notes.app**（Cloudflare Registrar で取得、DNS は Cloudflare、プロキシ OFF）。旧 URL https://coffeenotes-red.vercel.app は本体へ転送。プロジェクト `coffeenotes`。**GitHub 連携済み**（`ohagi-0/coffeenotes`、本番ブランチ `main`。2026-09-24 確認）なので `main` への push で自動デプロイされる。急ぐときは `vercel deploy --prod` でも可 |
 
 ### 2.1 決定済み事項（2026-09-21）— 勝手に変えない
 
@@ -171,7 +171,7 @@ export interface OcrProvider {
 ```
 
 - プロバイダは `src/lib/ocr/providers/claude.ts`（`OCR_PROVIDER=claude`）。選択は `src/lib/ocr/factory.ts`（サーバー専用）。`none` なら `/api/ocr` は 503 `ocr_disabled` を返し、UI は手入力に切り替える。
-- Claude 実装の要点: モデル `claude-haiku-4-5`、表・裏を 1 リクエスト、`tool_use`（`strict: true`、`tool_choice` で強制）で JSON を出させ、`sanitizeExtraction` で揺れを落としてから Zod 検証。**ツールの input_schema は「値はフラット + `confidence` オブジェクト」**（`BEAN_CARD_FIELDS`）。アプリ側の項目ごと `{ value, confidence }` の形を入れ子のまま strict に渡すと「compiled grammar is too large」で 400、配列型 `['integer','null']` と `enum` の併用も 400 になる（2026-09-24 実 API で確認）。strict スキーマは初回に文法コンパイルが走り 15 秒を超えることがあるが、SDK のリトライ 1 回で通り、以後 24 時間はキャッシュされる。`max_tokens` 1,024、タイムアウト 15 秒。1 ユーザー 1 日 50 回の上限は DB 関数 `consume_ocr_quota()`（SECURITY DEFINER、上限値は DB 側に固定、`ocr_usage` テーブル）で数え、`/api/ocr` がプロバイダを呼ぶ前に消費する。
+- Claude 実装の要点: モデル `claude-haiku-4-5`、表・裏を 1 リクエスト、`tool_use`（`strict: true`、`tool_choice` で強制）で JSON を出させ、`sanitizeExtraction` で揺れを落としてから Zod 検証。**ツールの input_schema は「値はフラット + `confidence` オブジェクト」**（`BEAN_CARD_FIELDS`）。アプリ側の項目ごと `{ value, confidence }` の形を入れ子のまま strict に渡すと「compiled grammar is too large」で 400、配列型 `['integer','null']` と `enum` の併用も 400 になる（2026-09-24 実 API で確認）。strict スキーマは初回に文法コンパイルが走り 15〜30 秒かかるが、以後 24 時間はキャッシュされる（上記のウォームアップで切らさない）。`max_tokens` 1,024、タイムアウト 30 秒（初回コンパイルが重なってもリトライ無しで通る長さ）。**`/api/ocr/warm`**（`CRON_SECRET` の Bearer 認証、上限は消費しない）が `OcrProvider.warmUp()` で同じスキーマを画像なしで 1 回呼び、`.github/workflows/ocr-warmup.yml` が 12 時間ごとに叩いて文法キャッシュを切らさない。1 ユーザー 1 日 50 回の上限は DB 関数 `consume_ocr_quota()`（SECURITY DEFINER、上限値は DB 側に固定、`ocr_usage` テーブル）で数え、`/api/ocr` がプロバイダを呼ぶ前に消費する。
 - **アプリ本体は `OcrProvider` 以外を import しない**。
 - 低信頼度の判定は `LOW_CONFIDENCE_THRESHOLD`（`src/lib/schemas/bean-card.ts`、現在 0.6）を使い、UI や設計書に数値を直書きしない。
 - OCR 失敗時は例外を握りつぶさず、UI は「手入力に切り替える」導線を出す。
@@ -208,7 +208,7 @@ pnpm test:e2e            # Playwright。3100 で dev サーバーを自分で起
 pnpm build               # dev サーバー（3100）が動いている間は実行しない（.next を上書きして dev が壊れる）
 pnpm format              # Prettier（Markdown と docs/design は対象外）
 pnpm db:types            # クラウド（ref gayhfwmvlxwyuzrvmkoy）から src/types/database.ts を再生成
-vercel deploy --prod     # 本番デプロイ（GitHub 連携が無いので手動）
+vercel deploy --prod     # 本番デプロイを手動で走らせる（通常は main への push で自動デプロイ）
 pnpm seed:dev -- --email <ログインに使ったアドレス> --reset   # サンプルデータ投入（.env.local に SUPABASE_SERVICE_ROLE_KEY）
 ANTHROPIC_API_KEY=sk-ant-… pnpm vitest run tests/unit/ocr/live.test.ts   # OCR を実 API で確認し応答を録画
 pnpm exec supabase db query --linked --project-ref gayhfwmvlxwyuzrvmkoy -f supabase/migrations/NNNN_x.sql   # 本番にマイグレーション適用
@@ -259,10 +259,10 @@ SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=
 - [x] Phase 0: Supabase プロジェクト作成（`ohagi-0's coffee`、ref `gayhfwmvlxwyuzrvmkoy`、ap-northeast-1）、`0001_init.sql` を SQL Editor で適用、`.env.local` 設定、`src/types/database.ts` 生成（2026-09-21）
 - [ ] Phase 0: ローカル Supabase 用に Docker Desktop を導入（任意。クラウドだけで進めることも可）
 - [x] Phase 0: PC でメールリンクのログイン → 空のホーム表示を確認（2026-09-21）。**Phase 0 の完了条件を達成**
-- [x] Vercel にデプロイ（プロジェクト `coffeenotes`、本番 https://coffeenotes-red.vercel.app。CLI から `vercel deploy --prod`。GitHub 連携は未接続で、ブラウザで Vercel と GitHub を接続すれば push で自動デプロイになる）（2026-09-21）
+- [x] Vercel にデプロイ（プロジェクト `coffeenotes`、本番 https://coffeenotes-red.vercel.app。CLI から `vercel deploy --prod`）（2026-09-21）。GitHub 連携は初回デプロイ時に CLI が自動で紐づけており、`main` への push で本番デプロイが走ることを確認（2026-09-24）
 - [x] Supabase Auth の URL 設定（Site URL = 本番、Redirect URLs に localhost:3100 / 127.0.0.1:3100 / 本番 / `coffeelog://` の 4 つ）（2026-09-21）
 - [ ] スマホで本番 URL からログイン確認
-- [ ] Google ログインを有効化（Google Cloud で OAuth クライアント作成 → Supabase の Providers で設定）— F-AUTH-1 の Must
+- [x] Google ログインを有効化（Google Cloud プロジェクト `coffeenotes` で同意画面 + Web クライアント作成 → Supabase Providers で Google 有効化。承認済みドメインは `coffee-notes.app` と `gayhfwmvlxwyuzrvmkoy.supabase.co`）— F-AUTH-1 の Must（2026-09-24）
 - [x] Q6（URL の形）をクエリ文字列に決定。ADR 0008、`src/lib/routes.ts`（2026-09-22）
 - [x] Phase 1: 非 UI — #4 Zod スキーマ、#5 豆・ロースター・店・タグのデータ層、#6 記録のデータ層（2026-09-22）
 - [x] Phase 1: 非 UI — #8 画像圧縮・Storage 保存・platform ラッパー（`src/lib/image/compress.ts`、`src/lib/storage/bean-images.ts`、`src/lib/platform/{camera,geolocation,share}.ts`。F-OCR-1 / F-BEAN-12 / F-SHOP-3、N-4 / N-5）（2026-09-22）
@@ -274,9 +274,10 @@ SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=
 - [ ] Phase 1: 実機（スマホ）で本番からログイン → 手入力で記録作成 → 一覧表示を確認して Phase 1 完了
 - [x] Phase 2: カード読み取り — マイグレーション 0002（`ocr_usage` + `consume_ocr_quota()`）、`providers/claude.ts`、`/api/ocr`、S3 ①撮影 / ②読み取り確認（要確認タグ、10 秒で手入力へ、失敗・上限・無効の 3 状態）、保存時に Storage へ画像と `bean_images` 行、豆詳細・一覧・記録詳細で署名付き URL を表示、設定に今日の回数（2026-09-22）
 - [x] Phase 2: `ANTHROPIC_API_KEY` と `OCR_PROVIDER=claude` を Vercel（Production / Preview）に設定し、実 API で `tests/unit/ocr/live.test.ts` を通して応答を録画（`recorded: true`、合成カードで 4.5 秒・入力 4,740 トークン）（2026-09-24）
+- [x] Phase 2: OCR の初回遅延対策 — タイムアウト 30 秒、`/api/ocr/warm` + `ocr-warmup.yml`（12 時間ごと）、`CRON_SECRET` を Vercel と GitHub に設定（2026-09-24）
 - [ ] Phase 2: 実機で撮影 → 読み取り → 保存が 1 分以内に終わることを確認（完了条件）
 - [x] F-AUTH-3 アカウント削除（0003_delete_my_account.sql、設定画面の確認ブロック）と /privacy /terms（2026-09-22）
-- [ ] 公開準備（ユーザー作業）: Google Cloud で OAuth クライアント作成 → Supabase Providers で Google 有効化 → 同意画面を本番公開。Vercel と GitHub の連携（任意）
+- [x] 公開準備（ユーザー作業）: Google Cloud で OAuth クライアント作成 → Supabase Providers で Google 有効化 → 同意画面を本番公開（2026-09-24）
 - [x] Phase 3 地図: /map（Leaflet + OSM、平均星で色分けしたピン、現在地、長押しで店登録）、/api/geo（Overpass / Nominatim）、記録作成③と店フォームの「現在地から探す / 店名で検索 / 地図で指定」（2026-09-22）
 - [x] Phase 4 自宅抽出・焙煎: レシピの折りたたみ、比率の自動計算、前回のレシピを複製、焙煎バッチ（一覧・登録・記録への紐づけ・バッチ別平均星）（2026-09-22）
 - [x] Phase 5 分析・仕上げ: /stats（4 タイル、高評価の生産国・精製、フレーバー、味覚レーダー、月別）、PWA（serwist、オフライン閲覧、アイコン）、CSV / JSON エクスポート、カードの QR → 参照 URL（2026-09-22）
@@ -310,4 +311,5 @@ SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=
 - **統計**: `features/stats/aggregate.ts` の純粋関数で集計（高評価 = 星 4 以上、豆ごとに 1 回数える項目とレコードごとに数える項目がある）。データは `useStatsRows()` が必要な列だけ全件取る。
 - **エクスポート**: `features/export/build.ts`（CSV は BOM + CRLF、JSON は記録の配列）。ダウンロードは `lib/platform/download.ts`。
 - Supabase Free の一時停止対策として `.github/workflows/supabase-keepalive.yml` が週 2 回 REST を叩く（Secrets: `SUPABASE_URL` / `SUPABASE_ANON_KEY`）。
+- OCR の初回遅延対策として `.github/workflows/ocr-warmup.yml` が 12 時間ごとに `POST https://coffee-notes.app/api/ocr/warm` を叩く（Secrets: `CRON_SECRET`。Vercel の同名変数と同じ値。差し替えるときは両方を更新する）。費用は 1 回 1 円未満。
 - 画面設計は `docs/DESIGN.md` を正とする（トークン、書体、部品仕様、画面ごとの要素・状態・遷移）。見た目の参照はモック `docs/design/`（index = 方針・色・書体・部品、mobile = Web スマホ、desktop = Web PC、ios = iOS アプリ。共通の design.css / design.js。GitHub Pages で https://ohagi-0.github.io/coffeenotes/design/ に公開、push で更新）。リポジトリは Pages のため public（2026-09-21）。画面や部品を変えるときはモックと DESIGN.md を同じ PR で更新する。

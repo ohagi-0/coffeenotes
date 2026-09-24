@@ -24,9 +24,21 @@ export interface OcrResult {
   durationMs: number;
 }
 
+export interface OcrWarmUpResult {
+  provider: string;
+  model: string | null;
+  durationMs: number;
+}
+
 export interface OcrProvider {
   readonly name: string;
   extractBeanCard(images: OcrImages): Promise<OcrResult>;
+  /**
+   * 初回呼び出しの遅延を先に払っておく（任意）。
+   * Claude の strict ツールスキーマは初回に文法コンパイルが走り 15〜30 秒かかることがあるため、
+   * `/api/ocr/warm` から定期的に呼んでキャッシュ（24 時間）を切らさない。
+   */
+  warmUp?(): Promise<OcrWarmUpResult>;
 }
 
 export type OcrErrorCode =
