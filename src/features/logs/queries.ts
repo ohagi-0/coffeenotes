@@ -22,6 +22,8 @@ export type LogWithRelations = QueryData<ReturnType<typeof logQuery>>[number];
 /** 絞り込み（F-LIST-2） */
 export interface LogFilters {
   country?: string;
+  /** 生産国の表記ゆれをまとめて絞る（同じ国の英語 / カタカナの値を並べる）。空配列は 0 件 */
+  countries?: readonly string[];
   process?: string;
   variety?: string;
   roasterId?: string;
@@ -66,6 +68,7 @@ export function useLogs(filters: LogFilters = {}, sort: LogSort = 'date') {
     queryFn: async (): Promise<LogWithRelations[]> => {
       let q = logQuery();
       if (filters.country) q = q.eq('bean.country', filters.country);
+      if (filters.countries) q = q.in('bean.country', [...filters.countries]);
       if (filters.process) q = q.eq('bean.process', filters.process);
       if (filters.variety) q = q.eq('bean.variety', filters.variety);
       if (filters.roasterId) q = q.eq('bean.roaster_id', filters.roasterId);

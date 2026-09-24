@@ -57,7 +57,11 @@ describe('presenters', () => {
     expect(chipToFilters('all')).toEqual({});
     expect(chipToFilters('rating4')).toEqual({ minRating: 4 });
     expect(chipToFilters('home')).toEqual({ place: 'home' });
-    expect(chipToFilters('country:Colombia')).toEqual({ country: 'Colombia' });
+    // 国のチップはキー。自分の豆に出てくる表記のうち同じ国のものをまとめて絞る（Colombia とコロンビアは 1 つ）
+    expect(chipToFilters('country:colombia', ['Colombia', 'コロンビア', 'Kenya'])).toEqual({
+      countries: ['Colombia', 'コロンビア'],
+    });
+    expect(chipToFilters('country:colombia')).toEqual({ countries: [] });
     expect(chipToFilters('process:Natural')).toEqual({ process: 'Natural' });
   });
 

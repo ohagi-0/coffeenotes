@@ -20,6 +20,7 @@ import {
 import { useDeleteLogs } from '@/features/logs/mutations';
 import { useLogs, useMonthlyLogCount } from '@/features/logs/queries';
 import { routes } from '@/lib/routes';
+import { COUNTRY_SHELVES, countryDisplayName, countryKeyOf } from '@/lib/vocab';
 import { cn } from '@/lib/utils';
 
 // S2 入力記録一覧（F-LIST-1 / F-LIST-2）。/logs（id なし）で描く。絞り込みは URL の ?f= に持ち、共有・戻るに対応する。
@@ -35,6 +36,19 @@ const FIXED_CHIPS: FilterChip[] = [
 ];
 const MAX_OPTION_CHIPS = 4;
 
+/** 自分の豆に出てくる生産国の表記を国ごとにまとめ、日本語名のチップにする（Ethiopia とエチオピアは 1 つ）。語彙の順 */
+function groupCountryChips(values: readonly string[]): FilterChip[] {
+  const seen = new Map<string, string>();
+  for (const v of values) {
+    const key = countryKeyOf(v);
+    if (key && !seen.has(key)) seen.set(key, countryDisplayName(v) ?? v);
+  }
+  const order = new Map(COUNTRY_SHELVES.map((c, i) => [c.key, i]));
+  return Array.from(seen.entries())
+    .sort((a, b) => (order.get(a[0]) ?? 999) - (order.get(b[0]) ?? 999) || a[1].localeCompare(b[1], 'ja'))
+    .map(([key, label]) => ({ value: `country:${key}`, label }));
+}
+
 export function LogListView() {
   const router = useRouter();
   const pathname = usePathname();
@@ -45,11 +59,11 @@ export function LogListView() {
   const selectedLog = params.get('log');
   // 1280px 以上では行を選ぶと右ペインに豆詳細を出す（ページ遷移しない）。それ未満は記録詳細へ遷移
   const twoPane = useMediaQuery(XL_QUERY);
-  const filters = useMemo(() => chipToFilters(chip), [chip]);
+  const options = useBeanFilterOptions();
+  const filters = useMemo(() => chipToFilters(chip, options.data?.countries ?? []), [chip, options.data]);
 
   const logs = useLogs(filters);
   const monthly = useMonthlyLogCount();
-  const options = useBeanFilterOptions();
   const deleteLogs = useDeleteLogs();
 
   // 一括削除の選択モード
@@ -90,9 +104,7 @@ export function LogListView() {
   }
 
   const chips = useMemo<FilterChip[]>(() => {
-    const countries = (options.data?.countries ?? [])
-      .slice(0, MAX_OPTION_CHIPS)
-      .map((c) => ({ value: `country:${c}`, label: c }));
+    const countries = groupCountryChips(options.data?.countries ?? []).slice(0, MAX_OPTION_CHIPS);
     const processes = (options.data?.processes ?? [])
       .slice(0, MAX_OPTION_CHIPS)
       .map((p) => ({ value: `process:${p}`, label: p }));

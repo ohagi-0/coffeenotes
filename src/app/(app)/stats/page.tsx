@@ -26,6 +26,7 @@ import {
 import { useStatsRows } from '@/features/stats/queries';
 import { routes } from '@/lib/routes';
 import { BEAN_ROAST_LEVEL_LABELS, type BeanRoastLevel } from '@/lib/schemas/bean';
+import { countryDisplayName } from '@/lib/vocab';
 
 // S8 好みの分析（F-STAT-1〜4）。期間は ?p= に持つ（ADR 0008）。集計は features/stats/aggregate の純粋関数。
 
@@ -79,7 +80,11 @@ function StatsInner() {
 
   const filtered = useMemo(() => filterByPeriod(rows.data ?? [], period), [rows.data, period]);
   const summary = useMemo(() => summarize(filtered), [filtered]);
-  const countries = useMemo(() => topHighRated(filtered, 'country'), [filtered]);
+  // 生産国は語彙で日本語名に寄せる（Ethiopia とエチオピアを 1 行に）
+  const countries = useMemo(
+    () => topHighRated(filtered, 'country', 5, (v) => countryDisplayName(v) ?? v),
+    [filtered],
+  );
   const processes = useMemo(() => topHighRated(filtered, 'process'), [filtered]);
   const roasts = useMemo(
     () =>

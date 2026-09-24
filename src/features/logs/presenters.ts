@@ -1,6 +1,7 @@
 import type { LogListItemProps } from '@/components/logs/log-list-item';
 import { frontImagePath } from '@/features/beans/images';
 import type { LogFilters, LogWithRelations } from './queries';
+import { countryKeyOf } from '@/lib/vocab';
 
 // DB の行（LogWithRelations）を表示用の平らな型に変換する純関数（Issue #17 段階 2）。
 // 画面コンポーネントは DB の形を知らない。
@@ -68,11 +69,15 @@ export function groupByDate(items: readonly TimelineItem[]): TimelineGroup[] {
  * S2 の絞り込みチップの値（URL の ?f=）を useLogs の条件に変換する。
  * all / rating4 / home / shop / country:<国> / process:<精製>
  */
-export function chipToFilters(value: string): LogFilters {
+export function chipToFilters(value: string, knownCountries: readonly string[] = []): LogFilters {
   if (value === 'rating4') return { minRating: 4 };
   if (value === 'home') return { place: 'home' };
   if (value === 'shop') return { place: 'shop' };
-  if (value.startsWith('country:')) return { country: value.slice('country:'.length) };
+  if (value.startsWith('country:')) {
+    // チップは国のキー（ethiopia）。自分の豆に出てくる表記（Ethiopia / エチオピア）のうち同じ国のものをまとめて絞る
+    const key = value.slice('country:'.length);
+    return { countries: knownCountries.filter((c) => countryKeyOf(c) === key) };
+  }
   if (value.startsWith('process:')) return { process: value.slice('process:'.length) };
   return {};
 }
