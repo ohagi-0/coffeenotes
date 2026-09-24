@@ -68,6 +68,13 @@ describe('saveNewLog', () => {
     expect(d.createLog).toHaveBeenCalledWith(expect.objectContaining({ place: 'home', shop_id: null }));
   });
 
+  it('ロースター名が空なら作らず roaster_id は null', async () => {
+    const d = deps();
+    await saveNewLog({ bean: { ...newBean.bean, roaster: { id: null, name: '  ' } } }, baseLog, d);
+    expect(d.createRoaster).not.toHaveBeenCalled();
+    expect(d.createBean).toHaveBeenCalledWith(expect.objectContaining({ roaster_id: null }));
+  });
+
   it('店で飲んだが店を選ばなければ shop_id は null', async () => {
     const d = deps();
     const r = await saveNewLog(newBean, { ...baseLog, shop: null }, d);

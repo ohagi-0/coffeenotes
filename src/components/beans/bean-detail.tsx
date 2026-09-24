@@ -101,8 +101,16 @@ export function BeanDetail({
     <>
       <h2 className="mt-5 mb-1 flex items-baseline justify-between text-[13px] font-bold">この豆の記録</h2>
       <LogTimeline items={logs} isPending={logsPending} error={logsError} onRetry={onRetryLogs} />
-      <div className="mt-4">
-        <AppButton onClick={onLogAgain} width={wide ? 'auto' : 'full'} className={wide ? 'px-7' : undefined}>
+      <div className={wide ? 'mt-4 flex flex-wrap gap-2' : 'mt-4 flex flex-col gap-2'}>
+        <AppButton href={routes.home} width={wide ? 'auto' : 'full'} className={wide ? 'px-7' : undefined}>
+          コレクションに戻る
+        </AppButton>
+        <AppButton
+          variant="secondary"
+          onClick={onLogAgain}
+          width={wide ? 'auto' : 'full'}
+          className={wide ? 'px-7' : undefined}
+        >
           この豆をもう一度記録する
         </AppButton>
       </div>

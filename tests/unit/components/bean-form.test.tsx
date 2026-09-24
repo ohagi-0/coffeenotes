@@ -17,14 +17,22 @@ it('焙煎度はチップで選び、もう一度押すと外れる', async () =
 });
 
 describe('BeanForm', () => {
-  it('豆名とロースターが空なら送信せずエラーを出す', async () => {
+  it('豆名が空なら送信せずエラーを出す（ロースターは任意）', async () => {
     const onSubmit = vi.fn();
     render(<BeanForm onSubmit={onSubmit} />);
     fireEvent.click(screen.getByRole('button', { name: '次へ：どこで飲んだ？' }));
-    await waitFor(() => expect(screen.getAllByRole('alert')).toHaveLength(2));
+    await waitFor(() => expect(screen.getAllByRole('alert')).toHaveLength(1));
     expect(screen.getByText('豆名を入力してください')).toBeInTheDocument();
-    expect(screen.getByText('ロースターを入力してください')).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('ロースターが空でも豆名だけで送信でき、roaster は id null・名前空で渡る', async () => {
+    const onSubmit = vi.fn();
+    render(<BeanForm onSubmit={onSubmit} />);
+    fireEvent.change(screen.getByLabelText('豆名'), { target: { value: 'もらい物の豆' } });
+    fireEvent.click(screen.getByRole('button', { name: '次へ：どこで飲んだ？' }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0].roaster).toEqual({ id: null, name: '' });
   });
 
   it('数値文字列は数値に、空は null に。新しいロースターは id null で渡す', async () => {

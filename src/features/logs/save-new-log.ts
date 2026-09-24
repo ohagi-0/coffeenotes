@@ -64,8 +64,12 @@ export async function saveNewLog(
     beanId = draft.bean.id;
   } else {
     progress('bean');
+    // ロースターは任意。名前も無ければ付けない
     const roasterId =
-      draft.bean.roaster.id ?? (await deps.createRoaster({ name: draft.bean.roaster.name })).id;
+      draft.bean.roaster.id ??
+      (draft.bean.roaster.name.trim()
+        ? (await deps.createRoaster({ name: draft.bean.roaster.name.trim() })).id
+        : null);
     beanId = (
       await deps.createBean({
         ...draft.bean.form,

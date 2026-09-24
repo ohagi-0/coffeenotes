@@ -7,7 +7,7 @@ import { PlatformGeolocationError, getCurrentPosition } from '@/lib/platform/geo
 import { cn } from '@/lib/utils';
 
 // 店を選ぶ全画面の検索シート（S3 ③、F-SHOP-2/3/4）。Instagram の場所検索のように、
-// 上に検索欄、一番上に「自分で登録する」、その下に 登録済みの店 / カードのロースターからの候補 / 近くの店 / 検索結果 を並べる。
+// 上に検索欄。並びは 地図で見つかった店（第一候補）→ 近くの店 → 登録済みの店（該当）→ 最後に「自分で登録する」（2026-09-24 に並び替え）。
 // ネイティブの <dialog> で開き、フォーカストラップ・Esc・最前面はブラウザに任せる（nav-drawer と同じ）。
 // 候補検索（/api/geo）は入力補助で、失敗しても「自分で登録する」から店名だけで作れる（ADR 0003）。
 
@@ -57,10 +57,12 @@ function formatDistance(m: number | undefined): string | null {
   return m < 1000 ? `${m} m` : `${(m / 1000).toFixed(1)} km`;
 }
 
+/** 空白区切りの語がすべて店名か住所に含まれれば一致（順不同・部分一致） */
 function matches(shop: ShopPickerOption, q: string): boolean {
-  if (!q) return true;
-  const needle = q.toLowerCase();
-  return shop.name.toLowerCase().includes(needle) || (shop.address ?? '').toLowerCase().includes(needle);
+  const terms = q.toLowerCase().split(/\s+/).filter(Boolean);
+  if (terms.length === 0) return true;
+  const hay = `${shop.name}\n${shop.address ?? ''}`.toLowerCase();
+  return terms.every((t) => hay.includes(t));
 }
 
 export function ShopPicker({
@@ -219,25 +221,6 @@ export function ShopPicker({
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-[max(env(safe-area-inset-bottom,0px),16px)]">
-          <button
-            type="button"
-            onClick={() => onRegisterManually(q)}
-            className="border-border hover:bg-secondary flex min-h-[60px] w-full items-center gap-3 border-b py-3 text-left"
-          >
-            <span className="bg-primary/14 text-primary grid size-10 shrink-0 place-items-center rounded-full">
-              <Plus className="size-5" aria-hidden />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-bold">
-                {q ? `「${q}」を自分で登録する` : '自分で登録する'}
-              </span>
-              <span className="text-muted-foreground block text-[11px]">
-                店名を手で入れる。位置は地図で指定するか、あとから付けられます
-              </span>
-            </span>
-            <ChevronRight className="text-muted-foreground size-[18px] shrink-0" aria-hidden />
-          </button>
-
           {showHint && hint && (
             <Section
               title={`${hint.label}「${hint.query}」の場所`}
@@ -270,7 +253,29 @@ export function ShopPicker({
             </div>
           )}
 
-          <Section title="登録済みの店">
+          {candidates && q === '' && nearbyResult.status !== 'idle' && (
+            <Section title="近くの店">
+              <CandidateList
+                result={nearbyResult}
+                emptyText="近くにカフェ・ロースターが見つかりませんでした"
+                onPick={onPickCandidate}
+              />
+            </Section>
+          )}
+
+          {candidates && q.length >= SHOP_PICKER_MIN_QUERY && (
+            <Section
+              title="地図で見つかった店"
+              note="OpenStreetMap の登録から。見つからなければ下の「自分で登録する」"
+            >
+              <CandidateList
+                result={searchResult}
+                emptyText="見つかりませんでした"
+                onPick={onPickCandidate}
+              />
+            </Section>
+          )}
+          <Section title={q ? '登録済みの店（該当）' : '登録済みの店'}>
             {registeredPending && registered.length === 0 ? (
               <p className="text-muted-foreground py-3 text-xs" role="status">
                 読み込んでいます…
@@ -309,25 +314,24 @@ export function ShopPicker({
             )}
           </Section>
 
-          {candidates && q === '' && nearbyResult.status !== 'idle' && (
-            <Section title="近くの店">
-              <CandidateList
-                result={nearbyResult}
-                emptyText="近くにカフェ・ロースターが見つかりませんでした"
-                onPick={onPickCandidate}
-              />
-            </Section>
-          )}
-
-          {candidates && q.length >= SHOP_PICKER_MIN_QUERY && (
-            <Section title="地図で見つかった店" note="OpenStreetMap の登録から。無ければ「自分で登録する」">
-              <CandidateList
-                result={searchResult}
-                emptyText="見つかりませんでした"
-                onPick={onPickCandidate}
-              />
-            </Section>
-          )}
+          <button
+            type="button"
+            onClick={() => onRegisterManually(q)}
+            className="border-border hover:bg-secondary mt-2 flex min-h-[60px] w-full items-center gap-3 rounded-[12px] border border-dashed px-3 py-3 text-left"
+          >
+            <span className="bg-primary/14 text-primary grid size-10 shrink-0 place-items-center rounded-full">
+              <Plus className="size-5" aria-hidden />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-bold">
+                {q ? `「${q}」を自分で登録する` : '自分で登録する'}
+              </span>
+              <span className="text-muted-foreground block text-[11px]">
+                地図で見つからないときに。店名を手で入れて、位置は地図で指定するか、あとから付けられます
+              </span>
+            </span>
+            <ChevronRight className="text-muted-foreground size-[18px] shrink-0" aria-hidden />
+          </button>
         </div>
       </div>
     </dialog>

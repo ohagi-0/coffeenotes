@@ -96,7 +96,10 @@ function BeanPageInner() {
       setFailure(null);
       try {
         const roasterId =
-          values.roaster.id ?? (await createRoaster.mutateAsync({ name: values.roaster.name })).id;
+          values.roaster.id ??
+          (values.roaster.name.trim()
+            ? (await createRoaster.mutateAsync({ name: values.roaster.name.trim() })).id
+            : null);
         await updateBean.mutateAsync({ id: b.id, ...values.form, roaster_id: roasterId });
         toast.success('保存しました');
         router.replace(routes.bean(b.id) as Route);

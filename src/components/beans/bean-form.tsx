@@ -26,7 +26,7 @@ import { cn } from '@/lib/utils';
 export type RoasterOption = { id: string; name: string };
 
 const formSchema = beanFormSchema.omit({ roaster_id: true }).extend({
-  roaster_name: z.string().trim().min(1, 'ロースターを入力してください').max(120),
+  roaster_name: z.string().trim().max(120, 'ロースター名は 120 文字までです').default(''),
   roaster_id: z.string().nullable().default(null),
 });
 type FormInput = z.input<typeof formSchema>;
@@ -173,9 +173,16 @@ export function BeanForm({
         name="roaster_name"
         ocr={ocr}
         label="ロースター"
+        aside={<span className="text-muted-foreground text-[11px]">任意</span>}
         htmlFor={id('roaster')}
         error={errors.roaster_name?.message}
-        hint={roasterIsNew ? '新しいロースターとして登録します' : undefined}
+        hint={
+          roasterIsNew
+            ? '新しいロースターとして登録します'
+            : roasterName.trim() === ''
+              ? '分からなければ空のままで構いません'
+              : undefined
+        }
       >
         <div className="relative">
           <TextInput

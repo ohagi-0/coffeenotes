@@ -35,7 +35,8 @@ export const flavorNotesSchema = z
 export const beanFormSchema = z.object({
   name: z.string().trim().min(1, '豆名を入力してください').max(200, '豆名は 200 文字までです'),
   // DB 列は NULL 可だが、アプリ要件（F-BEAN-2）としてフォームでは必須
-  roaster_id: uuidSchema.describe('ロースターを選んでください'),
+  // ロースターは任意（どこで焙煎したか分からない豆もある。2026-09-24）。DB も NULL 可
+  roaster_id: uuidSchema.nullable().default(null),
   source: beanSourceSchema,
   country: textOrNull(120),
   region: textOrNull(200),

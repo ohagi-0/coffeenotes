@@ -4,7 +4,6 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { CardImage } from '@/components/beans/card-image';
 import { RatingStars } from '@/components/logs/rating-stars';
-import { useBeanImageUrl } from '@/features/beans/images';
 import { routes } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 
@@ -59,8 +58,10 @@ export function LogListItem({
 }: LogListItemProps) {
   const flavors = flavorNotes.slice(0, LOG_LIST_ITEM_MAX_FLAVORS);
   const href = hrefOverride ?? (routes.log(id) as Route);
-  const image = useBeanImageUrl(imageSrc ? null : imagePath);
-  const src = imageSrc ?? image.data ?? null;
+  // 一覧では撮ったカード写真を出さず、常に印刷物風のカードで揃える（2026-09-24。写真は豆詳細で見る）
+  void imageSrc;
+  void imagePath;
+  const src = null;
 
   const body = (
     <>
