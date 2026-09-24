@@ -16,6 +16,7 @@ import {
   COLLECTION_SORT_CHIPS,
   buildCollection,
   groupByCountry,
+  groupByVariety,
   sortCollection,
   type CollectionSort,
 } from '@/features/beans/collection';
@@ -52,11 +53,15 @@ function CollectionInner() {
   const logs = useLogs();
   const collection = useMemo(() => buildCollection(logs.data ?? []), [logs.data]);
   // 生産国の棚では各棚の中を最近飲んだ順に。ほかのモードは全体を 1 本の棚に並べる
+  const grouped = sort === 'country' || sort === 'variety';
   const items = useMemo(
-    () => sortCollection(collection, sort === 'country' ? 'recent' : sort),
-    [collection, sort],
+    () => sortCollection(collection, grouped ? 'recent' : sort),
+    [collection, grouped, sort],
   );
-  const byCountry = useMemo(() => (sort === 'country' ? groupByCountry(items) : null), [items, sort]);
+  const byCountry = useMemo(
+    () => (sort === 'country' ? groupByCountry(items) : sort === 'variety' ? groupByVariety(items) : null),
+    [items, sort],
+  );
 
   function setSort(v: string) {
     router.replace((v === 'country' ? pathname : `${pathname}?s=${v}`) as Route, { scroll: false });
@@ -77,7 +82,7 @@ function CollectionInner() {
         <p className="text-muted-foreground font-num text-xs">
           {logs.data
             ? byCountry
-              ? `${byCountry.total} の産地のうち ${byCountry.visited} を制覇 · ${items.length} 袋 · ${logs.data.length} 杯`
+              ? `${byCountry.total} の${sort === 'variety' ? '品種' : '産地'}のうち ${byCountry.visited} を制覇 · ${items.length} 袋 · ${logs.data.length} 杯`
               : `${items.length} 袋 · ${logs.data.length} 杯`
             : ' '}
         </p>
@@ -127,18 +132,18 @@ function CollectionInner() {
         <>
           <FilterChips chips={COLLECTION_SORT_CHIPS} value={sort} onChange={setSort} className="mb-4" />
           {byCountry.shelves.map((shelf) => (
-            <section key={shelf.key} aria-label={`${shelf.ja}の棚`} className="mb-1">
+            <section key={shelf.key} aria-label={`${shelf.title}の棚`} className="mb-1">
               <div className="mb-2 flex items-baseline justify-between gap-2 px-1">
-                <h2 className="flex items-baseline gap-2">
-                  <span className="font-display text-[17px]">{shelf.ja}</span>
-                  {shelf.en && (
-                    <span className="font-num text-muted-foreground text-[10px] tracking-[.18em] uppercase">
-                      {shelf.en}
+                <h2 className="flex min-w-0 items-baseline gap-2">
+                  <span className="font-display truncate text-[17px]">{shelf.title}</span>
+                  {shelf.sub && (
+                    <span className="font-num text-muted-foreground shrink-0 text-[10px] tracking-[.18em] uppercase">
+                      {shelf.sub}
                     </span>
                   )}
                 </h2>
-                <span className="font-num text-muted-foreground text-[11px]">
-                  {shelf.items.length > 0 ? `${shelf.items.length} 袋` : shelf.region ? shelf.region : ''}
+                <span className="font-num text-muted-foreground shrink-0 text-[11px]">
+                  {shelf.items.length > 0 ? `${shelf.items.length} 袋` : (shelf.note ?? '')}
                 </span>
               </div>
               {shelf.items.length > 0 ? (
@@ -159,7 +164,7 @@ function CollectionInner() {
               ) : (
                 <div className="md:hidden">
                   <Shelf>
-                    <BeanBagEmpty label={shelf.ja} sub={shelf.en} />
+                    <BeanBagEmpty label={shelf.title} sub={shelf.sub} />
                   </Shelf>
                   <ShelfPlank />
                 </div>
@@ -169,7 +174,7 @@ function CollectionInner() {
                   {shelf.items.length > 0 ? (
                     shelf.items.map((item) => <BeanBag key={item.beanId} item={item} />)
                   ) : (
-                    <BeanBagEmpty label={shelf.ja} sub={shelf.en} />
+                    <BeanBagEmpty label={shelf.title} sub={shelf.sub} />
                   )}
                 </div>
                 <div className="h-7" />

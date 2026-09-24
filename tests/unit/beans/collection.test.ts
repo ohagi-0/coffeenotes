@@ -4,7 +4,10 @@ import {
   buildCollection,
   countryKeyOf,
   groupByCountry,
+  groupByVariety,
   sortCollection,
+  varietyKeysOf,
+  VARIETY_SHELVES,
   type CollectionSourceLog,
 } from '@/features/beans/collection';
 
@@ -42,6 +45,7 @@ describe('buildCollection', () => {
       name: 'Lusitania Lime Geisha',
       roasterName: 'KIELO COFFEE',
       process: null,
+      variety: null,
       count: 3,
       avgRating: 4.5,
       lastLoggedOn: '2026-09-20',
@@ -106,7 +110,37 @@ describe('countryKeyOf / groupByCountry', () => {
     expect(g.shelves.find((s) => s.key === 'kenya')?.items.map((i) => i.beanId)).toEqual(['a']);
     expect(g.shelves.find((s) => s.key === 'ethiopia')?.items).toEqual([]);
     const tail = g.shelves.slice(COUNTRY_SHELVES.length);
-    expect(tail.map((s) => s.ja)).toEqual(['Timor-Leste', '生産国なし']);
+    expect(tail.map((s) => s.title)).toEqual(['Timor-Leste', '生産国なし']);
     expect(tail[1]?.items.map((i) => i.beanId)).toEqual(['d']);
+  });
+});
+
+describe('varietyKeysOf / groupByVariety', () => {
+  it('区切りで分け、表記ゆれと前後の語を吸収する', () => {
+    expect(varietyKeysOf('Geisha')).toEqual(['geisha']);
+    expect(varietyKeysOf('SL28, SL34')).toEqual(['sl28', 'sl34']);
+    expect(varietyKeysOf('SL-28 / Ruiru 11')).toEqual(['sl28', 'ruiru11']);
+    expect(varietyKeysOf('Red Bourbon')).toEqual(['bourbon']);
+    expect(varietyKeysOf('Pink Bourbon')).toEqual(['pink-bourbon']);
+    expect(varietyKeysOf('エチオピア在来種')).toEqual(['heirloom']);
+    expect(varietyKeysOf('74158')).toEqual(['heirloom']);
+    expect(varietyKeysOf('Laurina')).toEqual(['other:laurina']);
+    expect(varietyKeysOf('')).toEqual([]);
+    expect(varietyKeysOf(null)).toEqual([]);
+  });
+  it('複数の品種を持つ豆は両方の棚に並び、主要品種は系統順に空でも並ぶ', () => {
+    const items = buildCollection([
+      log({ id: '1', bean: { id: 'a', name: 'A', country: 'Kenya', variety: 'SL28, SL34' } }),
+      log({ id: '2', bean: { id: 'b', name: 'B', country: 'Panama', variety: 'Geisha' } }),
+      log({ id: '3', bean: { id: 'c', name: 'C', country: null, variety: null } }),
+    ]);
+    const g = groupByVariety(items);
+    expect(g.total).toBe(VARIETY_SHELVES.length);
+    expect(g.visited).toBe(3);
+    expect(g.shelves[0]?.key).toBe('geisha');
+    expect(g.shelves.find((s) => s.key === 'sl28')?.items.map((i) => i.beanId)).toEqual(['a']);
+    expect(g.shelves.find((s) => s.key === 'sl34')?.items.map((i) => i.beanId)).toEqual(['a']);
+    expect(g.shelves.find((s) => s.key === 'typica')?.items).toEqual([]);
+    expect(g.shelves.at(-1)).toMatchObject({ key: 'unknown', title: '品種なし' });
   });
 });
