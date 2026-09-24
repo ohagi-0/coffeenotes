@@ -13,6 +13,7 @@ const bean = (id: string, over: Partial<StatsRow['bean']> = {}): StatsRow['bean'
   id,
   country: 'Colombia',
   process: 'Washed',
+  roast_level: null,
   flavor_notes: [],
   taste_flavor: null,
   taste_sweetness: null,
@@ -77,6 +78,20 @@ describe('topHighRated / topFlavors', () => {
       { label: 'Ethiopia', count: 1, percent: 50 },
     ]);
     expect(topHighRated(rows, 'process')[0]).toMatchObject({ label: 'Washed', count: 2 });
+  });
+  it('焙煎度は labelOf で表示名に変え、未設定は数えない', () => {
+    const withRoast: StatsRow[] = [
+      { ...rows[0]!, bean: bean('a', { roast_level: 'light' }) },
+      { ...rows[1]!, bean: bean('a', { roast_level: 'light' }) },
+      { ...rows[4]!, bean: bean('c', { roast_level: 'dark' }) },
+      { ...rows[2]!, bean: bean('b', { roast_level: 'dark' }) }, // 星 3 は数えない
+      { ...rows[0]!, bean: bean('d') }, // 未設定
+    ];
+    const labels: Record<string, string> = { light: '浅煎り', dark: '深煎り' };
+    expect(topHighRated(withRoast, 'roast_level', 5, (v) => labels[v] ?? v)).toEqual([
+      { label: '浅煎り', count: 2, percent: 100 },
+      { label: '深煎り', count: 1, percent: 50 },
+    ]);
   });
   it('フレーバーは豆ごとに 1 回', () => {
     const f = topFlavors(rows);

@@ -16,6 +16,12 @@ export type BeanSource = z.infer<typeof beanSourceSchema>;
 
 export const beanRoastLevelSchema = z.enum(['light', 'medium', 'dark']);
 export type BeanRoastLevel = z.infer<typeof beanRoastLevelSchema>;
+/** 焙煎度の表示名（フォームのチップと好みの分析で共有） */
+export const BEAN_ROAST_LEVEL_LABELS: Record<BeanRoastLevel, string> = {
+  light: '浅煎り',
+  medium: '中煎り',
+  dark: '深煎り',
+};
 
 /** 味覚チャートの 1 軸。1〜5 の整数、未入力は null（F-BEAN-10）。 */
 export const tasteAxisSchema = numberOrNull(z.number().int('整数で入力してください').min(1).max(5));

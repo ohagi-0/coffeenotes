@@ -25,6 +25,7 @@ import {
 } from '@/features/stats/aggregate';
 import { useStatsRows } from '@/features/stats/queries';
 import { routes } from '@/lib/routes';
+import { BEAN_ROAST_LEVEL_LABELS, type BeanRoastLevel } from '@/lib/schemas/bean';
 
 // S8 好みの分析（F-STAT-1〜4）。期間は ?p= に持つ（ADR 0008）。集計は features/stats/aggregate の純粋関数。
 
@@ -80,6 +81,13 @@ function StatsInner() {
   const summary = useMemo(() => summarize(filtered), [filtered]);
   const countries = useMemo(() => topHighRated(filtered, 'country'), [filtered]);
   const processes = useMemo(() => topHighRated(filtered, 'process'), [filtered]);
+  const roasts = useMemo(
+    () =>
+      topHighRated(filtered, 'roast_level', 3, (v) =>
+        v in BEAN_ROAST_LEVEL_LABELS ? BEAN_ROAST_LEVEL_LABELS[v as BeanRoastLevel] : v,
+      ),
+    [filtered],
+  );
   const flavors = useMemo(() => topFlavors(filtered), [filtered]);
   const tasteHigh = useMemo(() => tasteAverages(filtered, true), [filtered]);
   const tasteAll = useMemo(() => tasteAverages(filtered, false), [filtered]);
@@ -148,6 +156,11 @@ function StatsInner() {
                 title="星 4 以上に多い精製方法"
                 items={processes}
                 empty="星 4 以上の記録がまだありません。"
+              />
+              <Bars
+                title="星 4 以上に多い焙煎度"
+                items={roasts}
+                empty="焙煎度を入れた星 4 以上の記録がまだありません。豆の編集で焙煎度を付けられます。"
               />
 
               <section className="mt-6" aria-label="よく出るフレーバー">

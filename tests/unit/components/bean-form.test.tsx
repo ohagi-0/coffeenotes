@@ -4,6 +4,18 @@ import { BeanForm } from '@/components/beans/bean-form';
 
 afterEach(() => cleanup());
 
+it('焙煎度はチップで選び、もう一度押すと外れる', async () => {
+  const onSubmit = vi.fn();
+  render(<BeanForm onSubmit={onSubmit} defaultValues={{ name: 'x', roaster_name: 'y' }} />);
+  fireEvent.click(screen.getByRole('radio', { name: '深煎り' }));
+  expect(screen.getByRole('radio', { name: '深煎り' })).toHaveAttribute('aria-checked', 'true');
+  fireEvent.click(screen.getByRole('button', { name: /次へ/ }));
+  await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+  expect(onSubmit.mock.calls[0][0].form.roast_level).toBe('dark');
+  fireEvent.click(screen.getByRole('radio', { name: '深煎り' }));
+  expect(screen.getByRole('radio', { name: '深煎り' })).toHaveAttribute('aria-checked', 'false');
+});
+
 describe('BeanForm', () => {
   it('豆名とロースターが空なら送信せずエラーを出す', async () => {
     const onSubmit = vi.fn();

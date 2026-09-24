@@ -14,7 +14,7 @@ export function useStatsRows() {
       const { data, error } = await getSupabaseBrowserClient()
         .from('logs')
         .select(
-          'logged_on, rating, shop_id, bean:beans!inner(id, country, process, flavor_notes, taste_flavor, taste_sweetness, taste_acidity, taste_aftertaste, taste_body)',
+          'logged_on, rating, shop_id, bean:beans!inner(id, country, process, roast_level, flavor_notes, taste_flavor, taste_sweetness, taste_acidity, taste_aftertaste, taste_body)',
         )
         .order('logged_on', { ascending: false });
       if (error) throw error;

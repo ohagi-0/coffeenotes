@@ -9,6 +9,8 @@ export interface StatsRow {
     id: string;
     country: string | null;
     process: string | null;
+    /** light / medium / dark。表示名は BEAN_ROAST_LEVEL_LABELS */
+    roast_level: string | null;
     flavor_notes: string[];
     taste_flavor: number | null;
     taste_sweetness: number | null;
@@ -78,18 +80,23 @@ function toCountItems(counts: Map<string, number>, limit: number): CountItem[] {
   return sorted.slice(0, limit).map((x) => ({ ...x, percent: max ? Math.round((x.count / max) * 100) : 0 }));
 }
 
-/** 高評価の記録に多い生産国 / 精製方法（F-STAT-2）。同じ豆を何度飲んでも記録ごとに数える */
+/**
+ * 高評価の記録に多い生産国 / 精製方法 / 焙煎度（F-STAT-2、F-BEAN-14）。同じ豆を何度飲んでも記録ごとに数える。
+ * `labelOf` で表示名に変換できる（焙煎度の light → 浅煎り など）
+ */
 export function topHighRated(
   rows: readonly StatsRow[],
-  field: 'country' | 'process',
+  field: 'country' | 'process' | 'roast_level',
   limit = 5,
+  labelOf: (value: string) => string = (v) => v,
 ): CountItem[] {
   const counts = new Map<string, number>();
   for (const r of rows) {
     if (r.rating === null || r.rating < HIGH_RATING) continue;
     const v = r.bean[field]?.trim();
     if (!v) continue;
-    counts.set(v, (counts.get(v) ?? 0) + 1);
+    const label = labelOf(v);
+    counts.set(label, (counts.get(label) ?? 0) + 1);
   }
   return toCountItems(counts, limit);
 }

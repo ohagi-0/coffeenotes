@@ -10,7 +10,12 @@ import { EMPTY_TASTE, TasteDots, type TasteValues } from '@/components/beans/tas
 import { Field, Select, TextInput, Textarea } from '@/components/form/field';
 import { OcrField } from '@/components/logs/ocr-field';
 import type { BeanFormFieldName } from '@/features/ocr/to-bean-form';
-import { beanFormSchema, type BeanFormInput } from '@/lib/schemas/bean';
+import {
+  beanFormSchema,
+  type BeanFormInput,
+  BEAN_ROAST_LEVEL_LABELS,
+  type BeanRoastLevel,
+} from '@/lib/schemas/bean';
 import type { DraftBeanForm, DraftRoaster } from '@/features/logs/new-log-draft';
 import { cn } from '@/lib/utils';
 
@@ -43,7 +48,6 @@ export type BeanFormProps = {
 };
 
 const SOURCE_LABELS = { purchased: '購入', home_roasted: '自家焙煎' } as const;
-const ROAST_LABELS = { light: '浅煎り', medium: '中煎り', dark: '深煎り' } as const;
 const TASTE_KEYS = [
   'taste_flavor',
   'taste_sweetness',
@@ -98,6 +102,8 @@ export function BeanForm({
   const flavorNotes = (useWatch({ control, name: 'flavor_notes' }) ?? []) as string[];
   const roasterName = useWatch({ control, name: 'roaster_name' }) ?? '';
   const roasterId = useWatch({ control, name: 'roaster_id' }) ?? null;
+  const roastLevelRaw = useWatch({ control, name: 'roast_level' });
+  const roastLevel = typeof roastLevelRaw === 'string' && roastLevelRaw !== '' ? roastLevelRaw : null;
   const tasteRaw = useWatch({ control, name: TASTE_KEYS });
   const taste: TasteValues = {
     flavor: numOrNull(tasteRaw[0]),
@@ -380,23 +386,40 @@ export function BeanForm({
             ))}
           </Select>
         </F>
-        <F
-          name="roast_level"
-          ocr={ocr}
-          label="焙煎度"
-          htmlFor={id('roast')}
-          error={errors.roast_level?.message}
-        >
-          <Select id={id('roast')} {...register('roast_level')}>
-            <option value="">未設定</option>
-            {Object.entries(ROAST_LABELS).map(([v, l]) => (
-              <option key={v} value={v}>
-                {l}
-              </option>
-            ))}
-          </Select>
-        </F>
       </div>
+
+      <F
+        name="roast_level"
+        ocr={ocr}
+        label="焙煎度"
+        htmlFor={id('roast')}
+        error={errors.roast_level?.message}
+      >
+        <div id={id('roast')} role="radiogroup" aria-label="焙煎度" className="flex flex-wrap gap-2">
+          {(Object.keys(BEAN_ROAST_LEVEL_LABELS) as BeanRoastLevel[]).map((v) => {
+            const active = roastLevel === v;
+            return (
+              <button
+                key={v}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() =>
+                  setValue('roast_level', active ? null : v, { shouldDirty: true, shouldValidate: true })
+                }
+                className={cn(
+                  'focus-visible:outline-primary inline-flex h-[34px] items-center rounded-full border px-3.5 text-xs font-medium transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2',
+                  active
+                    ? 'bg-foreground text-background border-foreground'
+                    : 'border-border text-foreground',
+                )}
+              >
+                {BEAN_ROAST_LEVEL_LABELS[v]}
+              </button>
+            );
+          })}
+        </div>
+      </F>
 
       <F
         name="description"
