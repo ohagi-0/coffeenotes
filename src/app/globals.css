@@ -26,6 +26,9 @@
   --color-ok: var(--ok);
   --color-warn: var(--warn);
   --color-card-paper: var(--card-paper);
+  --color-bag: var(--bag);
+  --color-bag-fold: var(--bag-fold);
+  --color-shelf: var(--shelf);
   --color-card-ink: var(--card-ink);
   --color-pin-45: var(--pin-45);
   --color-pin-40: var(--pin-40);
@@ -93,6 +96,9 @@
   --warn: #e3a94d; /* Amber: OCR 要確認 */
   /* 固有 */
   --card-paper: #f6f1e8; /* カード画像プレースホルダの用紙 */
+  --bag: #2a211b; /* 豆の袋（S10 コレクション）。--card より少し赤みのある紙 */
+  --bag-fold: #3a2e26; /* 袋の折り返し */
+  --shelf: #3b2c22; /* 棚板 */
   --card-ink: #2a2118;
   --pin-45: #e8a968; /* 地図ピン: 平均星 4.5 以上 */
   --pin-40: #c27f49;

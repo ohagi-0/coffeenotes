@@ -9,6 +9,8 @@ export const routes = {
   home: '/',
   login: '/login',
   newLog: '/logs/new',
+  /** 豆のコレクション（S10。棚） */
+  collection: '/collection',
   shops: '/shops',
   map: '/map',
   stats: '/stats',

@@ -1,5 +1,5 @@
 import type { Route } from 'next';
-import { BarChart3, Home, Settings, Store, type LucideIcon } from 'lucide-react';
+import { BarChart3, Home, Package, Settings, Store, type LucideIcon } from 'lucide-react';
 
 // ナビ定義（DESIGN.md §3、ADR 0007 追記）。ここが唯一の元で、
 // Web ではサイトヘッダー + ドロワー、PC ではサイドバー（UI-15）、iOS 版では下タブをここから描く。
@@ -13,6 +13,7 @@ export type NavItem = {
 
 export const NAV_ITEMS: readonly NavItem[] = [
   { href: '/', label: '入力記録一覧', short: 'ホーム', icon: Home },
+  { href: '/collection', label: '豆のコレクション', short: '棚', icon: Package },
   // 地図は「記録したお店」に統合（2026-09-24）。/map は /shops へ転送する
   { href: '/shops', label: '記録したお店', short: 'お店', icon: Store },
   { href: '/stats', label: '好みの分析', short: '好み', icon: BarChart3 },
