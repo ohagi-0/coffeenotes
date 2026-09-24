@@ -11,8 +11,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - 開発者: 個人（Kota）。レビュー相手は Claude Code。
 - 規模目標: 個人〜数十ユーザー。ランニングコストは月 0〜数百円。
-- 現在のフェーズ: **Phase 0〜5 の実装が完了**（2026-09-22）。ユーザー側の設定（Anthropic API キー、Google OAuth）は 2026-09-24 に完了。残りは実機確認、UI の微調整、Phase 6（Capacitor）。フェーズ定義は REQUIREMENTS.md §10。
-- 作業の分担: UI / 非 UI の並行作業は 2026-09-22 に終了し、いまは 1 つのウィンドウで全部を扱う。Issue は完了済み（#4〜#24）。同じワーキングツリーで別ウィンドウが動くときは §3.1「並行作業の注意」に従う。
+- **想定ユーザー: コーヒーに詳しい人だけではなく、ライト層も使う**（2026-09-24 決定）。店で「ブルーマウンテン」と書かれた豆を記録した人が、アプリの中で「ティピカ」の棚に入れられても意味が分からない。専門的な正しさ（植物学上の品種、精製方法の分類など）より、**その人がお店で見た言葉のまま出てくること**を優先する。分類・集計・棚分けの軸を決めるときはこの観点を第一にする（§5.3）。
+- 現在のフェーズ: **Phase 0〜5 の実装が完了**（2026-09-22）。ユーザー側の設定（Anthropic API キー、Google OAuth）は 2026-09-24 に完了。実機確認（ログイン、カード読み取り、地図、分析、エクスポート、PWA のオフライン閲覧）も 2026-09-24 に完了。残りは UI の微調整と Phase 6（Capacitor）。フェーズ定義は REQUIREMENTS.md §10。
+- 作業の分担: UI / 非 UI の固定分担は 2026-09-22 に終了（Issue #4〜#24 完了）。ただし同じワーキングツリーで複数の Claude Code ウィンドウが同時に動くことは今もある（2026-09-24 も OCR とドキュメントを別ウィンドウで並行）。必ず §3.1「並行作業の注意」に従い、自分が触ったパスだけを `git add` する。
 
 ## 2. 技術スタック（確定分）
 
@@ -75,8 +76,8 @@ REQUIREMENTS.md §13.2 の N-1〜N-5。要点:
 │   │   │   ├── logs/new/      # 記録作成ウィザード
 │   │   │   ├── logs/              # 記録詳細・編集 `/logs?id=…`（ADR 0008。[id] は使わない）
 │   │   │   ├── beans/             # 豆詳細 `/beans?id=…`
-│   │   │   ├── shops/             # 一覧。詳細は shops/detail/ `/shops/detail?id=…`
-│   │   │   ├── map/               # 地図 `/map?shop=…`（Leaflet は dynamic import）
+│   │   │   ├── shops/             # 記録したお店 = 地図 + 一覧（`/shops?shop=…&f=…`。Leaflet は dynamic import）。詳細は shops/detail/ `/shops/detail?id=…`
+│   │   │   ├── map/               # 旧地図。`/shops` へ転送するだけ（2026-09-24 に統合）
 │   │   │   ├── stats/             # 好みの分析 `/stats?p=…`
 │   │   │   ├── settings/
 │   │   │   └── dev/components/    # 部品カタログ。本番は notFound()
@@ -100,6 +101,7 @@ REQUIREMENTS.md §13.2 の N-1〜N-5。要点:
 │   │   ├── storage/           # Supabase Storage（カード画像の保存・署名付き URL）
 │   │   ├── platform/          # camera / geolocation / share / network / download（ブラウザ API はここだけ。Capacitor で差し替える）
 │   │   ├── routes.ts          # 画面 URL の組み立て（詳細ページはクエリ形式。ADR 0008）
+│   │   ├── vocab/             # 生産国・品種の語彙（別名表 → 日本語の呼び名、棚の順、入力候補）。棚・絞り込み・分析・フォームはここだけを見る（ADR 0009）
 │   │   └── schemas/           # Zod スキーマ（DB 型と対応。フォーム用と DB 投入用を分ける）
 │   └── types/
 │       └── database.ts        # `supabase gen types` の生成物（手で編集しない）
@@ -180,8 +182,9 @@ export interface OcrProvider {
 
 ### 5.3 UI
 
+- **ライト層のユーザー体験を第一にする**（§1）。棚・フィルタ・統計の見出しは、ユーザーが入力した言葉（店のカードにある表記）で出す。専門分類に寄せて別の名前に置き換えない（ブルーマウンテンをティピカに、など）。専門用語（アラビカ / ロブスタ、系統名）は豆の情報として持ってよいが、棚や見出しのタイトルにはしない。表記ゆれ（英語 / カタカナ、略称）は別名表で同じ棚に寄せてよいが、見出しは日本語の一般的な呼び名にする。
 - 色・書体・部品・画面仕様は `docs/DESIGN.md` に従う（ダーク専用、銅は操作要素だけ、豆名は Bodoni Moda、数字は Manrope、日本語は端末フォント）。
-- ナビは Web ではサイトヘッダー（ワードマーク、「＋ 記録する」、メニュー）+ 右からのドロワー + フッター。下タブは iOS アプリ版だけ（ADR 0007 追記）。ナビとページ名は略称を使わず「入力記録一覧 / 記録したお店 / 記録したお店のマップ / 好みの分析 / 設定」で統一する（DESIGN.md §3）。
+- ナビは Web ではサイトヘッダー（ワードマーク、「＋ 記録する」、メニュー）+ 右からのドロワー + フッター。下タブは iOS アプリ版だけ（ADR 0007 追記）。ナビとページ名は略称を使わず「入力記録一覧 / 記録したお店 / 好みの分析 / 設定」で統一する（DESIGN.md §3。地図は 2026-09-24 に「記録したお店」へ統合、`/map` は転送。戻すなら git タグ `before-shops-map-merge`）。
 - モバイルファースト。ボタン・タップ領域は 44px 以上。
 - フォームは react-hook-form + Zod resolver。OCR 結果はフォームの `defaultValues` に流し込むだけにし、確定は必ずユーザー操作。
 - 画像は保存前に `src/lib/image/compress.ts` で長辺 1,600px・JPEG 品質 0.8 に圧縮する。
@@ -214,7 +217,9 @@ ANTHROPIC_API_KEY=sk-ant-… pnpm vitest run tests/unit/ocr/live.test.ts   # OCR
 pnpm exec supabase db query --linked --project-ref gayhfwmvlxwyuzrvmkoy -f supabase/migrations/NNNN_x.sql   # 本番にマイグレーション適用
 ```
 
-Docker が無いので `pnpm supabase start` / `db:migrate` / `db:types:local` は使えない。スキーマ変更は `supabase/migrations/` に SQL を書き、ダッシュボードの SQL Editor に貼って適用してから `pnpm db:types` を実行する。コミット前フックが lint / Prettier チェック / typecheck を走らせる（緊急時は `--no-verify`）。
+Docker が無いので `pnpm supabase start` / `db:migrate` / `db:types:local` は使えない。スキーマ変更は `supabase/migrations/` に SQL を書き、上の `supabase db query --linked` で本番に適用（SQL Editor に貼っても可）してから `pnpm db:types` を実行する。
+
+品質ゲート: コミット前フック（simple-git-hooks + lint-staged）が staged ファイルに `eslint --max-warnings=0`（**警告 1 つでもコミット失敗**）と `prettier --check`、続けて `pnpm typecheck` を走らせる（緊急時は `--no-verify`）。GitHub Actions の `ci.yml` は `main` への push と PR で lint / typecheck / 単体テストを回す（E2E と build は CI では走らない）。単体テストは `tests/unit/**/*.test.{ts,tsx}` だけを拾い、`@/` は `src/` に解決される。E2E は `.env.local` の `E2E_TEST_EMAIL` / `E2E_TEST_PASSWORD` が無いとログインが要るテストを skip し、`SUPABASE_SERVICE_ROLE_KEY` があれば `global-setup.ts` がテストユーザーを自動作成する。`E2E_BASE_URL` で本番など別 URL に向けられる。
 
 環境変数は `.env.example` を正とし、新しい変数を追加したら必ずそこにも追記する。
 
@@ -229,6 +234,9 @@ GEO_PROVIDER=nominatim|google
 GOOGLE_MAPS_API_KEY=              # GEO_PROVIDER=google のとき
 SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID=   # ローカル Supabase の config.toml から env() で参照
 SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=
+CRON_SECRET=                      # サーバーのみ。/api/ocr/warm を叩く GitHub Actions の Secrets と同じ値
+E2E_TEST_EMAIL=                   # Playwright 用。無ければログインが要る E2E は skip
+E2E_TEST_PASSWORD=
 ```
 
 ## 7. Claude Code への作業ルール
@@ -261,7 +269,7 @@ SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=
 - [x] Phase 0: PC でメールリンクのログイン → 空のホーム表示を確認（2026-09-21）。**Phase 0 の完了条件を達成**
 - [x] Vercel にデプロイ（プロジェクト `coffeenotes`、本番 https://coffeenotes-red.vercel.app。CLI から `vercel deploy --prod`）（2026-09-21）。GitHub 連携は初回デプロイ時に CLI が自動で紐づけており、`main` への push で本番デプロイが走ることを確認（2026-09-24）
 - [x] Supabase Auth の URL 設定（Site URL = 本番、Redirect URLs に localhost:3100 / 127.0.0.1:3100 / 本番 / `coffeelog://` の 4 つ）（2026-09-21）
-- [ ] スマホで本番 URL からログイン確認
+- [x] スマホで本番 URL からログイン確認（2026-09-24）
 - [x] Google ログインを有効化（Google Cloud プロジェクト `coffeenotes` で同意画面 + Web クライアント作成 → Supabase Providers で Google 有効化。承認済みドメインは `coffee-notes.app` と `gayhfwmvlxwyuzrvmkoy.supabase.co`）— F-AUTH-1 の Must（2026-09-24）
 - [x] Q6（URL の形）をクエリ文字列に決定。ADR 0008、`src/lib/routes.ts`（2026-09-22）
 - [x] Phase 1: 非 UI — #4 Zod スキーマ、#5 豆・ロースター・店・タグのデータ層、#6 記録のデータ層（2026-09-22）
@@ -271,22 +279,22 @@ SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=
 - [x] 公開準備: 独自ドメイン coffee-notes.app を取得し本番に設定（Vercel・Supabase Auth・config.toml）（2026-09-22）
 - [x] 公開準備: カスタム SMTP — Resend（ap-northeast-1、coffee-notes.app を DKIM/SPF 検証済み）を Supabase の SMTP に設定。送信元 `coffeenotes <login@coffee-notes.app>`、上限 30 通/時。ログインメールは日本語化し `{{ .RedirectTo }}?token_hash=…` 形式（送信時と別のブラウザで開いても通る）（2026-09-22）
 - [x] Phase 1 を本番 https://coffee-notes.app にデプロイ（UI-7〜16 + データ層 + SMTP）。品質ゲート（typecheck / lint / unit 229 / E2E 7 / build）通過（2026-09-22）
-- [ ] Phase 1: 実機（スマホ）で本番からログイン → 手入力で記録作成 → 一覧表示を確認して Phase 1 完了
+- [x] Phase 1: 実機（スマホ）で本番からログイン → 手入力で記録作成 → 一覧表示を確認して Phase 1 完了（2026-09-24）
 - [x] Phase 2: カード読み取り — マイグレーション 0002（`ocr_usage` + `consume_ocr_quota()`）、`providers/claude.ts`、`/api/ocr`、S3 ①撮影 / ②読み取り確認（要確認タグ、10 秒で手入力へ、失敗・上限・無効の 3 状態）、保存時に Storage へ画像と `bean_images` 行、豆詳細・一覧・記録詳細で署名付き URL を表示、設定に今日の回数（2026-09-22）
 - [x] Phase 2: `ANTHROPIC_API_KEY` と `OCR_PROVIDER=claude` を Vercel（Production / Preview）に設定し、実 API で `tests/unit/ocr/live.test.ts` を通して応答を録画（`recorded: true`、合成カードで 4.5 秒・入力 4,740 トークン）（2026-09-24）
 - [x] Phase 2: OCR の初回遅延対策 — タイムアウト 30 秒、`/api/ocr/warm` + `ocr-warmup.yml`（12 時間ごと）、`CRON_SECRET` を Vercel と GitHub に設定（2026-09-24）
-- [ ] Phase 2: 実機で撮影 → 読み取り → 保存が 1 分以内に終わることを確認（完了条件）
+- [x] Phase 2: 実機で撮影 → 読み取り → 保存が 1 分以内に終わることを確認（2026-09-24）。**Phase 2 の完了条件を達成**
 - [x] F-AUTH-3 アカウント削除（0003_delete_my_account.sql、設定画面の確認ブロック）と /privacy /terms（2026-09-22）
 - [x] 公開準備（ユーザー作業）: Google Cloud で OAuth クライアント作成 → Supabase Providers で Google 有効化 → 同意画面を本番公開（2026-09-24）
 - [x] Phase 3 地図: /map（Leaflet + OSM、平均星で色分けしたピン、現在地、長押しで店登録）、/api/geo（Overpass / Nominatim）、記録作成③と店フォームの「現在地から探す / 店名で検索 / 地図で指定」（2026-09-22）
 - [x] Phase 4 自宅抽出・焙煎: レシピの折りたたみ、比率の自動計算、前回のレシピを複製、焙煎バッチ（一覧・登録・記録への紐づけ・バッチ別平均星）（2026-09-22）
 - [x] Phase 5 分析・仕上げ: /stats（4 タイル、高評価の生産国・精製、フレーバー、味覚レーダー、月別）、PWA（serwist、オフライン閲覧、アイコン）、CSV / JSON エクスポート、カードの QR → 参照 URL（2026-09-22）
-- [ ] Phase 5 の実機確認: ホーム画面に追加 → 機内モードで一覧・豆詳細が開く、エクスポートのダウンロード
+- [x] Phase 5 の実機確認: ホーム画面に追加 → 機内モードで一覧・豆詳細が開く、エクスポートのダウンロード（2026-09-24）
 - [ ] Phase 6 ネイティブ化（Capacitor）— 未着手。前提の制約（§2.2）は守られている
 
 進捗はこのチェックリストを更新して管理する。
 
-- ブラウザ API（カメラ、位置情報、共有）に触れてよいのは `src/lib/platform/` の 3 ファイルだけ。UI から `navigator.*` を直接呼ばない（N-4）。違反は `grep -rn 'navigator\.' src --include='*.ts' --include='*.tsx' | grep -v '^src/lib/platform/'` が空になることで確認する。
+- ブラウザ API（カメラ、位置情報、共有）に触れてよいのは `src/lib/platform/` の 5 ファイル（camera / geolocation / share / network / download）だけ。UI から `navigator.*` を直接呼ばない（N-4）。違反は `grep -rn 'navigator\.' src --include='*.ts' --include='*.tsx' | grep -v '^src/lib/platform/'` が空になることで確認する。
 - 画像圧縮は Canvas 系 API を使うため jsdom では検証できない。寸法計算 `fitWithin` を純粋関数として単体テストし、実ブラウザでの挙動は `tests/e2e/image-compress.spec.ts` で確認する（compress.ts の関数を `toString()` でページに流し込んで実行する）。
 - `uploadBeanImage` は Storage への保存だけを行い、`bean_images` 行の作成は features 層の責務にしている。バケットは非公開なので表示は `getBeanImageUrl` の署名付き URL を使う。
 
@@ -308,6 +316,8 @@ SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=
 - マイグレーションは `pnpm exec supabase db query --linked --project-ref gayhfwmvlxwyuzrvmkoy -f supabase/migrations/NNNN.sql` で本番に適用できる（CLI のトークンを使うのでキーチェーン不要）。0001 / 0002 はこの方法か SQL Editor で適用済みで、`supabase_migrations` には記録が無い。
 - 記録作成ウィザードの段階間の受け渡しは sessionStorage。撮影画像は data URL（`src/features/ocr/capture-draft.ts`）、豆の下書きは `new-log-draft.ts`。Blob は JSON にできないため。保存時に `dataUrlToBlob` で戻して Storage に上げる。
 - **PWA / オフライン**: `src/app/sw.ts`（serwist）。Supabase REST の GET は NetworkFirst、署名付き画像と地図タイルは StaleWhileRevalidate。書き込みと `/api/*` はキャッシュしない。ログアウトと退会で `clearOfflineCaches()` がデータのキャッシュを消す。開発中は SW 無効。`public/sw.js` は生成物（.gitignore 済み）。
+- **生産国・品種の語彙**（2026-09-24、ADR 0009）: `src/lib/vocab/` の `COUNTRY_SHELVES`（生産量順、FAO 2023）/ `VARIETY_SHELVES`（店で見る頻度順）が別名表と棚の順を兼ねる。`countryDisplayName` / `varietyDisplayName` で日本語の呼び名に寄せ、コレクションの棚・入力記録一覧の生産国チップ・好みの分析・豆フォームの候補（`suggestCountries` / `suggestVarieties`）・OCR の流し込みが全部これを使う。値は入力どおり保存し、寄せるのは表示と絞り込みだけ。順や別名を変えるときは配列を直すだけでよい。
+- **記録削除と店**（F-LOG-7、2026-09-24）: `features/logs/delete-log.ts` が記録を消したあと、その店の記録が 0 件なら店も消す。先に店だけ登録した場合は残る。
 - **統計**: `features/stats/aggregate.ts` の純粋関数で集計（高評価 = 星 4 以上、豆ごとに 1 回数える項目とレコードごとに数える項目がある）。データは `useStatsRows()` が必要な列だけ全件取る。
 - **エクスポート**: `features/export/build.ts`（CSV は BOM + CRLF、JSON は記録の配列）。ダウンロードは `lib/platform/download.ts`。
 - Supabase Free の一時停止対策として `.github/workflows/supabase-keepalive.yml` が週 2 回 REST を叩く（Secrets: `SUPABASE_URL` / `SUPABASE_ANON_KEY`）。
