@@ -110,3 +110,29 @@ describe('BeanForm', () => {
     });
   });
 });
+
+describe('BeanForm 生産国・品種の候補', () => {
+  it('生産国にフォーカスすると過去の値とよくある国が日本語で出て、押すと入る', async () => {
+    const onSubmit = vi.fn();
+    render(<BeanForm onSubmit={onSubmit} recentCountries={['Ethiopia', 'エチオピア']} />);
+    fireEvent.focus(screen.getByLabelText('生産国'));
+    const list = screen.getByRole('listbox', { name: '生産国の候補' });
+    const names = Array.from(list.querySelectorAll('[role=option]')).map((o) => o.textContent);
+    expect(names[0]).toBe('エチオピア');
+    expect(names[1]).toBe('ブラジル');
+    expect(names.filter((n) => n === 'エチオピア')).toHaveLength(1);
+    fireEvent.click(screen.getByRole('option', { name: 'ブラジル' }));
+    expect(screen.getByLabelText('生産国')).toHaveValue('ブラジル');
+    expect(screen.queryByRole('listbox', { name: '生産国の候補' })).not.toBeInTheDocument();
+  });
+  it('品種は入力で絞れる', () => {
+    render(<BeanForm onSubmit={vi.fn()} />);
+    const input = screen.getByLabelText('品種');
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: 'sl' } });
+    const names = Array.from(
+      screen.getByRole('listbox', { name: '品種の候補' }).querySelectorAll('[role=option]'),
+    ).map((o) => o.textContent);
+    expect(names).toEqual(['SL28', 'SL34']);
+  });
+});

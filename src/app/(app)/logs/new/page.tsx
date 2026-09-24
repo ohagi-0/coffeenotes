@@ -20,7 +20,7 @@ import { PHASE1_STEPS, WIZARD_STEPS, WizardStepper } from '@/components/wizard-s
 import { requireUserId } from '@/features/auth/require-user-id';
 import { saveBeanImages } from '@/features/beans/images';
 import { useCreateBean } from '@/features/beans/mutations';
-import { beanKeys, useBean, useBeans } from '@/features/beans/queries';
+import { beanKeys, useBean, useBeanFilterOptions, useBeans } from '@/features/beans/queries';
 import { latestRecipe } from '@/features/logs/aggregate';
 import { useCreateLog } from '@/features/logs/mutations';
 import { useLogsByBean } from '@/features/logs/queries';
@@ -258,6 +258,7 @@ function OcrStepPage() {
   const [failure, setFailure] = useState<string | null>(null);
   const [roasterQuery, setRoasterQuery] = useState('');
   const roasters = useRoasterSearch(roasterQuery);
+  const beanOptions = useBeanFilterOptions();
   const started = useRef(false);
   const controller = useRef<AbortController | null>(null);
   const [slow, setSlow] = useState(false);
@@ -455,6 +456,8 @@ function OcrStepPage() {
             }
             roasterOptions={(roasters.data ?? []).map((r) => ({ id: r.id, name: r.name }))}
             onRoasterSearch={setRoasterQuery}
+            recentCountries={beanOptions.data?.countries}
+            recentVarieties={beanOptions.data?.varieties}
             onSubmit={onSubmit}
           />
         </>
@@ -467,6 +470,7 @@ function BeanStep() {
   const router = useRouter();
   const [roasterQuery, setRoasterQuery] = useState('');
   const roasters = useRoasterSearch(roasterQuery);
+  const beanOptions = useBeanFilterOptions();
 
   function onSubmit(values: BeanFormSubmit) {
     writeNewLogDraft({ bean: { kind: 'new', form: values.form, roaster: values.roaster } });
@@ -480,6 +484,8 @@ function BeanStep() {
       <BeanForm
         roasterOptions={(roasters.data ?? []).map((r) => ({ id: r.id, name: r.name }))}
         onRoasterSearch={setRoasterQuery}
+        recentCountries={beanOptions.data?.countries}
+        recentVarieties={beanOptions.data?.varieties}
         onSubmit={onSubmit}
       />
     </div>

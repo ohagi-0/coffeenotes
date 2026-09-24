@@ -15,6 +15,9 @@ describe('extractionToBeanForm', () => {
     expect(values.name).toBe('Lusitania Lime Geisha');
     expect(values.roaster_name).toBe('KIELO COFFEE');
     expect(values.altitude_m).toBe(1650);
+    // 生産国・品種は語彙で日本語の呼び名に寄せる
+    expect(values.country).toBe('コロンビア');
+    expect(values.variety).toBe('ゲイシャ');
     expect(values.flavor_notes).toEqual(['Lime', 'Bergamot', 'Laurier']);
     expect(values.taste_flavor).toBe(5);
     expect(values.price_jpy).toBe(3800);

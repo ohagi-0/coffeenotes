@@ -16,7 +16,7 @@ import { ErrorCallout } from '@/components/error-callout';
 import { FullScreenLoading } from '@/components/full-screen-loading';
 import { useUpdateBean } from '@/features/beans/mutations';
 import { beanSpecItems, beanTaste } from '@/features/beans/presenters';
-import { useBean } from '@/features/beans/queries';
+import { useBean, useBeanFilterOptions } from '@/features/beans/queries';
 import { writeNewLogDraft } from '@/features/logs/new-log-draft';
 import { toTimelineItem } from '@/features/logs/presenters';
 import { useLogsByBean, useRatingStats } from '@/features/logs/queries';
@@ -43,6 +43,7 @@ function BeanPageInner() {
 
   const [roasterQuery, setRoasterQuery] = useState('');
   const roasters = useRoasterSearch(roasterQuery);
+  const beanOptions = useBeanFilterOptions();
   const updateBean = useUpdateBean();
   const createRoaster = useCreateRoaster();
   const [failure, setFailure] = useState<string | null>(null);
@@ -155,6 +156,8 @@ function BeanPageInner() {
           }}
           roasterOptions={(roasters.data ?? []).map((r) => ({ id: r.id, name: r.name }))}
           onRoasterSearch={setRoasterQuery}
+          recentCountries={beanOptions.data?.countries}
+          recentVarieties={beanOptions.data?.varieties}
           onSubmit={onSubmit}
           submitLabel="保存する"
           submitting={updateBean.isPending || createRoaster.isPending}

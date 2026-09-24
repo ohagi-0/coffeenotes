@@ -1,5 +1,6 @@
 import type { BeanCardExtraction } from '@/lib/schemas/bean-card';
 import type { BeanFormInput } from '@/lib/schemas/bean';
+import { countryDisplayName, varietyDisplayName } from '@/lib/vocab';
 
 // OCR の抽出結果を豆フォームの defaultValues と、項目ごとの信頼度に写す純粋関数（F-OCR-2 / F-OCR-5）。
 // フォームへは初期値として流すだけで、確定は必ずユーザー操作（CLAUDE.md §5.3）。
@@ -25,9 +26,10 @@ export function extractionToBeanForm(e: BeanCardExtraction): BeanFormPrefill {
 
   put('name', e.name.value, e.name.confidence);
   put('roaster_name', e.roaster.value, e.roaster.confidence);
-  put('country', e.country.value, e.country.confidence);
+  // 生産国と品種はカードの英語のままではなく、語彙にあれば日本語の呼び名で見せる（Colombia → コロンビア）
+  put('country', countryDisplayName(e.country.value), e.country.confidence);
   put('region', e.region.value, e.region.confidence);
-  put('variety', e.variety.value, e.variety.confidence);
+  put('variety', varietyDisplayName(e.variety.value), e.variety.confidence);
   put('process', e.process.value, e.process.confidence);
   put('altitude_m', e.altitudeM.value, e.altitudeM.confidence);
   if (e.flavorNotes.value && e.flavorNotes.value.length > 0) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -8,6 +8,7 @@ import { Plus, X } from 'lucide-react';
 import { AppButton } from '@/components/app-button';
 import { EMPTY_TASTE, TasteDots, type TasteValues } from '@/components/beans/taste-dots';
 import { Field, Select, TextInput, Textarea } from '@/components/form/field';
+import { SuggestBox } from '@/components/form/suggest-box';
 import { OcrField } from '@/components/logs/ocr-field';
 import type { BeanFormFieldName } from '@/features/ocr/to-bean-form';
 import {
@@ -18,6 +19,7 @@ import {
 } from '@/lib/schemas/bean';
 import type { DraftBeanForm, DraftRoaster } from '@/features/logs/new-log-draft';
 import { cn } from '@/lib/utils';
+import { suggestCountries, suggestVarieties } from '@/lib/vocab';
 
 // 豆フォーム（S3 ②、F-BEAN-1〜11/15）。beanFormSchema を resolver に使う。
 // ロースターは共有マスタから選ぶか、無ければ名前だけ入れて「新しいロースター」として扱う（保存時に登録）。
@@ -41,6 +43,9 @@ export type BeanFormProps = {
   /** ロースター候補（`onRoasterSearch` の結果） */
   roasterOptions?: RoasterOption[];
   onRoasterSearch?: (query: string) => void;
+  /** 自分の豆に出てくる生産国・品種（生の値）。よくある名前と合わせて入力候補にする */
+  recentCountries?: readonly string[];
+  recentVarieties?: readonly string[];
   onSubmit: (values: BeanFormSubmit) => void;
   submitLabel?: string;
   submitting?: boolean;
@@ -76,6 +81,8 @@ export function BeanForm({
   confidence,
   roasterOptions = [],
   onRoasterSearch,
+  recentCountries = [],
+  recentVarieties = [],
   onSubmit,
   submitLabel = '次へ：どこで飲んだ？',
   submitting,
@@ -115,6 +122,28 @@ export function BeanForm({
 
   const [flavorDraft, setFlavorDraft] = useState('');
   const [roasterFocused, setRoasterFocused] = useState(false);
+
+  // 生産国・品種の候補（F-BEAN-2 / F-BEAN-4）。フォーカス中だけ出し、候補を押すと値を入れる
+  const [suggestFor, setSuggestFor] = useState<'country' | 'variety' | null>(null);
+  const countryValue = String(useWatch({ control, name: 'country' }) ?? '');
+  const varietyValue = String(useWatch({ control, name: 'variety' }) ?? '');
+  const countryOptions = useMemo(
+    () => (suggestFor === 'country' ? suggestCountries(countryValue, recentCountries) : []),
+    [suggestFor, countryValue, recentCountries],
+  );
+  const varietyOptions = useMemo(
+    () => (suggestFor === 'variety' ? suggestVarieties(varietyValue, recentVarieties) : []),
+    [suggestFor, varietyValue, recentVarieties],
+  );
+  const countryReg = register('country');
+  const varietyReg = register('variety');
+  function pickSuggestion(name: 'country' | 'variety', value: string) {
+    setValue(name, value, { shouldDirty: true, shouldValidate: true });
+    setSuggestFor(null);
+  }
+  function leaveSuggest(name: 'country' | 'variety') {
+    setTimeout(() => setSuggestFor((f) => (f === name ? null : f)), 120);
+  }
 
   function addFlavor() {
     const v = flavorDraft.trim();
@@ -228,7 +257,27 @@ export function BeanForm({
 
       <div className="grid grid-cols-2 gap-3">
         <F name="country" ocr={ocr} label="生産国" htmlFor={id('country')} error={errors.country?.message}>
-          <TextInput id={id('country')} placeholder="Colombia" autoComplete="off" {...register('country')} />
+          <div className="relative">
+            <TextInput
+              id={id('country')}
+              placeholder="コロンビア"
+              autoComplete="off"
+              aria-autocomplete="list"
+              aria-expanded={countryOptions.length > 0}
+              {...countryReg}
+              onFocus={() => setSuggestFor('country')}
+              onBlur={(e) => {
+                void countryReg.onBlur(e);
+                leaveSuggest('country');
+              }}
+            />
+            <SuggestBox
+              open={suggestFor === 'country'}
+              options={countryOptions}
+              label="生産国の候補"
+              onPick={(v) => pickSuggestion('country', v)}
+            />
+          </div>
         </F>
         <F
           name="altitude_m"
@@ -265,7 +314,27 @@ export function BeanForm({
 
       <div className="grid grid-cols-2 gap-3">
         <F name="variety" ocr={ocr} label="品種" htmlFor={id('variety')} error={errors.variety?.message}>
-          <TextInput id={id('variety')} placeholder="Geisha" autoComplete="off" {...register('variety')} />
+          <div className="relative">
+            <TextInput
+              id={id('variety')}
+              placeholder="ゲイシャ"
+              autoComplete="off"
+              aria-autocomplete="list"
+              aria-expanded={varietyOptions.length > 0}
+              {...varietyReg}
+              onFocus={() => setSuggestFor('variety')}
+              onBlur={(e) => {
+                void varietyReg.onBlur(e);
+                leaveSuggest('variety');
+              }}
+            />
+            <SuggestBox
+              open={suggestFor === 'variety'}
+              options={varietyOptions}
+              label="品種の候補"
+              onPick={(v) => pickSuggestion('variety', v)}
+            />
+          </div>
         </F>
         <F name="process" ocr={ocr} label="精製" htmlFor={id('process')} error={errors.process?.message}>
           <TextInput id={id('process')} placeholder="Washed" autoComplete="off" {...register('process')} />
