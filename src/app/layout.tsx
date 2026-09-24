@@ -37,6 +37,10 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  // ピンチ・ダブルタップでページ全体が拡大しないよう固定する（地図の中だけは Leaflet が独自に拡大縮小する）。
+  // Safari のタブでは user-scalable=no が無視されるが、ホーム画面に追加した PWA では効く
+  maximumScale: 1,
+  userScalable: false,
   viewportFit: 'cover',
   themeColor: '#17120f',
 };

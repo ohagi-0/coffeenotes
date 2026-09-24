@@ -121,6 +121,8 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* ダブルタップ拡大を無効にする（ピンチは viewport の user-scalable=no。地図の中は Leaflet が touch-action を上書きする） */
+    touch-action: manipulation;
   }
   html {
     @apply font-sans;
