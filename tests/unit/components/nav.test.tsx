@@ -29,7 +29,7 @@ afterEach(() => cleanup());
 describe('nav 定義', () => {
   it('ページ名をそのままラベルにし、一文字の略称を使わない', () => {
     const labels = NAV_ITEMS.map((n) => n.label);
-    expect(labels).toEqual(['入力記録一覧', '記録したお店', '記録したお店のマップ', '好みの分析', '設定']);
+    expect(labels).toEqual(['入力記録一覧', '記録したお店', '好みの分析', '設定']);
     expect(labels.some((l) => l.length === 1)).toBe(false);
   });
 
@@ -66,10 +66,10 @@ describe('SiteHeader', () => {
 });
 
 describe('NavDrawer', () => {
-  it('開くと 5 項目と「記録を追加」が並び、現在地が aria-current になる', () => {
+  it('開くと 4 項目と「記録を追加」が並び、現在地が aria-current になる', () => {
     render(<NavDrawer open onClose={() => {}} email="kota@example.com" />);
     const nav = screen.getByRole('navigation', { name: 'メインナビゲーション' });
-    expect(nav.querySelectorAll('a')).toHaveLength(5);
+    expect(nav.querySelectorAll('a')).toHaveLength(4);
     expect(screen.getByRole('link', { name: '記録したお店' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: '記録を追加' })).toHaveAttribute('href', ADD_LOG_HREF);
     expect(screen.getByText('kota@example.com')).toBeInTheDocument();
