@@ -71,6 +71,26 @@ describe('LogTimeline', () => {
     expect(screen.getByText('自宅')).toBeInTheDocument();
   });
 
+  it('選択モードでは行がリンクではなくチェックボックスになり、切り替えで onToggle', () => {
+    const onToggle = vi.fn();
+    render(
+      <LogTimeline
+        items={items}
+        isPending={false}
+        error={null}
+        now={now}
+        selectable
+        selectedIds={new Set(['b'])}
+        onToggle={onToggle}
+      />,
+    );
+    expect(screen.queryAllByRole('link')).toHaveLength(0);
+    expect(screen.getAllByRole('checkbox')).toHaveLength(3);
+    expect(screen.getByRole('checkbox', { name: 'Kenya Kiambu AA を選択' })).toBeChecked();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Ethiopia Guji を選択' }));
+    expect(onToggle).toHaveBeenCalledWith('c');
+  });
+
   it('hrefFor で行の遷移先を差し替え、selectedId の行に aria-current が付く', () => {
     render(
       <LogTimeline

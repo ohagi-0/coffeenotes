@@ -24,6 +24,10 @@ export type LogTimelineProps = {
   hrefFor?: (item: TimelineItem) => Route;
   /** 選択中の記録 ID（PC の 2 ペイン用） */
   selectedId?: string | null;
+  /** 一括削除の選択モード。行がチェックボックスになる */
+  selectable?: boolean;
+  selectedIds?: ReadonlySet<string>;
+  onToggle?: (id: string) => void;
 };
 
 // タイムライン（DESIGN.md S2）。読み込み・失敗・空・絞り込み 0 件・一覧の 5 状態を持つ。
@@ -37,6 +41,9 @@ export function LogTimeline({
   now,
   hrefFor,
   selectedId,
+  selectable,
+  selectedIds,
+  onToggle,
 }: LogTimelineProps) {
   if (isPending) return <LogListSkeleton />;
 
@@ -95,6 +102,9 @@ export function LogTimeline({
               {...item}
               href={hrefFor?.(item)}
               selected={selectedId !== undefined && selectedId === item.id}
+              selectable={selectable}
+              checked={selectedIds?.has(item.id) ?? false}
+              onToggle={onToggle}
             />
           ))}
         </DateGroup>

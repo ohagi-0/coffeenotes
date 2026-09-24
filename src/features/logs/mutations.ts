@@ -54,6 +54,26 @@ export function useUpdateLog() {
   });
 }
 
+/** 複数の記録をまとめて削除する（F-LOG-7 の一括版。S2 の選択モード）。戻り値は消した件数。豆は残る。 */
+export function useDeleteLogs() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (ids: readonly string[]): Promise<number> => {
+      if (ids.length === 0) return 0;
+      const { error } = await getSupabaseBrowserClient()
+        .from('logs')
+        .delete()
+        .in('id', [...ids]);
+      if (error) throw error;
+      return ids.length;
+    },
+    onSuccess: (_, ids) => {
+      for (const id of ids) queryClient.removeQueries({ queryKey: logKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: logKeys.all });
+    },
+  });
+}
+
 /** 記録を削除する（F-LOG-7）。log_tags は ON DELETE CASCADE。豆は残る。 */
 export function useDeleteLog() {
   const queryClient = useQueryClient();

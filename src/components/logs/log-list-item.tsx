@@ -31,6 +31,10 @@ export type LogListItemProps = {
   href?: Route;
   /** 選択中（PC の 2 ペインで右に出している行） */
   selected?: boolean;
+  /** 一括削除の選択モード。true のとき行はリンクではなくチェックボックスになる */
+  selectable?: boolean;
+  checked?: boolean;
+  onToggle?: (id: string) => void;
   className?: string;
 };
 
@@ -48,6 +52,9 @@ export function LogListItem({
   imagePath,
   href: hrefOverride,
   selected,
+  selectable,
+  checked = false,
+  onToggle,
   className,
 }: LogListItemProps) {
   const flavors = flavorNotes.slice(0, LOG_LIST_ITEM_MAX_FLAVORS);
@@ -55,17 +62,8 @@ export function LogListItem({
   const image = useBeanImageUrl(imageSrc ? null : imagePath);
   const src = imageSrc ?? image.data ?? null;
 
-  return (
-    <Link
-      href={href}
-      aria-current={selected ? 'true' : undefined}
-      className={cn(
-        'border-border grid grid-cols-[62px_1fr] items-start gap-3.5 border-b py-3.5',
-        'focus-visible:outline-primary rounded-md focus-visible:outline-2 focus-visible:outline-offset-2',
-        selected && 'bg-card -mx-3 rounded-xl border-b-transparent px-3',
-        className,
-      )}
-    >
+  const body = (
+    <>
       <CardImage src={src} beanName={beanName} roasterName={roasterName} country={country} size="sm" />
       <div className="min-w-0">
         <p className="font-display text-[21px] leading-[1.05] break-words">{beanName}</p>
@@ -91,6 +89,43 @@ export function LogListItem({
           </ul>
         )}
       </div>
+    </>
+  );
+
+  if (selectable) {
+    return (
+      <label
+        className={cn(
+          'border-border grid grid-cols-[24px_62px_1fr] items-start gap-3.5 border-b py-3.5',
+          'has-[:focus-visible]:outline-primary rounded-md has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2',
+          checked && 'bg-card -mx-3 rounded-xl border-b-transparent px-3',
+          className,
+        )}
+      >
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={() => onToggle?.(id)}
+          aria-label={`${beanName} を選択`}
+          className="accent-primary mt-5 size-6 justify-self-center"
+        />
+        {body}
+      </label>
+    );
+  }
+
+  return (
+    <Link
+      href={href}
+      aria-current={selected ? 'true' : undefined}
+      className={cn(
+        'border-border grid grid-cols-[62px_1fr] items-start gap-3.5 border-b py-3.5',
+        'focus-visible:outline-primary rounded-md focus-visible:outline-2 focus-visible:outline-offset-2',
+        selected && 'bg-card -mx-3 rounded-xl border-b-transparent px-3',
+        className,
+      )}
+    >
+      {body}
     </Link>
   );
 }
