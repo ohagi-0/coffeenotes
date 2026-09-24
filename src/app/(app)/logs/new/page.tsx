@@ -55,8 +55,8 @@ import { routes } from '@/lib/routes';
 //   place   ③ 店・日付・評価・メモ → 保存（豆・ロースター・画像・店・記録の順に作る）
 
 const RECENT_BEANS = 3;
-/** これを超えたら読み取りを打ち切って手入力に切り替える（DESIGN.md S3 ②） */
-const OCR_AUTO_FALLBACK_MS = 10_000;
+/** これを超えたら「時間がかかっています」の案内に切り替える。自動では手入力に落とさない（2026-09-24。待つほうが手入力より楽、という判断） */
+const OCR_SLOW_NOTICE_MS = 10_000;
 
 type Step = 'capture' | 'ocr' | 'bean' | 'place';
 
@@ -185,13 +185,14 @@ function OcrStepPage() {
   const roasters = useRoasterSearch(roasterQuery);
   const started = useRef(false);
   const controller = useRef<AbortController | null>(null);
+  const [slow, setSlow] = useState(false);
 
   useEffect(() => {
     if (!capture || started.current) return;
     started.current = true; // StrictMode の二重実行で 2 回読み取らない（1 回分の上限を無駄にしない）
     const ac = new AbortController();
     controller.current = ac;
-    const timer = setTimeout(() => ac.abort(), OCR_AUTO_FALLBACK_MS);
+    const timer = setTimeout(() => setSlow(true), OCR_SLOW_NOTICE_MS);
     (async () => {
       try {
         const [front, back] = await Promise.all([
@@ -210,7 +211,7 @@ function OcrStepPage() {
         if (e instanceof OcrRequestError) {
           switch (e.code) {
             case 'aborted':
-              setNotice('10 秒以内に読み取れなかったので、手入力に切り替えました。画像は保存されます。');
+              setNotice('読み取りを止めました。画像は保存されます。内容は手で入力してください。');
               setPhase('manual');
               return;
             case 'ocr_disabled':
@@ -298,7 +299,11 @@ function OcrStepPage() {
           <div className="bg-secondary h-1.5 overflow-hidden rounded-full">
             <div className="bg-primary h-full w-1/3 animate-[ocr-progress_1.6s_ease-in-out_infinite] rounded-full motion-reduce:animate-none" />
           </div>
-          <p className="text-muted-foreground text-[12px]">読み取っています。通常 3〜8 秒かかります。</p>
+          <p className="text-muted-foreground text-[12px]" role="status">
+            {slow
+              ? '時間がかかっています（初回や混み合うときは 30 秒ほど）。このまま待つか、下のボタンで手入力に切り替えられます。'
+              : '読み取っています。通常 3〜8 秒かかります。'}
+          </p>
           <div className="flex flex-col gap-3" aria-hidden>
             {[0, 1, 2, 3, 4].map((i) => (
               <div key={i} className="flex flex-col gap-1.5">
