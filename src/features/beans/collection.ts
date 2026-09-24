@@ -37,14 +37,28 @@ export interface CollectionItem {
   lastLogId: string;
 }
 
-export type CollectionSort = 'country' | 'variety' | 'recent' | 'rating' | 'count';
-export const COLLECTION_SORT_CHIPS: { value: CollectionSort; label: string }[] = [
+/** 見せ方（?s=）。country / variety は棚に分け、all は全部の豆を 1 本に並べる */
+export type CollectionView = 'country' | 'variety' | 'all';
+export const COLLECTION_VIEW_CHIPS: { value: CollectionView; label: string }[] = [
   { value: 'country', label: '生産国の棚' },
   { value: 'variety', label: '品種の棚' },
+  { value: 'all', label: 'すべての豆' },
+];
+
+/** 「すべての豆」の並び順（?o=）。棚の中は常に最近飲んだ順 */
+export type CollectionSort = 'recent' | 'rating' | 'count';
+export const COLLECTION_SORT_CHIPS: { value: CollectionSort; label: string }[] = [
   { value: 'recent', label: '最近飲んだ順' },
   { value: 'rating', label: '星が高い順' },
   { value: 'count', label: 'よく飲む順' },
 ];
+
+export function isCollectionView(v: string | null): v is CollectionView {
+  return COLLECTION_VIEW_CHIPS.some((c) => c.value === v);
+}
+export function isCollectionSort(v: string | null): v is CollectionSort {
+  return COLLECTION_SORT_CHIPS.some((c) => c.value === v);
+}
 
 /** 記録を豆ごとにまとめる。入力の順序に依存せず、最後に飲んだ日を決める */
 export function buildCollection(logs: readonly CollectionSourceLog[]): CollectionItem[] {

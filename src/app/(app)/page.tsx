@@ -14,15 +14,20 @@ import { ADD_LOG_HREF } from '@/components/nav';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   COLLECTION_SORT_CHIPS,
+  COLLECTION_VIEW_CHIPS,
   buildCollection,
   groupByCountry,
   groupByVariety,
+  isCollectionSort,
+  isCollectionView,
   sortCollection,
   type CollectionSort,
+  type CollectionView,
 } from '@/features/beans/collection';
 import { useLogs } from '@/features/logs/queries';
 
-// ホーム = S10 豆のコレクション（棚）。飲んだ豆を 1 袋ずつ棚に並べる。並び順は ?s=（最近 / 星 / 回数）。
+// ホーム = S10 豆のコレクション（棚）。飲んだ豆を 1 袋ずつ棚に並べる。
+// 見せ方は ?s=（生産国の棚 / 品種の棚 / すべての豆）、「すべての豆」のときだけ並び順 ?o=（最近 / 星 / 回数）を出す。
 // 一覧（S2、/logs）とは別の見せ方で、袋を押すと豆の詳細（S4）へ。記録は S2 と同じ useLogs から集計する。
 
 /** 棚 1 段（横一列）。袋の間と下に板を描く */
@@ -47,25 +52,59 @@ function CollectionInner() {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
-  const sort = (
-    COLLECTION_SORT_CHIPS.some((c) => c.value === params.get('s')) ? params.get('s') : 'country'
-  ) as CollectionSort;
+  const sParam = params.get('s');
+  // 以前の ?s=recent|rating|count（並び順が見せ方を兼ねていた）は「すべての豆」+ その並び順として読む
+  const view: CollectionView = isCollectionView(sParam)
+    ? sParam
+    : isCollectionSort(sParam)
+      ? 'all'
+      : 'country';
+  const oParam = params.get('o');
+  const sort: CollectionSort = isCollectionSort(oParam)
+    ? oParam
+    : isCollectionSort(sParam)
+      ? sParam
+      : 'recent';
   const logs = useLogs();
   const collection = useMemo(() => buildCollection(logs.data ?? []), [logs.data]);
-  // 生産国の棚では各棚の中を最近飲んだ順に。ほかのモードは全体を 1 本の棚に並べる
-  const grouped = sort === 'country' || sort === 'variety';
+  // 棚に分けるときは各棚の中を最近飲んだ順に。「すべての豆」は選んだ並び順で 1 本に
+  const grouped = view !== 'all';
   const items = useMemo(
     () => sortCollection(collection, grouped ? 'recent' : sort),
     [collection, grouped, sort],
   );
   const byCountry = useMemo(
-    () => (sort === 'country' ? groupByCountry(items) : sort === 'variety' ? groupByVariety(items) : null),
-    [items, sort],
+    () => (view === 'country' ? groupByCountry(items) : view === 'variety' ? groupByVariety(items) : null),
+    [items, view],
   );
 
-  function setSort(v: string) {
-    router.replace((v === 'country' ? pathname : `${pathname}?s=${v}`) as Route, { scroll: false });
+  function replaceQuery(next: { s?: CollectionView; o?: CollectionSort }) {
+    const v = next.s ?? view;
+    const o = next.o ?? sort;
+    const sp = new URLSearchParams();
+    if (v !== 'country') sp.set('s', v);
+    if (v === 'all' && o !== 'recent') sp.set('o', o);
+    const qs = sp.toString();
+    router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, { scroll: false });
   }
+  const chips = (
+    <>
+      <FilterChips
+        chips={COLLECTION_VIEW_CHIPS}
+        value={view}
+        onChange={(v) => replaceQuery({ s: v })}
+        className={view === 'all' ? 'mb-1' : 'mb-4'}
+      />
+      {view === 'all' && (
+        <FilterChips
+          chips={COLLECTION_SORT_CHIPS}
+          value={sort}
+          onChange={(o) => replaceQuery({ o })}
+          className="mb-4"
+        />
+      )}
+    </>
+  );
 
   // 棚は 3 袋ずつ（md 4、xl 5）で段を作る。段の数は CSS のグリッドに任せ、板は段ごとに描くため配列を切る
   const perRow = 2;
@@ -82,7 +121,7 @@ function CollectionInner() {
         <p className="text-muted-foreground font-num text-xs">
           {logs.data
             ? byCountry
-              ? `${byCountry.total} の${sort === 'variety' ? '品種' : '産地'}のうち ${byCountry.visited} を制覇 · ${items.length} 袋 · ${logs.data.length} 杯`
+              ? `${byCountry.total} の${view === 'variety' ? '品種' : '産地'}のうち ${byCountry.visited} を制覇 · ${items.length} 袋 · ${logs.data.length} 杯`
               : `${items.length} 袋 · ${logs.data.length} 杯`
             : ' '}
         </p>
@@ -130,7 +169,7 @@ function CollectionInner() {
 
       {logs.data && items.length > 0 && byCountry && (
         <>
-          <FilterChips chips={COLLECTION_SORT_CHIPS} value={sort} onChange={setSort} className="mb-4" />
+          {chips}
           {byCountry.shelves.map((shelf) => (
             <section key={shelf.key} aria-label={`${shelf.title}の棚`} className="mb-1">
               <div className="mb-2 flex items-baseline justify-between gap-2 px-1">
@@ -186,7 +225,7 @@ function CollectionInner() {
 
       {logs.data && items.length > 0 && !byCountry && (
         <>
-          <FilterChips chips={COLLECTION_SORT_CHIPS} value={sort} onChange={setSort} className="mb-4" />
+          {chips}
           {/* 画面幅で 1 段の袋数が変わるため、板は md 未満の 2 袋ずつの段に合わせて描く（md 以上は板を各袋の下に） */}
           <div className="md:hidden">
             {rowsOfItems.map((row, i) => (
