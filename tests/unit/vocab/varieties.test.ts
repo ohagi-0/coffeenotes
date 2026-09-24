@@ -10,8 +10,17 @@ describe('varietyKeysOf', () => {
     expect(varietyKeysOf('Pink Bourbon')).toEqual(['pink-bourbon']);
     expect(varietyKeysOf('エチオピア在来種')).toEqual(['heirloom']);
     expect(varietyKeysOf('74158')).toEqual(['heirloom']);
+    expect(varietyKeysOf('ブルーマウンテン')).toEqual(['blue-mountain']);
+    expect(varietyKeysOf('Blue Mountain (Typica)')).toEqual(['blue-mountain']);
+    expect(varietyKeysOf('Sudan Rume')).toEqual(['other:sudan rume']);
     expect(varietyKeysOf('')).toEqual([]);
     expect(varietyKeysOf(null)).toEqual([]);
+  });
+  it('アラビカ / ロブスタは種の名前なので棚にしない。それだけなら品種なし', () => {
+    expect(varietyKeysOf('Arabica')).toEqual([]);
+    expect(varietyKeysOf('アラビカ種')).toEqual([]);
+    expect(varietyKeysOf('Arabica / Bourbon')).toEqual(['bourbon']);
+    expect(varietyKeysOf('Robusta')).toEqual([]);
   });
   it('キーは重複しない', () => {
     expect(new Set(VARIETY_SHELVES.map((v) => v.key)).size).toBe(VARIETY_SHELVES.length);

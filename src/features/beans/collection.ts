@@ -172,7 +172,7 @@ export function groupByCountry(items: readonly CollectionItem[]): ShelfGroups {
 // ---- 品種の棚（S10「品種の棚」モード） ----
 // よくある品種（src/lib/vocab/varieties.ts）を固定で並べる。1 つの豆に「SL28, SL34」のように複数あれば両方の棚に置く。
 
-/** 品種ごとの棚。主要品種は系統順に固定で（空でも）並べ、そのあとにその他と「品種なし」を続ける */
+/** 品種ごとの棚。主要品種は店で見る頻度の順に固定で（空でも）並べ、そのあとにその他と「品種なし」を続ける */
 export function groupByVariety(items: readonly CollectionItem[]): ShelfGroups {
   const buckets = new Map<string, CollectionItem[]>();
   const unknown: CollectionItem[] = [];
@@ -192,7 +192,7 @@ export function groupByVariety(items: readonly CollectionItem[]): ShelfGroups {
     key: v.key,
     title: v.name,
     sub: v.en,
-    note: v.group,
+    note: null,
     items: buckets.get(v.key) ?? [],
   }));
   const visited = shelves.filter((s) => s.items.length > 0).length;

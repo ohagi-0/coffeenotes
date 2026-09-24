@@ -2,11 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   COUNTRY_SHELVES,
   buildCollection,
-  countryKeyOf,
   groupByCountry,
   groupByVariety,
   sortCollection,
-  varietyKeysOf,
   VARIETY_SHELVES,
   type CollectionSourceLog,
 } from '@/features/beans/collection';
@@ -81,20 +79,8 @@ describe('sortCollection', () => {
   });
 });
 
-describe('countryKeyOf / groupByCountry', () => {
-  it('英語・日本語・略称・国名で始まる表記を同じ棚にする', () => {
-    expect(countryKeyOf('Ethiopia')).toBe('ethiopia');
-    expect(countryKeyOf('エチオピア')).toBe('ethiopia');
-    expect(countryKeyOf('Ethiopia Yirgacheffe')).toBe('ethiopia');
-    expect(countryKeyOf('Costa Rica')).toBe('costa-rica');
-    expect(countryKeyOf('costarica')).toBe('costa-rica');
-    expect(countryKeyOf('Brasil')).toBe('brazil');
-    expect(countryKeyOf('PNG')).toBe('png');
-    expect(countryKeyOf('Timor-Leste')).toBe('other:timor leste');
-    expect(countryKeyOf('')).toBeNull();
-    expect(countryKeyOf(null)).toBeNull();
-  });
-  it('主要国は地域順に空でも並び、その他と生産国なしを最後に足す。制覇数を数える', () => {
+describe('groupByCountry', () => {
+  it('主要国は語彙の順に空でも並び、その他と生産国なしを最後に足す。制覇数を数える', () => {
     const items = buildCollection([
       log({ id: '1', bean: { id: 'a', name: 'A', country: 'Kenya' } }),
       log({ id: '2', bean: { id: 'b', name: 'B', country: 'コロンビア' } }),
@@ -115,20 +101,8 @@ describe('countryKeyOf / groupByCountry', () => {
   });
 });
 
-describe('varietyKeysOf / groupByVariety', () => {
-  it('区切りで分け、表記ゆれと前後の語を吸収する', () => {
-    expect(varietyKeysOf('Geisha')).toEqual(['geisha']);
-    expect(varietyKeysOf('SL28, SL34')).toEqual(['sl28', 'sl34']);
-    expect(varietyKeysOf('SL-28 / Ruiru 11')).toEqual(['sl28', 'ruiru11']);
-    expect(varietyKeysOf('Red Bourbon')).toEqual(['bourbon']);
-    expect(varietyKeysOf('Pink Bourbon')).toEqual(['pink-bourbon']);
-    expect(varietyKeysOf('エチオピア在来種')).toEqual(['heirloom']);
-    expect(varietyKeysOf('74158')).toEqual(['heirloom']);
-    expect(varietyKeysOf('Laurina')).toEqual(['other:laurina']);
-    expect(varietyKeysOf('')).toEqual([]);
-    expect(varietyKeysOf(null)).toEqual([]);
-  });
-  it('複数の品種を持つ豆は両方の棚に並び、主要品種は系統順に空でも並ぶ', () => {
+describe('groupByVariety', () => {
+  it('複数の品種を持つ豆は両方の棚に並び、主要品種は語彙の順に空でも並ぶ。系統名は出さない', () => {
     const items = buildCollection([
       log({ id: '1', bean: { id: 'a', name: 'A', country: 'Kenya', variety: 'SL28, SL34' } }),
       log({ id: '2', bean: { id: 'b', name: 'B', country: 'Panama', variety: 'Geisha' } }),
@@ -138,6 +112,7 @@ describe('varietyKeysOf / groupByVariety', () => {
     expect(g.total).toBe(VARIETY_SHELVES.length);
     expect(g.visited).toBe(3);
     expect(g.shelves[0]?.key).toBe('geisha');
+    expect(g.shelves[0]?.note).toBeNull();
     expect(g.shelves.find((s) => s.key === 'sl28')?.items.map((i) => i.beanId)).toEqual(['a']);
     expect(g.shelves.find((s) => s.key === 'sl34')?.items.map((i) => i.beanId)).toEqual(['a']);
     expect(g.shelves.find((s) => s.key === 'typica')?.items).toEqual([]);
