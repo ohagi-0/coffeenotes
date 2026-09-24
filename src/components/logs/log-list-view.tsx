@@ -91,10 +91,14 @@ export function LogListView() {
   }
   function deleteSelected() {
     deleteLogs.mutate([...selectedIds], {
-      onSuccess: (n) => {
+      onSuccess: (r) => {
         setConfirming(false);
         exitSelecting();
-        toast.success(`${n} 件の記録を削除しました`);
+        toast.success(
+          r.removedShopIds.length > 0
+            ? `${r.deleted} 件の記録を削除しました。記録の無くなった店も消しました`
+            : `${r.deleted} 件の記録を削除しました`,
+        );
       },
       onError: (e) => {
         setConfirming(false);
@@ -249,7 +253,7 @@ export function LogListView() {
           {selectedIds.size} 件の記録を削除しますか？
         </p>
         <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">
-          選んだ記録が消えます。豆の情報とカード画像は残ります。元に戻せません。
+          選んだ記録が消えます。記録が無くなった店も一緒に消えます。豆の情報とカード画像は残ります。元に戻せません。
         </p>
         <div className="mt-4 flex flex-col gap-2">
           <AppButton variant="destructive" onClick={deleteSelected} loading={deleteLogs.isPending}>

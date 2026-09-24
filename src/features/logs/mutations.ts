@@ -4,7 +4,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import type { LogFormInput } from '@/lib/schemas/log';
 import { requireUserId } from '@/features/auth/require-user-id';
+import { shopKeys } from '@/features/shops/queries';
 import { tagKeys } from '@/features/tags/queries';
+import { deleteLogsAndOrphanShops, type DeleteLogsResult } from './delete-log';
 import { createLogWithTags, type LogPatch, updateLogWithTags } from './create-log';
 import { LOG_SELECT, logKeys, type LogWithRelations } from './queries';
 
@@ -54,37 +56,33 @@ export function useUpdateLog() {
   });
 }
 
-/** 複数の記録をまとめて削除する（F-LOG-7 の一括版。S2 の選択モード）。戻り値は消した件数。豆は残る。 */
+/**
+ * 複数の記録をまとめて削除する（F-LOG-7 の一括版。S2 の選択モード）。
+ * 記録が無くなった店も一緒に消す（delete-log.ts）。豆は残る。
+ */
 export function useDeleteLogs() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (ids: readonly string[]): Promise<number> => {
-      if (ids.length === 0) return 0;
-      const { error } = await getSupabaseBrowserClient()
-        .from('logs')
-        .delete()
-        .in('id', [...ids]);
-      if (error) throw error;
-      return ids.length;
-    },
-    onSuccess: (_, ids) => {
+    mutationFn: (ids: readonly string[]): Promise<DeleteLogsResult> =>
+      deleteLogsAndOrphanShops(getSupabaseBrowserClient(), ids),
+    onSuccess: (result, ids) => {
       for (const id of ids) queryClient.removeQueries({ queryKey: logKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: logKeys.all });
+      if (result.removedShopIds.length > 0) queryClient.invalidateQueries({ queryKey: shopKeys.all });
     },
   });
 }
 
-/** 記録を削除する（F-LOG-7）。log_tags は ON DELETE CASCADE。豆は残る。 */
+/** 記録を削除する（F-LOG-7）。log_tags は ON DELETE CASCADE。記録が無くなった店も一緒に消す。豆は残る。 */
 export function useDeleteLog() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string): Promise<void> => {
-      const { error } = await getSupabaseBrowserClient().from('logs').delete().eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: (_, id) => {
+    mutationFn: (id: string): Promise<DeleteLogsResult> =>
+      deleteLogsAndOrphanShops(getSupabaseBrowserClient(), [id]),
+    onSuccess: (result, id) => {
       queryClient.removeQueries({ queryKey: logKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: logKeys.all });
+      if (result.removedShopIds.length > 0) queryClient.invalidateQueries({ queryKey: shopKeys.all });
     },
   });
 }

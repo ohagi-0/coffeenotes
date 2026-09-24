@@ -180,7 +180,8 @@ export function LogDetail({
           この記録を削除しますか？
         </p>
         <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">
-          {dateLabel} の記録が消えます。豆「{bean.name}」の情報とカード画像は残ります。元に戻せません。
+          {dateLabel} の記録が消えます。この店の記録がこれだけなら店も一緒に消えます。豆「{bean.name}
+          」の情報とカード画像は残ります。元に戻せません。
         </p>
         <div className="mt-4 flex flex-col gap-2">
           <AppButton

@@ -225,8 +225,10 @@ function LogPageInner() {
       deleting={deleteLog.isPending}
       onDelete={async () => {
         try {
-          await deleteLog.mutateAsync(l.id);
-          toast.success('削除しました');
+          const r = await deleteLog.mutateAsync(l.id);
+          toast.success(
+            r.removedShopIds.length > 0 ? '削除しました。記録の無くなった店も消しました' : '削除しました',
+          );
           router.replace(routes.logs);
         } catch (e) {
           toast.error(e instanceof Error ? e.message : '削除できませんでした');
