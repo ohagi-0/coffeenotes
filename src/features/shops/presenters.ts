@@ -105,6 +105,19 @@ export function sortShopRows(rows: readonly ShopRow[], sort: ShopSort): ShopRow[
   return copy;
 }
 
+/** Google マップで開く URL。座標があれば座標、無ければ店名と住所で検索する。どちらも無ければ null */
+export function googleMapsUrl(shop: {
+  name: string;
+  address?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+}): string | null {
+  const base = 'https://www.google.com/maps/search/?api=1&query=';
+  if (shop.lat != null && shop.lng != null) return `${base}${shop.lat},${shop.lng}`;
+  const q = [shop.name, shop.address].filter((v): v is string => !!v && v.trim() !== '').join(' ');
+  return q ? `${base}${encodeURIComponent(q)}` : null;
+}
+
 /** 一覧の距離表示。「120 m」「1.4 km」 */
 export function formatDistance(m: number | null | undefined): string | null {
   if (m === null || m === undefined) return null;

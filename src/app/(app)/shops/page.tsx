@@ -1,10 +1,10 @@
 'use client';
 
-import { Suspense, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import type { Route } from 'next';
 import dynamic from 'next/dynamic';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { LocateFixed, Search, Store } from 'lucide-react';
+import { ExternalLink, LocateFixed, Search, Store } from 'lucide-react';
 import { toast } from 'sonner';
 import { AppButton } from '@/components/app-button';
 import { EmptyState } from '@/components/empty-state';
@@ -22,6 +22,7 @@ import { initialCenter, toMapShops } from '@/features/shops/map-pins';
 import { useCreateShop } from '@/features/shops/mutations';
 import {
   filterShopRows,
+  googleMapsUrl,
   sortShopRows,
   toShopRow,
   withDistance,
@@ -73,6 +74,9 @@ function ShopsInner() {
   const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
   const [locError, setLocError] = useState<string | null>(null);
+  /** 検索語に合う登録済みの店が地図に無いとき、その語の場所を引いて地図を寄せる（登録済みではない） */
+  const [focus, setFocus] = useState<{ lat: number; lng: number; label: string } | null>(null);
+  const [focusMiss, setFocusMiss] = useState<string | null>(null);
 
   const kind = KINDS.includes(chip as ShopKind) ? (chip as ShopKind) : undefined;
   const sort: ShopSort = chip === 'rating' ? 'rating' : chip === 'near' ? 'distance' : 'name';
@@ -123,6 +127,35 @@ function ShopsInner() {
     [selected, mapShops],
   );
   const noCoords = allRows.filter((r) => !r.hasCoordinates).length;
+
+  const searchTerm = search.trim();
+  const needFocus = searchTerm.length >= 2 && mapShops.length === 0 && !shops.isPending;
+  useEffect(() => {
+    if (!needFocus) {
+      setFocus(null);
+      setFocusMiss(null);
+      return;
+    }
+    let active = true;
+    const timer = setTimeout(() => {
+      geocodePlace({ query: searchTerm, near: userPos ?? undefined })
+        .then((c) => {
+          if (!active) return;
+          const first = c[0];
+          setFocus(first ? { lat: first.lat, lng: first.lng, label: first.name } : null);
+          setFocusMiss(first ? null : searchTerm);
+        })
+        .catch(() => {
+          if (!active) return;
+          setFocus(null);
+          setFocusMiss(searchTerm);
+        });
+    }, 500);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [needFocus, searchTerm, userPos]);
   const filtered = chip !== 'all' || search.trim() !== '';
   const newHref = `${routes.shops}?new=1` as Route;
 
@@ -272,17 +305,24 @@ function ShopsInner() {
 
       {!shops.isPending && !shops.error && hasAny && (
         <>
-          {mapShops.length > 0 ? (
+          {mapShops.length > 0 || focus ? (
             <>
               <ShopMap
                 shops={mapShops}
                 selectedId={selectedId}
                 onSelect={select}
                 onLongPress={onLongPress}
-                center={center}
-                zoom={selected?.hasCoordinates ? 15 : 12}
+                center={focus ?? center}
+                zoom={focus || selected?.hasCoordinates ? 15 : 12}
                 userLocation={userPos}
+                focus={focus}
               />
+              {focus && (
+                <p role="status" className="text-primary mt-2 text-[12px]">
+                  登録済みの店に該当が無いので「{focus.label}
+                  」付近を表示しています。長押しでここに店を登録できます。
+                </p>
+              )}
               <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
                 <PinLegend />
                 <AppButton
@@ -303,9 +343,11 @@ function ShopsInner() {
             </>
           ) : (
             <p className="border-border bg-card text-muted-foreground rounded-[14px] border px-3.5 py-3 text-xs">
-              {filtered
-                ? '条件に合う店に座標のあるものがありません。'
-                : '座標のある店がまだありません。店を登録するときに「店名で検索」か「地図で指定」で位置を入れると、ここに地図が出ます。'}
+              {focusMiss
+                ? `「${focusMiss}」に合う登録済みの店も、地図上の場所も見つかりませんでした。`
+                : filtered
+                  ? '条件に合う店に座標のあるものがありません。'
+                  : '座標のある店がまだありません。店を登録するときに「店名で検索」か「地図で指定」で位置を入れると、ここに地図が出ます。'}
             </p>
           )}
           {locError && (
@@ -365,8 +407,19 @@ function SelectedShopCard({
           </span>
         )}
       </p>
-      <div className="mt-2">
+      <div className="mt-2 flex items-center justify-between gap-2">
         <RatingStars value={shop.avgRating} size="md" aria-label="平均星" />
+        {googleMapsUrl(shop) && (
+          <a
+            href={googleMapsUrl(shop)!}
+            target="_blank"
+            rel="noreferrer"
+            className="text-primary flex h-9 items-center gap-1 text-[12px] font-medium"
+          >
+            <ExternalLink className="size-3.5" aria-hidden />
+            Google マップで開く
+          </a>
+        )}
       </div>
       {pending ? (
         <Skeleton className="mt-2 h-5 w-40" />

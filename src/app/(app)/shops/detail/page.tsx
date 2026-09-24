@@ -2,6 +2,7 @@
 
 import { Suspense, useMemo } from 'react';
 import Link from 'next/link';
+import { ExternalLink } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { AppButton } from '@/components/app-button';
 import { BeanSpecGrid } from '@/components/beans/bean-spec-grid';
@@ -13,7 +14,7 @@ import { ADD_LOG_HREF } from '@/components/nav';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toTimelineItem } from '@/features/logs/presenters';
 import { useLogsByShop, useRatingStats } from '@/features/logs/queries';
-import { shopKindLabel } from '@/features/shops/presenters';
+import { googleMapsUrl, shopKindLabel } from '@/features/shops/presenters';
 import { useShop } from '@/features/shops/queries';
 import { idFromSearchParams, routes } from '@/lib/routes';
 
@@ -101,9 +102,20 @@ function ShopDetailInner() {
           },
         ]}
       />
+      {googleMapsUrl(s) && (
+        <a
+          href={googleMapsUrl(s)!}
+          target="_blank"
+          rel="noreferrer"
+          className="text-primary mt-2 inline-flex h-11 items-center gap-1.5 text-[13px] font-medium"
+        >
+          <ExternalLink className="size-4" aria-hidden />
+          Google マップで開く
+        </a>
+      )}
       {(s.lat === null || s.lng === null) && (
         <p className="text-muted-foreground mt-2 text-xs">
-          座標が無いので地図には出ません。Phase 3 で住所からの補完と地図タップで付けられます。
+          座標が無いので地図には出ません。編集で「店名で検索」か「地図で指定」を使うと付けられます。
         </p>
       )}
       <h2 className="mt-6 mb-1 text-[13px] font-bold">この店の記録</h2>

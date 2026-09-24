@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   filterShopRows,
   formatDistance,
+  googleMapsUrl,
   shortArea,
   sortShopRows,
   toShopRow,
@@ -91,6 +92,16 @@ describe('shops presenters', () => {
     expect(formatDistance(120)).toBe('120 m');
     expect(formatDistance(1400)).toBe('1.4 km');
     expect(formatDistance(null)).toBeNull();
+  });
+
+  it('googleMapsUrl は座標優先、無ければ店名 + 住所、どちらも無ければ null', () => {
+    expect(googleMapsUrl({ name: 'KIELO', address: '東京都', lat: 35.7, lng: 139.79 })).toBe(
+      'https://www.google.com/maps/search/?api=1&query=35.7,139.79',
+    );
+    expect(googleMapsUrl({ name: 'KIELO COFFEE', address: '台東区蔵前' })).toBe(
+      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('KIELO COFFEE 台東区蔵前')}`,
+    );
+    expect(googleMapsUrl({ name: '  ', address: null })).toBeNull();
   });
 
   it('filterShopRows は種別と検索語（店名・住所、大文字小文字を無視）で絞る', () => {

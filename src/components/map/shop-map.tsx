@@ -21,6 +21,8 @@ export type ShopMapProps = {
   zoom?: number;
   /** 現在地。あれば青い点を出し、変わったらそこへ移動する */
   userLocation?: { lat: number; lng: number } | null;
+  /** 検索語から引いた場所（登録済みの店ではない）。点線のピンを出し、変わったらそこへ移動する */
+  focus?: { lat: number; lng: number; label: string } | null;
   /** 地図の高さ（px）。既定 300 */
   height?: number;
   className?: string;
@@ -73,6 +75,23 @@ function FitOnce({ shops }: { shops: MapShop[] }) {
   return null;
 }
 
+function focusIcon(label: string): L.DivIcon {
+  return L.divIcon({
+    className: 'coffeenotes-focus',
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
+    html: `<div role="img" aria-label="${escapeHtml(label)}" style="width:22px;height:22px;border-radius:50%;border:2px dashed #F0B57A;background:#F0B57A33"></div>`,
+  });
+}
+
+function FlyToFocus({ pos }: { pos: { lat: number; lng: number } | null | undefined }) {
+  const map = useMap();
+  useEffect(() => {
+    if (pos) map.flyTo([pos.lat, pos.lng], Math.max(map.getZoom(), 15), { duration: 0.6 });
+  }, [pos, map]);
+  return null;
+}
+
 function FlyToUser({ pos }: { pos: { lat: number; lng: number } | null | undefined }) {
   const map = useMap();
   useEffect(() => {
@@ -100,6 +119,7 @@ export default function ShopMap({
   center,
   zoom = 13,
   userLocation,
+  focus,
   height = 300,
   className,
 }: ShopMapProps) {
@@ -134,8 +154,12 @@ export default function ShopMap({
         {userLocation && (
           <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon} interactive={false} />
         )}
+        {focus && (
+          <Marker position={[focus.lat, focus.lng]} icon={focusIcon(focus.label)} interactive={false} />
+        )}
         <FitOnce shops={shops} />
         <FlyToUser pos={userLocation} />
+        <FlyToFocus pos={focus} />
         <LongPress onLongPress={onLongPress} />
       </MapContainer>
     </div>
