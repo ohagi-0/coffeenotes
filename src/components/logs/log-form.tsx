@@ -10,6 +10,7 @@ import { AppButton } from '@/components/app-button';
 import { Field, TextInput, Textarea } from '@/components/form/field';
 import { PlaceSegment } from '@/components/logs/place-segment';
 import { ShopCandidateTools, type ShopCandidate } from '@/components/shops/shop-candidate-tools';
+import { ShopPicker, type ShopPickerHint } from '@/components/shops/shop-picker';
 import { RatingStars } from '@/components/logs/rating-stars';
 import { RoastForm, type GreenShopOption } from '@/components/roasts/roast-form';
 import { RECIPE_KEYS, hasRecipe, type RecipeValues } from '@/features/logs/aggregate';
@@ -21,8 +22,9 @@ import { logFormFieldsSchema, type LogPlace } from '@/lib/schemas/log';
 import { cn } from '@/lib/utils';
 
 // ③ 店・日付・評価・メモ（S3 ③、F-LOG-2/3/4/8、F-SHOP-2/6、F-TAG-1/2）。
-// 星とメモだけでも保存できる。店は既存から選ぶか、名前だけ手入力して新規にする（候補検索は Phase 3）。
-// 店の候補（現在地から / 店名で検索 / 地図で指定）は ShopCandidateTools に任せ、選んだ候補の座標は shopMeta に持って submit に含める。
+// 星とメモだけでも保存できる。店は「店で」を押すと開く全画面の検索シート（ShopPicker）で選ぶ:
+// 登録済みの店 / カードのロースター名からの候補 / 近くの店 / 地図で見つかった店、一番上に「自分で登録する」。
+// 「自分で登録する」は店名の手入力 + ShopCandidateTools（地図で指定）。選んだ候補の座標は shopMeta に持って submit に含める。
 
 export type ShopOption = { id: string; name: string; address?: string | null };
 
@@ -53,6 +55,10 @@ export type LogFormProps = {
     nearby: (pos: { lat: number; lng: number }) => Promise<ShopCandidate[]>;
     geocode: (query: string, near?: { lat: number; lng: number }) => Promise<ShopCandidate[]>;
   };
+  /** 検索シートの上に出す手がかり（カードのロースター名など）。候補を先に引いておく */
+  shopHint?: ShopPickerHint | null;
+  /** 登録済みの店を読み込み中か（検索シートの表示用） */
+  shopOptionsPending?: boolean;
   defaultValues?: Partial<FormInput>;
   onSubmit: (values: LogFormDraft) => void;
   submitting?: boolean;
@@ -75,6 +81,8 @@ export function LogForm({
   homeRoasted = false,
   greenShops,
   shopCandidates,
+  shopHint,
+  shopOptionsPending,
   defaultValues,
   onSubmit,
   submitting,
@@ -120,7 +128,11 @@ export function LogForm({
   const [newRoast, setNewRoast] = useState<RoastFormValues | null>(null);
   const [roastAdding, setRoastAdding] = useState(false);
 
-  const [shopPicking, setShopPicking] = useState(false);
+  /** 検索シートの開閉と検索語 */
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerQuery, setPickerQuery] = useState('');
+  /** 「自分で登録する」を選んで店名を手入力している間 true */
+  const [manual, setManual] = useState(false);
   /** 候補や地図で決めた新規店の付帯情報（既存の店を選んだら null） */
   const [shopMeta, setShopMeta] = useState<{
     address: string | null;
@@ -137,17 +149,36 @@ export function LogForm({
 
   const ratingValue = typeof rating === 'number' ? rating : null;
 
+  function openPicker() {
+    setPickerQuery('');
+    onShopSearch?.('');
+    setManual(false);
+    setPickerOpen(true);
+  }
+  function setQuery(q: string) {
+    setPickerQuery(q);
+    onShopSearch?.(q);
+  }
   function pickShop(s: ShopOption) {
     setValue('shop_id', s.id, { shouldDirty: true });
     setValue('shop_name', s.name, { shouldDirty: true });
     setShopMeta(null);
-    setShopPicking(false);
+    setManual(false);
+    setPickerOpen(false);
   }
   function pickCandidate(c: ShopCandidate) {
     setValue('shop_id', null);
     setValue('shop_name', c.name, { shouldDirty: true, shouldValidate: true });
     setShopMeta({ address: c.address, lat: c.lat, lng: c.lng, externalPlaceId: c.externalPlaceId });
-    setShopPicking(false);
+    setManual(false);
+    setPickerOpen(false);
+  }
+  function registerManually(name: string) {
+    setValue('shop_id', null);
+    setValue('shop_name', name, { shouldDirty: true });
+    setShopMeta(null);
+    setPickerOpen(false);
+    setManual(true);
   }
   function pickPosition(pos: { lat: number; lng: number }) {
     setValue('shop_id', null);
@@ -157,8 +188,8 @@ export function LogForm({
     setValue('shop_id', null);
     setValue('shop_name', '');
     setShopMeta(null);
-    onShopSearch?.('');
-    setShopPicking(true);
+    setManual(false);
+    openPicker();
   }
   function copyLastRecipe() {
     if (!lastRecipe) return;
@@ -209,14 +240,19 @@ export function LogForm({
         value={place}
         onChange={(v) => {
           setValue('place', v, { shouldDirty: true });
-          if (v === 'home') setShopPicking(false);
+          // 「店で」を押したら（すでに店でも）検索シートを開く。店を選び直したいときの入口も兼ねる
+          if (v === 'shop') openPicker();
+          else {
+            setPickerOpen(false);
+            setManual(false);
+          }
         }}
       />
 
       {place === 'shop' && (
         <div className="flex flex-col gap-1">
           <span className="text-muted-foreground text-[11px]">店</span>
-          {shopId || (!shopPicking && shopName) ? (
+          {shopId || (!manual && shopName) ? (
             <button
               type="button"
               onClick={clearShop}
@@ -237,71 +273,84 @@ export function LogForm({
               </span>
               <ChevronRight className="text-muted-foreground size-[18px]" aria-hidden />
             </button>
-          ) : (
-            <div className="relative">
-              <Store
-                className="text-muted-foreground pointer-events-none absolute top-1/2 left-3.5 size-[18px] -translate-y-1/2"
-                aria-hidden
+          ) : manual ? (
+            <div className="flex flex-col gap-2">
+              <div className="relative">
+                <Store
+                  className="text-muted-foreground pointer-events-none absolute top-1/2 left-3.5 size-[18px] -translate-y-1/2"
+                  aria-hidden
+                />
+                <TextInput
+                  id={id('shop')}
+                  placeholder="店名を入力"
+                  autoComplete="off"
+                  autoFocus
+                  className="pl-10"
+                  aria-label="店"
+                  {...register('shop_name', {
+                    onChange: () => setValue('shop_id', null),
+                  })}
+                />
+              </div>
+              <ShopCandidateTools
+                query={shopName}
+                geocode={shopCandidates?.geocode}
+                onPick={pickCandidate}
+                onPickPosition={pickPosition}
+                position={
+                  shopMeta?.lat != null && shopMeta.lng != null
+                    ? { lat: shopMeta.lat, lng: shopMeta.lng }
+                    : null
+                }
               />
-              <TextInput
-                id={id('shop')}
-                placeholder="店名を入力（無ければそのまま新規登録）"
-                autoComplete="off"
-                className="pl-10"
-                aria-label="店"
-                aria-autocomplete="list"
-                aria-expanded={shopPicking && shopOptions.length > 0}
-                {...register('shop_name', {
-                  onChange: (e) => {
-                    setValue('shop_id', null);
-                    onShopSearch?.(e.target.value);
-                  },
-                })}
-                onFocus={() => setShopPicking(true)}
-                onBlur={() => setTimeout(() => setShopPicking(false), 120)}
-              />
-              {shopPicking && shopOptions.length > 0 && (
-                <ul
-                  role="listbox"
-                  aria-label="店の候補"
-                  className="bg-card border-border absolute inset-x-0 top-full z-10 mt-1 max-h-56 overflow-y-auto rounded-xl border py-1 shadow-[0_12px_30px_-10px_rgba(0,0,0,.6)]"
+              <div className="flex items-center justify-between">
+                <button type="button" onClick={openPicker} className="text-primary text-[12px] font-medium">
+                  検索に戻る
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setManual(false)}
+                  disabled={!shopName.trim()}
+                  className="text-primary text-[12px] font-bold disabled:opacity-50"
                 >
-                  {shopOptions.map((s) => (
-                    <li key={s.id}>
-                      <button
-                        type="button"
-                        role="option"
-                        aria-selected={false}
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={() => pickShop(s)}
-                        className="hover:bg-secondary flex h-11 w-full flex-col justify-center px-3.5 text-left"
-                      >
-                        <span className="text-sm">{s.name}</span>
-                        {s.address && <span className="text-muted-foreground text-[11px]">{s.address}</span>}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
+                  この店名で決定
+                </button>
+              </div>
             </div>
-          )}
-          {!shopId && (
-            <ShopCandidateTools
-              query={shopName}
-              nearby={shopCandidates?.nearby}
-              geocode={shopCandidates?.geocode}
-              onPick={pickCandidate}
-              onPickPosition={pickPosition}
-              position={
-                shopMeta?.lat != null && shopMeta.lng != null
-                  ? { lat: shopMeta.lat, lng: shopMeta.lng }
-                  : null
-              }
-            />
+          ) : (
+            <button
+              type="button"
+              onClick={openPicker}
+              className="border-border bg-card flex items-center gap-3 rounded-[14px] border px-3.5 py-3 text-left"
+            >
+              <span className="bg-secondary text-muted-foreground grid size-10 shrink-0 place-items-center rounded-full">
+                <Store className="size-[18px]" aria-hidden />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-bold">店を選ぶ</span>
+                <span className="text-muted-foreground block text-xs">
+                  登録済み・現在地・地図から探す。無ければ自分で登録
+                </span>
+              </span>
+              <ChevronRight className="text-muted-foreground size-[18px]" aria-hidden />
+            </button>
           )}
           <p className="text-muted-foreground text-xs">
             店は後から付けることもできます。座標が無くても保存できます。
           </p>
+          <ShopPicker
+            open={pickerOpen}
+            onClose={() => setPickerOpen(false)}
+            query={pickerQuery}
+            onQueryChange={setQuery}
+            registered={shopOptions}
+            registeredPending={shopOptionsPending}
+            candidates={shopCandidates}
+            hint={shopHint}
+            onPickShop={pickShop}
+            onPickCandidate={pickCandidate}
+            onRegisterManually={registerManually}
+          />
         </div>
       )}
 

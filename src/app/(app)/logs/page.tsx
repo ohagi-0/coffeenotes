@@ -8,6 +8,7 @@ import { ErrorCallout } from '@/components/error-callout';
 import { FullScreenLoading } from '@/components/full-screen-loading';
 import { LogDetail } from '@/components/logs/log-detail';
 import { LogForm } from '@/components/logs/log-form';
+import { geocodePlace, searchNearbyPlaces } from '@/features/geo/search';
 import { LogListSkeleton } from '@/components/logs/log-list-item-skeleton';
 import { frontImagePath, useBeanImageUrl } from '@/features/beans/images';
 import { useDeleteLog, useUpdateLog } from '@/features/logs/mutations';
@@ -161,7 +162,12 @@ function LogPageInner() {
           }))}
           greenShops={(greenShops.data ?? []).map((s) => ({ id: s.id, name: s.name }))}
           shopOptions={(shops.data ?? []).map((s) => ({ id: s.id, name: s.name, address: s.address }))}
+          shopOptionsPending={shops.isPending}
           onShopSearch={setShopQuery}
+          shopCandidates={{
+            nearby: (pos) => searchNearbyPlaces(pos),
+            geocode: (query, near) => geocodePlace({ query, near }),
+          }}
           tagSuggestions={(tags.data ?? []).map((t) => t.name)}
           onSubmit={onSubmit}
           submitLabel="保存する"

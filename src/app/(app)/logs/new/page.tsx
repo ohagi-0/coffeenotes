@@ -457,6 +457,11 @@ function PlaceStep() {
 
   const beanName = draft.bean.kind === 'existing' ? draft.bean.name : draft.bean.form.name;
   const fromCamera = draft.bean.kind === 'new' && !!draft.bean.images;
+  // カードから読んだ（または入力した）ロースター名で、店の候補を先に引いておく（同名の店があるので確定はユーザー）
+  const roasterName = draft.bean.kind === 'new' ? draft.bean.roaster.name.trim() : '';
+  const shopHint = roasterName
+    ? { label: fromCamera ? 'カードのロースター' : 'ロースター', query: roasterName }
+    : null;
 
   async function onSubmit(values: LogFormDraft) {
     if (!draft) return;
@@ -511,7 +516,9 @@ function PlaceStep() {
       <LogForm
         beanName={beanName}
         shopOptions={(shops.data ?? []).map((s) => ({ id: s.id, name: s.name, address: s.address }))}
+        shopOptionsPending={shops.isPending}
         onShopSearch={setShopQuery}
+        shopHint={shopHint}
         tagSuggestions={(tags.data ?? []).map((t) => t.name)}
         lastRecipe={lastRecipe}
         homeRoasted={!!homeRoasted}
