@@ -11,7 +11,7 @@ test('/api/ocr は未ログインだと 401 の JSON を返す', async ({ reques
   expect((await res.json()).error.code).toBe('unauthorized');
 });
 
-test('記録の入口に「カードを撮る」が出る（未ログインならログインへ）', async ({ page }) => {
+test('記録の入口（未ログインならログインへ）', async ({ page }) => {
   await page.goto('/logs/new');
   await expect(page).toHaveURL(/\/login$/);
 });

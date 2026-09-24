@@ -4,7 +4,7 @@ import { Suspense, useEffect, useRef, useState } from 'react';
 import type { Route } from 'next';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
-import { Camera, List, PencilLine } from 'lucide-react';
+import { Camera, List, PencilLine, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { AppButton } from '@/components/app-button';
 import { BeanForm, type BeanFormSubmit } from '@/components/beans/bean-form';
@@ -48,7 +48,7 @@ import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { routes } from '@/lib/routes';
 
 // S3 記録作成（F-LOG-1）。段階は URL の ?step= に持つ（動的セグメントは使わない。ADR 0008）。
-//   (なし)  入口: カードを撮る / 手で入力する / 登録済みの豆から
+//   (なし)  入口: テイスティングカードから読み取る / 手で入力する / 登録済みの豆から（過去の豆を検索して選ぶ）
 //   capture ① カード撮影（F-OCR-1）→ 画像は sessionStorage に data URL で持つ
 //   ocr     ② 読み取り結果の確認・修正（F-OCR-2/5）。失敗・上限・無効なら同じ画面で手入力に切り替える
 //   bean    ② 豆フォーム（手入力）
@@ -64,14 +64,89 @@ function stepHref(step: Step): Route {
   return `${routes.newLog}?step=${step}` as Route;
 }
 
+function beanSubtitle(b: {
+  roaster?: { name: string } | null;
+  source: string;
+  country: string | null;
+}): string | null {
+  const roaster = b.roaster?.name ?? (b.source === 'home_roasted' ? '自家焙煎' : null);
+  return [roaster, b.country].filter(Boolean).join(' · ') || null;
+}
+
 function Entry() {
   const router = useRouter();
   const beans = useBeans();
   const recent = (beans.data ?? []).slice(0, RECENT_BEANS);
+  /** 「登録済みの豆から」を選んだあとの、過去の豆を検索して選ぶ画面 */
+  const [choosing, setChoosing] = useState(false);
+  const [query, setQuery] = useState('');
 
   function pickExisting(id: string, name: string) {
     writeNewLogDraft({ bean: { kind: 'existing', id, name } });
     router.push(stepHref('place'));
+  }
+
+  if (choosing) {
+    const q = query.trim().toLowerCase();
+    const list = (beans.data ?? []).filter(
+      (b) =>
+        !q ||
+        b.name.toLowerCase().includes(q) ||
+        (b.roaster?.name ?? '').toLowerCase().includes(q) ||
+        (b.country ?? '').toLowerCase().includes(q),
+    );
+    return (
+      <div className="pb-2">
+        <div className="flex items-end justify-between pt-2 pb-4">
+          <h1 className="text-2xl font-bold">登録済みの豆から</h1>
+          <button
+            type="button"
+            onClick={() => setChoosing(false)}
+            className="text-primary h-11 text-[13px] font-medium"
+          >
+            入口に戻る
+          </button>
+        </div>
+        <label className="border-border bg-card text-muted-foreground mb-2 flex h-12 items-center gap-2 rounded-xl border px-3.5 text-sm">
+          <Search className="size-[18px] shrink-0" strokeWidth={2} aria-hidden />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="豆名・ロースター・生産国で探す"
+            aria-label="豆名・ロースター・生産国で探す"
+            autoFocus
+            className="text-foreground placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent outline-none"
+          />
+        </label>
+        <p className="text-muted-foreground font-num mb-1 text-[11px]">
+          {beans.data ? `${list.length} 種（新しい順）` : ' '}
+        </p>
+        {beans.isPending && <p className="text-muted-foreground py-3 text-sm">読み込み中…</p>}
+        {beans.error && (
+          <p className="text-destructive py-3 text-sm">豆を読み込めませんでした。{beans.error.message}</p>
+        )}
+        {beans.data && list.length === 0 && (
+          <p className="text-muted-foreground py-3 text-sm">
+            {q
+              ? '一致する豆はありません。'
+              : 'まだ豆がありません。「手で入力する」から最初の豆を登録できます。'}
+          </p>
+        )}
+        <ul aria-label="登録済みの豆">
+          {list.map((b) => (
+            <li key={b.id}>
+              <Row
+                initial={b.name.slice(0, 2)}
+                title={b.name}
+                subtitle={beanSubtitle(b)}
+                onClick={() => pickExisting(b.id, b.name)}
+              />
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
   }
 
   return (
@@ -80,7 +155,7 @@ function Entry() {
       <div className="flex flex-col gap-2.5">
         <EntryOption
           icon={Camera}
-          title="カードを撮る"
+          title="テイスティングカードから読み取る"
           description="表と裏を撮ると、豆の情報を読み取ります"
           primary
           href={stepHref('capture')}
@@ -94,13 +169,13 @@ function Entry() {
         <EntryOption
           icon={List}
           title="登録済みの豆から"
-          description="同じ豆をもう一度飲んだとき"
-          onClick={() => document.getElementById('recent-beans')?.scrollIntoView({ behavior: 'smooth' })}
-          disabled={!beans.isPending && recent.length === 0}
+          description="過去に飲んだ豆を検索して選ぶ"
+          onClick={() => setChoosing(true)}
+          disabled={!beans.isPending && (beans.data ?? []).length === 0}
         />
       </div>
 
-      <section id="recent-beans" aria-label="最近の豆" className="mt-6">
+      <section aria-label="最近の豆" className="mt-6">
         <h2 className="mb-1 text-[13px] font-bold">最近の豆</h2>
         {beans.isPending && <p className="text-muted-foreground py-3 text-sm">読み込み中…</p>}
         {beans.error && (
@@ -116,7 +191,7 @@ function Entry() {
             key={b.id}
             initial={b.name.slice(0, 2)}
             title={b.name}
-            subtitle={b.roaster?.name ?? (b.source === 'home_roasted' ? '自家焙煎' : null)}
+            subtitle={beanSubtitle(b)}
             onClick={() => pickExisting(b.id, b.name)}
           />
         ))}
@@ -152,7 +227,7 @@ function CaptureStepPage() {
 
   return (
     <div className="pb-2">
-      <h1 className="pt-2 pb-3 text-2xl font-bold">カードを撮る</h1>
+      <h1 className="pt-2 pb-3 text-2xl font-bold">テイスティングカードから読み取る</h1>
       <WizardStepper current={1} steps={WIZARD_STEPS} className="mb-4" />
       {failure && (
         <ErrorCallout
