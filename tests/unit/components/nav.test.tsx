@@ -29,7 +29,7 @@ afterEach(() => cleanup());
 describe('nav 定義', () => {
   it('ページ名をそのままラベルにし、一文字の略称を使わない', () => {
     const labels = NAV_ITEMS.map((n) => n.label);
-    expect(labels).toEqual(['入力記録一覧', '豆のコレクション', '記録したお店', '好みの分析', '設定']);
+    expect(labels).toEqual(['豆のコレクション', '入力記録一覧', '記録したお店', '好みの分析', '設定']);
     expect(labels.some((l) => l.length === 1)).toBe(false);
   });
 

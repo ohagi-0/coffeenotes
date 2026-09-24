@@ -49,7 +49,7 @@ function BeanPageInner() {
 
   const crumb = (
     <div className="text-muted-foreground pt-3 pb-2.5 text-xs">
-      <a href={routes.home} className="text-muted-foreground">
+      <a href={routes.logs} className="text-muted-foreground">
         入力記録一覧
       </a>{' '}
       › 豆

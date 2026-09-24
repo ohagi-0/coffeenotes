@@ -8,8 +8,10 @@ const withId = <P extends string>(path: P, id: string) =>
 export const routes = {
   home: '/',
   login: '/login',
+  /** 入力記録一覧（S2）。ホームは豆のコレクション（S10）になった（2026-09-24） */
+  logs: '/logs',
   newLog: '/logs/new',
-  /** 豆のコレクション（S10。棚） */
+  /** 旧 URL。/ へ転送する */
   collection: '/collection',
   shops: '/shops',
   map: '/map',

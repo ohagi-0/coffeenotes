@@ -21,6 +21,7 @@ import type { LogFormDraft } from '@/features/logs/save-new-log';
 import { useCreateShop } from '@/features/shops/mutations';
 import { useShops } from '@/features/shops/queries';
 import { useTags } from '@/features/tags/queries';
+import { LogListView } from '@/components/logs/log-list-view';
 import { idFromSearchParams, routes } from '@/lib/routes';
 
 // S5 記録詳細・編集。URL は /logs?id=（ADR 0008）。?edit=1 で LogForm をページ内に出す。
@@ -51,25 +52,15 @@ function LogPageInner() {
 
   const crumb = (
     <div className="text-muted-foreground pt-3 pb-2.5 text-xs">
-      <a href={routes.home} className="text-muted-foreground">
+      <a href={routes.logs} className="text-muted-foreground">
         入力記録一覧
       </a>{' '}
       › 記録
     </div>
   );
 
-  if (!id) {
-    return (
-      <div className="pb-2">
-        {crumb}
-        <ErrorCallout
-          title="記録が見つかりません"
-          what="URL に記録の ID がありません。"
-          next="一覧から記録を選び直してください。"
-        />
-      </div>
-    );
-  }
+  // id が無ければ入力記録一覧（S2）。詳細は ?id= 付き（ADR 0008）
+  if (!id) return <LogListView />;
   if (log.isPending) {
     return (
       <div className="pb-2">
@@ -236,7 +227,7 @@ function LogPageInner() {
         try {
           await deleteLog.mutateAsync(l.id);
           toast.success('削除しました');
-          router.replace(routes.home);
+          router.replace(routes.logs);
         } catch (e) {
           toast.error(e instanceof Error ? e.message : '削除できませんでした');
         }

@@ -84,7 +84,7 @@ export function LogDetail({
     <div className={cn('pb-2', className)}>
       <div className="text-muted-foreground flex items-center justify-between pt-3 pb-2.5 text-xs">
         <span>
-          <Link href={routes.home} className="text-muted-foreground">
+          <Link href={routes.logs} className="text-muted-foreground">
             入力記録一覧
           </Link>{' '}
           › {format(date, 'M月d日', { locale: ja })}

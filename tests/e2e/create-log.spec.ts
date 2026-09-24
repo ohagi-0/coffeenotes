@@ -53,7 +53,7 @@ test.describe('記録作成の主要フロー', () => {
 
   test('ログイン → 手入力で記録作成 → 入力記録一覧に表示', async ({ page }) => {
     await signIn(page, creds!.email, creds!.password);
-    await expect(page.getByRole('heading', { name: '入力記録一覧' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: '豆のコレクション' })).toBeVisible();
 
     await page.getByRole('link', { name: '記録する' }).click();
     await expect(page.getByRole('heading', { name: '記録を追加' })).toBeVisible();
@@ -79,8 +79,8 @@ test.describe('記録作成の主要フロー', () => {
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(beanName);
     await expect(page.getByText('1 回')).toBeVisible();
 
-    // 入力記録一覧にも出る
-    await page.goto('/');
+    // 入力記録一覧（/logs）にも出る
+    await page.goto('/logs');
     await expect(page.getByRole('heading', { name: '入力記録一覧' })).toBeVisible();
     const row = page.getByRole('link', { name: new RegExp(beanName) });
     await expect(row).toBeVisible();

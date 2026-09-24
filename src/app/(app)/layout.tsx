@@ -40,7 +40,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             'mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 pt-[env(safe-area-inset-top,0px)]',
             'md:min-h-0 md:max-w-[680px] md:px-8 md:pt-4 xl:px-10',
             // ホームだけ 2 ペイン（一覧 400px + 詳細）のために広くする（#23 段階 2）
-            pathname === routes.home ? 'xl:max-w-[1320px]' : 'xl:max-w-[920px]',
+            pathname === routes.logs ? 'xl:max-w-[1320px]' : 'xl:max-w-[920px]',
           )}
         >
           <div className="md:hidden">

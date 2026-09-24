@@ -115,7 +115,7 @@ export function BeanDetail({
         <span>
           {crumb ?? (
             <>
-              <Link href={routes.home} className="text-muted-foreground">
+              <Link href={routes.logs} className="text-muted-foreground">
                 入力記録一覧
               </Link>{' '}
               › 豆
