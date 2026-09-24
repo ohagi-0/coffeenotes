@@ -76,3 +76,39 @@ export function chipToFilters(value: string): LogFilters {
   if (value.startsWith('process:')) return { process: value.slice('process:'.length) };
   return {};
 }
+
+/** フリーワード検索（F-LIST-3）の対象。LogWithRelations の必要な部分だけ */
+export type SearchableLog = {
+  memo?: string | null;
+  bean: {
+    name: string;
+    country?: string | null;
+    process?: string | null;
+    variety?: string | null;
+    flavor_notes?: string[] | null;
+    roaster?: { name: string } | null;
+  };
+  shop?: { name: string } | null;
+  log_tags?: { tag: { name: string } | null }[] | null;
+};
+
+/** 検索語を空白で区切り、すべての語が 豆名・ロースター・生産国・精製・品種・フレーバー・メモ・店名・タグ のどれかに含まれれば一致（大文字小文字を無視） */
+export function matchesLogSearch(log: SearchableLog, query: string): boolean {
+  const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (terms.length === 0) return true;
+  const hay = [
+    log.bean.name,
+    log.bean.roaster?.name,
+    log.bean.country,
+    log.bean.process,
+    log.bean.variety,
+    ...(log.bean.flavor_notes ?? []),
+    log.memo,
+    log.shop?.name,
+    ...(log.log_tags ?? []).map((t) => t.tag?.name),
+  ]
+    .filter((v): v is string => typeof v === 'string' && v !== '')
+    .join('\n')
+    .toLowerCase();
+  return terms.every((t) => hay.includes(t));
+}

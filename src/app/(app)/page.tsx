@@ -12,7 +12,12 @@ import { LogTimeline } from '@/components/logs/log-timeline';
 import { FullScreenLoading } from '@/components/full-screen-loading';
 import { XL_QUERY, useMediaQuery } from '@/components/use-media-query';
 import { useBeanFilterOptions } from '@/features/beans/queries';
-import { chipToFilters, toTimelineItem, type TimelineItem } from '@/features/logs/presenters';
+import {
+  chipToFilters,
+  matchesLogSearch,
+  toTimelineItem,
+  type TimelineItem,
+} from '@/features/logs/presenters';
 import { useDeleteLogs } from '@/features/logs/mutations';
 import { useLogs, useMonthlyLogCount } from '@/features/logs/queries';
 import { routes } from '@/lib/routes';
@@ -35,6 +40,7 @@ function HomeInner() {
   const pathname = usePathname();
   const params = useSearchParams();
   const chip = params.get('f') ?? 'all';
+  const q = params.get('q') ?? '';
   const selectedBean = params.get('bean');
   const selectedLog = params.get('log');
   // 1280px 以上では行を選ぶと右ペインに豆詳細を出す（ページ遷移しない）。それ未満は記録詳細へ遷移
@@ -93,21 +99,37 @@ function HomeInner() {
     return [...FIXED_CHIPS, ...countries, ...processes];
   }, [options.data]);
 
+  function replaceQuery(next: { f?: string; q?: string }) {
+    const sp = new URLSearchParams();
+    const f = next.f ?? chip;
+    const query = next.q ?? q;
+    if (f !== 'all') sp.set('f', f);
+    if (query.trim()) sp.set('q', query);
+    const qs = sp.toString();
+    router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, { scroll: false });
+  }
   function setChip(value: string) {
-    const next = value === 'all' ? pathname : `${pathname}?f=${encodeURIComponent(value)}`;
-    router.replace(next as Route, { scroll: false });
+    replaceQuery({ f: value });
+  }
+  function setQuery(value: string) {
+    replaceQuery({ q: value });
   }
 
-  const items = useMemo(() => (logs.data ?? []).map(toTimelineItem), [logs.data]);
+  // フリーワード検索（F-LIST-3）は手元で絞る（一覧は全件取っているので往復しない）
+  const items = useMemo(
+    () => (logs.data ?? []).filter((l) => matchesLogSearch(l, q)).map(toTimelineItem),
+    [logs.data, q],
+  );
   const allSelected = items.length > 0 && items.every((i) => selectedIds.has(i.id));
 
   function hrefFor(item: TimelineItem): Route {
     if (!twoPane || !item.beanId) return routes.log(item.id) as Route;
-    const q = new URLSearchParams();
-    if (chip !== 'all') q.set('f', chip);
-    q.set('bean', item.beanId);
-    q.set('log', item.id);
-    return `${pathname}?${q.toString()}` as Route;
+    const sp = new URLSearchParams();
+    if (chip !== 'all') sp.set('f', chip);
+    if (q.trim()) sp.set('q', q);
+    sp.set('bean', item.beanId);
+    sp.set('log', item.id);
+    return `${pathname}?${sp.toString()}` as Route;
   }
 
   return (
@@ -144,22 +166,25 @@ function HomeInner() {
               </button>
             ))}
         </div>
-        {/* フリーワード検索は Phase 5（F-LIST-3）。それまでは見た目だけ */}
-        <div
-          className="border-border bg-card text-muted-foreground mb-2.5 flex h-12 items-center gap-2 rounded-xl border px-3.5 text-sm"
-          aria-disabled="true"
-        >
-          <Search className="size-[18px]" strokeWidth={2} aria-hidden />
-          豆名・フレーバー・メモで探す（準備中）
-        </div>
+        <label className="border-border bg-card text-muted-foreground mb-2.5 flex h-12 items-center gap-2 rounded-xl border px-3.5 text-sm">
+          <Search className="size-[18px] shrink-0" strokeWidth={2} aria-hidden />
+          <input
+            type="search"
+            value={q}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="豆名・フレーバー・メモ・店名で探す"
+            aria-label="豆名・フレーバー・メモ・店名で探す"
+            className="text-foreground placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent outline-none"
+          />
+        </label>
         <FilterChips chips={chips} value={chip} onChange={setChip} />
         <LogTimeline
           items={items}
           isPending={logs.isPending}
           error={logs.error}
           onRetry={() => void logs.refetch()}
-          filtered={chip !== 'all'}
-          onClearFilter={() => setChip('all')}
+          filtered={chip !== 'all' || q.trim() !== ''}
+          onClearFilter={() => replaceQuery({ f: 'all', q: '' })}
           hrefFor={hrefFor}
           selectedId={twoPane ? selectedLog : undefined}
           selectable={selecting}

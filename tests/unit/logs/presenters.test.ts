@@ -6,6 +6,7 @@ import {
   groupByDate,
   toTimelineItem,
   type TimelineItem,
+  matchesLogSearch,
 } from '@/features/logs/presenters';
 import type { LogWithRelations } from '@/features/logs/queries';
 
@@ -107,5 +108,40 @@ describe('presenters', () => {
       ['2026-09-21', 2],
       ['2026-09-19', 1],
     ]);
+  });
+});
+
+describe('matchesLogSearch', () => {
+  const log = {
+    memo: '冷めてからが良い。朝に合う',
+    bean: {
+      name: 'Lusitania Lime Geisha',
+      country: 'Colombia',
+      process: 'Lime infused',
+      variety: 'Geisha',
+      flavor_notes: ['Lime', 'Bergamot'],
+      roaster: { name: 'KIELO COFFEE' },
+    },
+    shop: { name: 'KIELO COFFEE 蔵前' },
+    log_tags: [{ tag: { name: 'ゲイシャ' } }, { tag: null }],
+  };
+  it('豆名・ロースター・フレーバー・メモ・店名・タグのどれかに含まれれば一致（大文字小文字を無視）', () => {
+    expect(matchesLogSearch(log, '')).toBe(true);
+    expect(matchesLogSearch(log, 'geisha')).toBe(true);
+    expect(matchesLogSearch(log, 'bergamot')).toBe(true);
+    expect(matchesLogSearch(log, '朝')).toBe(true);
+    expect(matchesLogSearch(log, '蔵前')).toBe(true);
+    expect(matchesLogSearch(log, 'ゲイシャ')).toBe(true);
+    expect(matchesLogSearch(log, 'kenya')).toBe(false);
+  });
+  it('空白区切りはすべての語を含むときだけ一致', () => {
+    expect(matchesLogSearch(log, 'lime 蔵前')).toBe(true);
+    expect(matchesLogSearch(log, 'lime kenya')).toBe(false);
+  });
+  it('関連が無くても落ちない', () => {
+    expect(matchesLogSearch({ bean: { name: 'X' } }, 'x')).toBe(true);
+    expect(matchesLogSearch({ bean: { name: 'X' }, memo: null, shop: null, log_tags: null }, 'y')).toBe(
+      false,
+    );
   });
 });
