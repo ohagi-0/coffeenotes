@@ -8,8 +8,9 @@ import { ErrorCallout } from '@/components/error-callout';
 import { RatingStars } from '@/components/logs/rating-stars';
 import { Row } from '@/components/row';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { ShopRow } from '@/features/shops/presenters';
+import { formatDistance, type ShopRow } from '@/features/shops/presenters';
 import { routes } from '@/lib/routes';
+import { cn } from '@/lib/utils';
 
 export type ShopListProps = {
   rows: ShopRow[];
@@ -21,6 +22,9 @@ export type ShopListProps = {
   onClearFilter?: () => void;
   /** 「＋ お店を登録」の遷移先 */
   newHref: Route;
+  /** 渡すと行はリンクではなく選択（地図と連動）になる。選択中の行は強調 */
+  onSelect?: (id: string) => void;
+  selectedId?: string | null;
 };
 
 // 店一覧（S6）。読み込み / 失敗 / 空 / 絞り込み 0 件 / 一覧の 5 状態。
@@ -32,6 +36,8 @@ export function ShopList({
   filtered,
   onClearFilter,
   newHref,
+  onSelect,
+  selectedId,
 }: ShopListProps) {
   if (isPending) {
     return (
@@ -95,7 +101,9 @@ export function ShopList({
           title={s.name}
           subtitle={
             <>
-              {[s.kindLabel, s.area, s.count > 0 ? `${s.count} 回` : null].filter(Boolean).join(' · ')}
+              {[s.kindLabel, formatDistance(s.distanceM) ?? s.area, s.count > 0 ? `${s.count} 回` : null]
+                .filter(Boolean)
+                .join(' · ')}
               {!s.hasCoordinates && (
                 <span className="bg-secondary text-muted-foreground ml-2 rounded-[4px] px-[7px] text-[10px] leading-[1.7]">
                   座標なし
@@ -113,7 +121,10 @@ export function ShopList({
               <span className="text-muted-foreground">—</span>
             )
           }
-          href={routes.shop(s.id) as Route}
+          {...(onSelect ? { onClick: () => onSelect(s.id) } : { href: routes.shop(s.id) as Route })}
+          className={cn(
+            onSelect && selectedId === s.id && 'bg-card -mx-3 rounded-xl border-b-transparent px-3',
+          )}
         />
       ))}
     </div>
