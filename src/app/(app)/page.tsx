@@ -118,11 +118,24 @@ function CollectionInner() {
     <div className="pb-2">
       <div className="pt-5 pb-4">
         <h1 className="text-2xl font-bold">豆のコレクション</h1>
-        <p className="text-muted-foreground font-num text-xs">
-          {logs.data
+        {/* これまでに記録した杯数を大きく（2026-09-25）。0 杯のときは下の空状態に任せる */}
+        {logs.data && logs.data.length > 0 && (
+          <p
+            className="mt-2.5 flex items-baseline gap-1.5"
+            aria-label={`これまでに ${logs.data.length} 杯を記録`}
+          >
+            <span className="font-num text-[44px] leading-none font-bold tracking-tight">
+              {logs.data.length}
+            </span>
+            <span className="text-base font-bold">杯</span>
+            <span className="text-muted-foreground ml-1 text-xs">これまでに記録したコーヒー</span>
+          </p>
+        )}
+        <p className="text-muted-foreground font-num mt-1.5 text-xs">
+          {logs.data && logs.data.length > 0
             ? byCountry
-              ? `${byCountry.total} の${view === 'variety' ? '品種' : '産地'}のうち ${byCountry.visited} を制覇 · ${items.length} 袋 · ${logs.data.length} 杯`
-              : `${items.length} 袋 · ${logs.data.length} 杯`
+              ? `${items.length} 種類の豆 · ${byCountry.total} の${view === 'variety' ? '品種' : '産地'}のうち ${byCountry.visited} を制覇`
+              : `${items.length} 種類の豆`
             : ' '}
         </p>
       </div>
@@ -151,13 +164,11 @@ function CollectionInner() {
           <ShelfPlank />
           <EmptyState
             icon={Package}
-            title="棚はまだ空です"
+            title="まだ記録がありません"
             description={
-              <>
-                最初の一杯を記録すると、飲んだ豆が袋になってここに並びます。
-                <br />
-                テイスティングカードを読み取れば、豆の名前や生産国がそのまま袋のラベルになります。
-              </>
+              <span className="mx-auto block max-w-[21em]">
+                飲んだコーヒーを記録すると、豆ごとにここに並んでいきます。お店のテイスティングカードを撮れば、豆の名前や生産国を自動で読み取ります。
+              </span>
             }
             action={
               <AppButton width="auto" href={ADD_LOG_HREF}>
