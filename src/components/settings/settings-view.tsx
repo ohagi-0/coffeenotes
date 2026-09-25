@@ -65,7 +65,7 @@ export function SettingsView({
 
   return (
     <div className="pb-2">
-      <h1 className="pt-2 pb-3 text-2xl font-bold">設定</h1>
+      <h1 className="pt-5 pb-4 text-2xl font-bold">設定</h1>
 
       <div className="flex items-center gap-3 py-3.5">
         <span className="bg-primary text-primary-foreground font-num grid size-10 shrink-0 place-items-center rounded-full text-sm font-bold">

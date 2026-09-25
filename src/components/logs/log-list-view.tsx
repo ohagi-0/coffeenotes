@@ -156,10 +156,10 @@ export function LogListView() {
       )}
     >
       <div>
-        <div className="flex items-end justify-between pt-2 pb-3">
+        <div className="flex items-end justify-between pt-5 pb-4">
           <div>
             <h1 className="text-2xl font-bold">入力記録一覧</h1>
-            <p className="text-muted-foreground font-num text-xs">
+            <p className="text-muted-foreground font-num mt-1.5 text-xs">
               {monthly.data !== undefined ? `今月 · ${monthly.data} 杯` : ' '}
             </p>
           </div>
