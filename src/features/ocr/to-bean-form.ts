@@ -29,6 +29,8 @@ export function extractionToBeanForm(e: BeanCardExtraction): BeanFormPrefill {
   // 生産国と品種はカードの英語のままではなく、語彙にあれば日本語の呼び名で見せる（Colombia → コロンビア）
   put('country', countryDisplayName(e.country.value), e.country.confidence);
   put('region', e.region.value, e.region.confidence);
+  put('farm', e.farm.value, e.farm.confidence);
+  put('harvest_year', e.harvestYear.value, e.harvestYear.confidence);
   put('variety', varietyDisplayName(e.variety.value), e.variety.confidence);
   put('process', e.process.value, e.process.confidence);
   put('altitude_m', e.altitudeM.value, e.altitudeM.confidence);

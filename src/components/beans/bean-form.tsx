@@ -313,6 +313,39 @@ export function BeanForm({
       </F>
 
       <div className="grid grid-cols-2 gap-3">
+        <F name="farm" ocr={ocr} label="農園" htmlFor={id('farm')} error={errors.farm?.message}>
+          <TextInput
+            id={id('farm')}
+            placeholder="Finca Los Senisos"
+            autoComplete="off"
+            {...register('farm')}
+          />
+        </F>
+        <F
+          name="harvest_year"
+          ocr={ocr}
+          label="収穫年度"
+          htmlFor={id('harvest')}
+          error={errors.harvest_year?.message}
+        >
+          <div className="relative">
+            <TextInput
+              id={id('harvest')}
+              type="number"
+              inputMode="numeric"
+              placeholder="2025"
+              className="font-num pr-9"
+              aria-invalid={!!errors.harvest_year}
+              {...register('harvest_year')}
+            />
+            <span className="text-muted-foreground absolute top-1/2 right-3.5 -translate-y-1/2 text-xs">
+              年
+            </span>
+          </div>
+        </F>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
         <F name="variety" ocr={ocr} label="品種" htmlFor={id('variety')} error={errors.variety?.message}>
           <div className="relative">
             <TextInput

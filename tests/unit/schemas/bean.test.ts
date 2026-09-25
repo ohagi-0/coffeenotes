@@ -23,6 +23,8 @@ describe('beanFormSchema', () => {
       ...minimal,
       country: 'Colombia',
       region: 'Caicedonia, Valle del Cauca',
+      farm: 'Finca Los Senisos',
+      harvest_year: '2025',
       variety: 'Geisha',
       process: 'Lime infused',
       altitude_m: '1650',
@@ -36,7 +38,12 @@ describe('beanFormSchema', () => {
       price_grams: 100,
     });
     expect(r.altitude_m).toBe(1650);
+    expect(r.harvest_year).toBe(2025);
+    expect(r.farm).toBe('Finca Los Senisos');
     expect(r.flavor_notes).toEqual(['Lime', 'Bergamot', 'Laurier']);
+  });
+  it.each(['1899', '2101', '25'])('収穫年度 %s は無効', (v) => {
+    expect(beanFormSchema.safeParse({ ...minimal, harvest_year: v }).success).toBe(false);
   });
   it.each([0, 6, 2.5])('味覚チャート %s は無効', (v) => {
     expect(beanFormSchema.safeParse({ ...minimal, taste_body: v }).success).toBe(false);

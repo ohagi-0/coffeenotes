@@ -80,7 +80,9 @@ export type Database = {
           country: string | null
           created_at: string
           description: string | null
+          farm: string | null
           flavor_notes: string[]
+          harvest_year: number | null
           id: string
           name: string
           ocr_raw: Json | null
@@ -107,7 +109,9 @@ export type Database = {
           country?: string | null
           created_at?: string
           description?: string | null
+          farm?: string | null
           flavor_notes?: string[]
+          harvest_year?: number | null
           id?: string
           name: string
           ocr_raw?: Json | null
@@ -134,7 +138,9 @@ export type Database = {
           country?: string | null
           created_at?: string
           description?: string | null
+          farm?: string | null
           flavor_notes?: string[]
+          harvest_year?: number | null
           id?: string
           name?: string
           ocr_raw?: Json | null

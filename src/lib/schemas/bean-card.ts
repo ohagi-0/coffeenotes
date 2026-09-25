@@ -16,6 +16,8 @@ export const beanCardExtractionSchema = z.object({
   roaster: extracted(z.string()),
   country: extracted(z.string()),
   region: extracted(z.string()),
+  farm: extracted(z.string()),
+  harvestYear: extracted(z.number().int().min(1900).max(2100)),
   variety: extracted(z.string()),
   process: extracted(z.string()),
   altitudeM: extracted(z.number().int().nonnegative()),

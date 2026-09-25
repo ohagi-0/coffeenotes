@@ -24,6 +24,8 @@ describe('beans presenters', () => {
     const bean = {
       country: 'Colombia',
       region: null,
+      farm: 'Finca Los Senisos',
+      harvest_year: 2025,
       variety: 'Geisha',
       process: null,
       altitude_m: 1650,

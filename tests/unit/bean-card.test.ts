@@ -8,6 +8,8 @@ const sample = {
   roaster: ok('KIELO COFFEE'),
   country: ok('Colombia'),
   region: ok('Caicedonia, Valle del Cauca'),
+  farm: ok('Finca Los Senisos'),
+  harvestYear: ok(2025),
   variety: ok('Geisha'),
   process: ok('Lime infused'),
   altitudeM: ok(1650),

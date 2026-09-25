@@ -42,6 +42,8 @@ export const BEAN_CARD_FIELDS = [
   'roaster',
   'country',
   'region',
+  'farm',
+  'harvestYear',
   'variety',
   'process',
   'altitudeM',
@@ -71,14 +73,25 @@ export const BEAN_CARD_TOOL: Anthropic.Tool = {
     properties: {
       name: withDesc(nullableString, '豆の名前。カードの表記のまま（言語を変えない）'),
       roaster: withDesc(nullableString, 'ロースター（焙煎所・店）の名前'),
-      country: withDesc(nullableString, '生産国。英語表記のまま'),
-      region: withDesc(nullableString, '地域・農園'),
-      variety: withDesc(nullableString, '品種（Geisha, Bourbon など）'),
-      process: withDesc(nullableString, '精製方法（Washed, Natural, Lime infused など）'),
+      country: withDesc(
+        nullableString,
+        '生産国。カードの表記のまま（英語でも日本語でも）。「パナマ / セロ プンタ」のように地域と併記なら国だけ',
+      ),
+      region: withDesc(
+        nullableString,
+        '地域（州・地区・村）。生産国や農園名は含めない。「生産地 パナマ / セロ プンタ」なら「セロ プンタ」',
+      ),
+      farm: withDesc(nullableString, '農園名（Finca …、「農園」の欄）。地域とは別'),
+      harvestYear: withDesc(nullableInteger, '収穫年度（西暦 4 桁）。「2025 年」「2024/25」は 2025'),
+      variety: withDesc(nullableString, '品種（Geisha, ゲイシャ, Bourbon など。カードの表記のまま）'),
+      process: withDesc(
+        nullableString,
+        '精製方法（Washed, Natural, ハニー, Lime infused など。カードの表記のまま）',
+      ),
       altitudeM: withDesc(nullableInteger, '標高（メートル）。"1,650m" は 1650。範囲表記は下限'),
       flavorNotes: withDesc(
         { type: 'array', items: { type: 'string' } },
-        'フレーバーノート。カンマや改行で区切られた語を配列に。無ければ空配列',
+        'フレーバーノート。カンマや改行で区切られた語、色見本付きの一覧の語も全部を配列に（1 つも落とさない）。無ければ空配列',
       ),
       description: withDesc(nullableString, '説明文。書いてある言語のまま全文'),
       taste: withDesc(
@@ -94,11 +107,14 @@ export const BEAN_CARD_TOOL: Anthropic.Tool = {
           required: ['flavor', 'sweetness', 'acidity', 'aftertaste', 'body'],
           additionalProperties: false,
         },
-        '味覚チャート。塗りつぶされたドットの数（1〜5）。軸が無ければ null',
+        '味覚チャート。塗りつぶされたドットの数や数字（1〜5）が読めるときだけ。数字もドットも無い形だけのレーダーチャートは読まずに null',
       ),
       priceJpy: withDesc(nullableInteger, '価格（円、税込か不明ならそのまま）。"¥3,800" は 3800'),
       priceGrams: withDesc(nullableInteger, '価格に対応するグラム数。"/100g" は 100'),
-      roastLevel: withDesc(nullableRoastLevel, '焙煎度'),
+      roastLevel: withDesc(
+        nullableRoastLevel,
+        '焙煎度。浅煎り・ライト・Light → light、中煎り・ミディアム・Medium → medium、中深煎り・深煎り・ダーク・シティ・フレンチ・Dark → dark',
+      ),
       referenceUrl: withDesc(
         nullableString,
         'カードに印字された URL（QR の下の文字列など）。https:// が無ければ補う。無ければ null',
@@ -121,7 +137,8 @@ const SYSTEM_PROMPT = `あなたはスペシャルティコーヒーのテイス
 渡された画像（1 枚目が表、2 枚目があれば裏）から項目を抜き出し、必ずツール ${TOOL_NAME} で記録してください。
 - 書いてあることだけを書く。書いていない項目は null にし、confidence の同じ名前のキーを 0 にする。推測で埋めない。
 - 固有名詞（豆名・ロースター・地域・品種）は表記と言語をそのまま写す。
-- 味覚チャートは、塗りつぶされた丸の数を数えて 1〜5 にする。読めない軸は null。
+- 味覚チャートは、塗りつぶされた丸の数や数字を読んで 1〜5 にする。数字も丸も無い（形だけの）レーダーチャートは推測せず taste を null にする。
+- 日本語のカードもそのまま読む。「農園」「生産地」「収穫年度」「品種」「精製」「焙煎」の欄はそれぞれ farm / country・region / harvestYear / variety / process / roastLevel に入れる。
 - 価格は円の整数、標高はメートルの整数。単位や記号は数値に含めない。
 - confidence は 1 が「はっきり読めた」、0.5 が「かすれ・傾きで自信がない」、0 が「無い・読めない」。`;
 
@@ -211,11 +228,15 @@ export function sanitizeExtraction(input: unknown): unknown {
   const ref = pick(i, 'referenceUrl');
   const refValue = urlOrNull(ref.value);
   const grams = int('priceGrams', 1);
+  const yearRaw = int('harvestYear', 1900);
+  const year = yearRaw.value !== null && yearRaw.value <= 2100 ? yearRaw : { value: null, confidence: 0 };
   return {
     name: str('name'),
     roaster: str('roaster'),
     country: str('country'),
     region: str('region'),
+    farm: str('farm'),
+    harvestYear: year,
     variety: str('variety'),
     process: str('process'),
     altitudeM: int('altitudeM'),

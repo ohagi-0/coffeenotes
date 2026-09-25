@@ -138,6 +138,8 @@ function BeanPageInner() {
             source: b.source === 'home_roasted' ? 'home_roasted' : 'purchased',
             country: b.country ?? '',
             region: b.region ?? '',
+            farm: b.farm ?? '',
+            harvest_year: b.harvest_year ?? '',
             variety: b.variety ?? '',
             process: b.process ?? '',
             altitude_m: b.altitude_m ?? '',

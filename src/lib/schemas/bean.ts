@@ -40,6 +40,15 @@ export const beanFormSchema = z.object({
   source: beanSourceSchema,
   country: textOrNull(120),
   region: textOrNull(200),
+  // 農園と収穫年度（F-BEAN-16 / F-BEAN-17、2026-09-25）
+  farm: textOrNull(200),
+  harvest_year: numberOrNull(
+    z
+      .number()
+      .int('整数で入力してください')
+      .min(1900, '収穫年度は西暦 4 桁です')
+      .max(2100, '収穫年度は西暦 4 桁です'),
+  ),
   variety: textOrNull(120),
   process: textOrNull(120),
   altitude_m: numberOrNull(z.number().int('整数で入力してください').min(0, '標高は 0 以上です')),

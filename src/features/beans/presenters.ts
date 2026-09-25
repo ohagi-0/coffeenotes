@@ -8,6 +8,8 @@ type BeanLike = Pick<
   Tables<'beans'>,
   | 'country'
   | 'region'
+  | 'farm'
+  | 'harvest_year'
   | 'variety'
   | 'process'
   | 'altitude_m'
@@ -39,11 +41,12 @@ export function sourceLabel(v: string): string {
   return SOURCE_LABELS[v] ?? v;
 }
 
-/** データグリッド（生産国 / 地域 / 品種 / 精製 / 標高 / 価格 / 焙煎度）。null の項目はグリッド側が省く */
+/** データグリッド（生産国 / 地域 / 農園 / 品種 / 精製 / 標高 / 価格 / 焙煎度 / 焙煎日 / 収穫年度）。null の項目はグリッド側が省く */
 export function beanSpecItems(bean: BeanLike): SpecItem[] {
   return [
     { label: '生産国', value: bean.country },
     { label: '地域', value: bean.region },
+    { label: '農園', value: bean.farm },
     { label: '品種', value: bean.variety },
     { label: '精製', value: bean.process },
     {
@@ -54,6 +57,7 @@ export function beanSpecItems(bean: BeanLike): SpecItem[] {
     { label: '価格', value: formatPrice(bean.price_jpy, bean.price_grams) },
     { label: '焙煎度', value: roastLevelLabel(bean.roast_level), ja: true },
     { label: '焙煎日', value: bean.roasted_on },
+    { label: '収穫年度', value: bean.harvest_year !== null ? String(bean.harvest_year) : null, unit: '年' },
   ];
 }
 
