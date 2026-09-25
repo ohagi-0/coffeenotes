@@ -11,7 +11,8 @@ export const CLAUDE_OCR_MODEL = 'claude-haiku-4-5';
 export const CLAUDE_OCR_TIMEOUT_MS = 30_000;
 /** ウォームアップは裏で走るので長めに待つ（コンパイルが終わるまで） */
 export const CLAUDE_OCR_WARMUP_TIMEOUT_MS = 90_000;
-export const CLAUDE_OCR_MAX_TOKENS = 1024;
+// 説明文の長い日本語カードは 1,024 では足りない（210 文字の説明で出力 771 トークン。2026-09-25 実測）
+export const CLAUDE_OCR_MAX_TOKENS = 2048;
 export const TOOL_NAME = 'record_bean_card';
 
 const IMAGE_MEDIA_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'] as const;

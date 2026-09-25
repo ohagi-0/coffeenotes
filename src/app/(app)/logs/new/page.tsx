@@ -205,12 +205,13 @@ function CaptureStepPage() {
   const [saving, setSaving] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
 
-  async function onSubmit({ front, back }: CapturedImages) {
+  async function onSubmit({ front, back, qrText }: CapturedImages) {
     setSaving(true);
     setFailure(null);
     try {
       const draft: DraftImages = { front: await blobToDataUrl(front) };
       if (back) draft.back = await blobToDataUrl(back);
+      if (qrText) draft.qr = qrText;
       if (!writeCaptureDraft(draft)) {
         setFailure(
           'この端末では画像を一時保存できません（ストレージの空きが無いか、プライベートブラウズ）。',
@@ -275,10 +276,13 @@ function OcrStepPage() {
           dataUrlToBlob(capture.front),
           capture.back ? dataUrlToBlob(capture.back) : Promise.resolve(null),
         ]);
-        // QR はブラウザ内で読む（OCR と並行。無ければ null）
-        void Promise.all([readQrFromBlob(front), back ? readQrFromBlob(back) : Promise.resolve(null)]).then(
-          ([a, b]) => setQrUrl(qrTextToUrl(a) ?? qrTextToUrl(b)),
-        );
+        // QR はブラウザ内で読む（OCR と並行。無ければ null）。撮影時に元画像から読めていればそれを使う
+        const draftQr = qrTextToUrl(capture.qr ?? null);
+        if (draftQr) setQrUrl(draftQr);
+        else
+          void Promise.all([readQrFromBlob(front), back ? readQrFromBlob(back) : Promise.resolve(null)]).then(
+            ([a, b]) => setQrUrl(qrTextToUrl(a) ?? qrTextToUrl(b)),
+          );
         const res = await requestBeanCardExtraction({ front, back, signal: ac.signal });
         setPrefill(extractionToBeanForm(res.extraction));
         setOcrRaw(res.raw);
@@ -458,6 +462,7 @@ function OcrStepPage() {
             onRoasterSearch={setRoasterQuery}
             recentCountries={beanOptions.data?.countries}
             recentVarieties={beanOptions.data?.varieties}
+            recentProcesses={beanOptions.data?.processes}
             onSubmit={onSubmit}
           />
         </>
@@ -486,6 +491,7 @@ function BeanStep() {
         onRoasterSearch={setRoasterQuery}
         recentCountries={beanOptions.data?.countries}
         recentVarieties={beanOptions.data?.varieties}
+        recentProcesses={beanOptions.data?.processes}
         onSubmit={onSubmit}
       />
     </div>

@@ -26,7 +26,7 @@ describe('createClaudeOcrProvider', () => {
     await provider.extractBeanCard({ front: jpeg(), back: jpeg() });
     const params = create.mock.calls[0]![0];
     expect(params.model).toBe('claude-haiku-4-5');
-    expect(params.max_tokens).toBe(1024);
+    expect(params.max_tokens).toBe(2048);
     expect(params.tool_choice).toEqual({ type: 'tool', name: TOOL_NAME });
     expect(params.tools).toEqual([BEAN_CARD_TOOL]);
     const content = params.messages[0]!.content as Anthropic.ContentBlockParam[];

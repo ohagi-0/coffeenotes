@@ -5,14 +5,16 @@ import { Camera, Image as ImageIcon, RefreshCw, X } from 'lucide-react';
 import { AppButton } from '@/components/app-button';
 import { ErrorCallout } from '@/components/error-callout';
 import { compressImage } from '@/lib/image/compress';
+import { readQrFromBlob } from '@/lib/image/qr';
 import { capturePhoto, type PhotoSource } from '@/lib/platform/camera';
 import { cn } from '@/lib/utils';
 
 // S3 ① カード撮影（F-OCR-1 / F-BEAN-12、DESIGN.md §5）。
 // Web はアプリ内カメラを持たず、OS のカメラ／写真選択を開く（src/lib/platform/camera.ts 経由）。
 // 撮った直後に長辺 1,600px の JPEG に圧縮する。Blob のまま親へ渡す（ネイティブ化制約 N-5）。
+// QR は圧縮前の元画像から読む（小さく印刷された QR は 1,600px に縮めると読めないことがある。2026-09-25）。
 
-export type CapturedImages = { front: Blob; back: Blob | null };
+export type CapturedImages = { front: Blob; back: Blob | null; qrText?: string | null };
 
 type Side = 'front' | 'back';
 
@@ -107,6 +109,7 @@ export type CaptureStepProps = {
 export function CaptureStep({ onSubmit, submitting, className }: CaptureStepProps) {
   const [front, setFront] = useState<Blob | null>(null);
   const [back, setBack] = useState<Blob | null>(null);
+  const [qr, setQr] = useState<{ front: string | null; back: string | null }>({ front: null, back: null });
   const [busy, setBusy] = useState<Side | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -116,9 +119,10 @@ export function CaptureStep({ onSubmit, submitting, className }: CaptureStepProp
     try {
       const raw = await capturePhoto({ source });
       if (!raw) return; // キャンセル
-      const blob = await compressImage(raw);
+      const [blob, qrText] = await Promise.all([compressImage(raw), readQrFromBlob(raw)]);
       if (side === 'front') setFront(blob);
       else setBack(blob);
+      setQr((q) => ({ ...q, [side]: qrText }));
     } catch (e) {
       setError(e instanceof Error ? e.message : '画像を読み込めませんでした');
     } finally {
@@ -152,7 +156,11 @@ export function CaptureStep({ onSubmit, submitting, className }: CaptureStepProp
         />
       </div>
       <div className="mt-1 flex flex-col gap-2">
-        <AppButton onClick={() => front && onSubmit({ front, back })} disabled={!front} loading={submitting}>
+        <AppButton
+          onClick={() => front && onSubmit({ front, back, qrText: qr.front ?? qr.back })}
+          disabled={!front}
+          loading={submitting}
+        >
           この内容で読み取る
         </AppButton>
         <p className="text-muted-foreground text-center text-[11px] leading-relaxed">

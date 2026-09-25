@@ -20,12 +20,19 @@ import {
 import { useDeleteLogs } from '@/features/logs/mutations';
 import { useLogs, useMonthlyLogCount } from '@/features/logs/queries';
 import { routes } from '@/lib/routes';
-import { COUNTRY_SHELVES, countryDisplayName, countryKeyOf } from '@/lib/vocab';
+import {
+  COUNTRY_SHELVES,
+  PROCESSES,
+  countryDisplayName,
+  countryKeyOf,
+  processDisplayName,
+  processKeyOf,
+} from '@/lib/vocab';
 import { cn } from '@/lib/utils';
 
 // S2 入力記録一覧（F-LIST-1 / F-LIST-2）。/logs（id なし）で描く。絞り込みは URL の ?f= に持ち、共有・戻るに対応する。
 // 2026-09-24 にホーム（/）は豆のコレクション（S10）になり、一覧はここへ移った。
-// チップの値: all / rating4 / home / shop / country:<国> / process:<精製>
+// チップの値: all / rating4 / home / shop / country:<国のキー> / process:<精製のキー>（語彙で表記ゆれをまとめる）
 // 「選択」で一括削除の選択モード（F-LOG-7）。行がチェックボックスになり、下のバーから確認ダイアログ → 削除。
 
 const FIXED_CHIPS: FilterChip[] = [
@@ -49,6 +56,19 @@ function groupCountryChips(values: readonly string[]): FilterChip[] {
     .map(([key, label]) => ({ value: `country:${key}`, label }));
 }
 
+/** 自分の豆に出てくる精製方法を語彙でまとめ、日本語名のチップにする（Washed とウォッシュドは 1 つ）。語彙の順 */
+function groupProcessChips(values: readonly string[]): FilterChip[] {
+  const seen = new Map<string, string>();
+  for (const v of values) {
+    const key = processKeyOf(v);
+    if (key && !seen.has(key)) seen.set(key, processDisplayName(v) ?? v);
+  }
+  const order = new Map(PROCESSES.map((p, i) => [p.key, i]));
+  return Array.from(seen.entries())
+    .sort((a, b) => (order.get(a[0]) ?? 999) - (order.get(b[0]) ?? 999) || a[1].localeCompare(b[1], 'ja'))
+    .map(([key, label]) => ({ value: `process:${key}`, label }));
+}
+
 export function LogListView() {
   const router = useRouter();
   const pathname = usePathname();
@@ -60,7 +80,10 @@ export function LogListView() {
   // 1280px 以上では行を選ぶと右ペインに豆詳細を出す（ページ遷移しない）。それ未満は記録詳細へ遷移
   const twoPane = useMediaQuery(XL_QUERY);
   const options = useBeanFilterOptions();
-  const filters = useMemo(() => chipToFilters(chip, options.data?.countries ?? []), [chip, options.data]);
+  const filters = useMemo(
+    () => chipToFilters(chip, options.data?.countries ?? [], options.data?.processes ?? []),
+    [chip, options.data],
+  );
 
   const logs = useLogs(filters);
   const monthly = useMonthlyLogCount();
@@ -109,9 +132,7 @@ export function LogListView() {
 
   const chips = useMemo<FilterChip[]>(() => {
     const countries = groupCountryChips(options.data?.countries ?? []).slice(0, MAX_OPTION_CHIPS);
-    const processes = (options.data?.processes ?? [])
-      .slice(0, MAX_OPTION_CHIPS)
-      .map((p) => ({ value: `process:${p}`, label: p }));
+    const processes = groupProcessChips(options.data?.processes ?? []).slice(0, MAX_OPTION_CHIPS);
     return [...FIXED_CHIPS, ...countries, ...processes];
   }, [options.data]);
 

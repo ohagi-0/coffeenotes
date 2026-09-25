@@ -1,7 +1,11 @@
 // ①撮影 → ②読み取り の受け渡し（sessionStorage、data URL）。
 export const CAPTURE_DRAFT_KEY = 'coffeenotes:capture-draft';
 
-export type CaptureDraft = { front: string; back?: string };
+export type CaptureDraft = {
+  front: string;
+  back?: string;
+  /** 撮影時に元画像から読んだ QR の中身 */ qr?: string;
+};
 
 export function readCaptureDraft(): CaptureDraft | null {
   try {

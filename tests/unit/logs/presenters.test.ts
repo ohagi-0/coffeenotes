@@ -62,7 +62,9 @@ describe('presenters', () => {
       countries: ['Colombia', 'コロンビア'],
     });
     expect(chipToFilters('country:colombia')).toEqual({ countries: [] });
-    expect(chipToFilters('process:Natural')).toEqual({ process: 'Natural' });
+    expect(chipToFilters('process:natural', [], ['Natural', 'ナチュラル', 'Washed'])).toEqual({
+      processes: ['Natural', 'ナチュラル'],
+    });
   });
 
   it('formatBrewRatio は 1:15 の形。整数でなければ小数 1 桁、無ければ null', () => {

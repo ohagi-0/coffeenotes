@@ -160,6 +160,7 @@ function BeanPageInner() {
           onRoasterSearch={setRoasterQuery}
           recentCountries={beanOptions.data?.countries}
           recentVarieties={beanOptions.data?.varieties}
+          recentProcesses={beanOptions.data?.processes}
           onSubmit={onSubmit}
           submitLabel="保存する"
           submitting={updateBean.isPending || createRoaster.isPending}

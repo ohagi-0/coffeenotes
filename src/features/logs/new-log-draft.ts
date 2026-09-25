@@ -11,7 +11,11 @@ export const NEW_LOG_DRAFT_KEY = 'coffeenotes:new-log-draft';
 export type DraftBeanForm = Omit<BeanFormInput, 'roaster_id'>;
 export type DraftRoaster = { id: string | null; name: string };
 /** 撮影したカード画像（長辺 1,600px の JPEG を data URL にしたもの） */
-export type DraftImages = { front: string; back?: string };
+export type DraftImages = {
+  front: string;
+  back?: string;
+  /** 撮影時に元画像から読んだ QR の中身 */ qr?: string;
+};
 
 export type NewLogDraft =
   | {

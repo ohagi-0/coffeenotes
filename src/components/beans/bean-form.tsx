@@ -19,7 +19,7 @@ import {
 } from '@/lib/schemas/bean';
 import type { DraftBeanForm, DraftRoaster } from '@/features/logs/new-log-draft';
 import { cn } from '@/lib/utils';
-import { suggestCountries, suggestVarieties } from '@/lib/vocab';
+import { suggestCountries, suggestProcesses, suggestVarieties } from '@/lib/vocab';
 
 // 豆フォーム（S3 ②、F-BEAN-1〜11/15）。beanFormSchema を resolver に使う。
 // ロースターは共有マスタから選ぶか、無ければ名前だけ入れて「新しいロースター」として扱う（保存時に登録）。
@@ -46,6 +46,7 @@ export type BeanFormProps = {
   /** 自分の豆に出てくる生産国・品種（生の値）。よくある名前と合わせて入力候補にする */
   recentCountries?: readonly string[];
   recentVarieties?: readonly string[];
+  recentProcesses?: readonly string[];
   onSubmit: (values: BeanFormSubmit) => void;
   submitLabel?: string;
   submitting?: boolean;
@@ -83,6 +84,7 @@ export function BeanForm({
   onRoasterSearch,
   recentCountries = [],
   recentVarieties = [],
+  recentProcesses = [],
   onSubmit,
   submitLabel = '次へ：どこで飲んだ？',
   submitting,
@@ -124,9 +126,10 @@ export function BeanForm({
   const [roasterFocused, setRoasterFocused] = useState(false);
 
   // 生産国・品種の候補（F-BEAN-2 / F-BEAN-4）。フォーカス中だけ出し、候補を押すと値を入れる
-  const [suggestFor, setSuggestFor] = useState<'country' | 'variety' | null>(null);
+  const [suggestFor, setSuggestFor] = useState<'country' | 'variety' | 'process' | null>(null);
   const countryValue = String(useWatch({ control, name: 'country' }) ?? '');
   const varietyValue = String(useWatch({ control, name: 'variety' }) ?? '');
+  const processValue = String(useWatch({ control, name: 'process' }) ?? '');
   const countryOptions = useMemo(
     () => (suggestFor === 'country' ? suggestCountries(countryValue, recentCountries) : []),
     [suggestFor, countryValue, recentCountries],
@@ -135,13 +138,18 @@ export function BeanForm({
     () => (suggestFor === 'variety' ? suggestVarieties(varietyValue, recentVarieties) : []),
     [suggestFor, varietyValue, recentVarieties],
   );
+  const processOptions = useMemo(
+    () => (suggestFor === 'process' ? suggestProcesses(processValue, recentProcesses) : []),
+    [suggestFor, processValue, recentProcesses],
+  );
   const countryReg = register('country');
   const varietyReg = register('variety');
-  function pickSuggestion(name: 'country' | 'variety', value: string) {
+  const processReg = register('process');
+  function pickSuggestion(name: 'country' | 'variety' | 'process', value: string) {
     setValue(name, value, { shouldDirty: true, shouldValidate: true });
     setSuggestFor(null);
   }
-  function leaveSuggest(name: 'country' | 'variety') {
+  function leaveSuggest(name: 'country' | 'variety' | 'process') {
     setTimeout(() => setSuggestFor((f) => (f === name ? null : f)), 120);
   }
 
@@ -370,7 +378,27 @@ export function BeanForm({
           </div>
         </F>
         <F name="process" ocr={ocr} label="精製" htmlFor={id('process')} error={errors.process?.message}>
-          <TextInput id={id('process')} placeholder="Washed" autoComplete="off" {...register('process')} />
+          <div className="relative">
+            <TextInput
+              id={id('process')}
+              placeholder="ウォッシュド"
+              autoComplete="off"
+              aria-autocomplete="list"
+              aria-expanded={processOptions.length > 0}
+              {...processReg}
+              onFocus={() => setSuggestFor('process')}
+              onBlur={(e) => {
+                void processReg.onBlur(e);
+                leaveSuggest('process');
+              }}
+            />
+            <SuggestBox
+              open={suggestFor === 'process'}
+              options={processOptions}
+              label="精製の候補"
+              onPick={(v) => pickSuggestion('process', v)}
+            />
+          </div>
         </F>
       </div>
 

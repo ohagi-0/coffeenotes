@@ -3,6 +3,7 @@
 
 import { COUNTRY_SHELVES, countryDisplayName } from './countries';
 import { VARIETY_SHELVES, varietyDisplayName, varietyKeysOf } from './varieties';
+import { PROCESSES, processDisplayName } from './processes';
 
 export const SUGGEST_LIMIT = 8;
 
@@ -38,6 +39,10 @@ const COUNTRY_ENTRIES: Entry[] = COUNTRY_SHELVES.map((c) => ({
   label: c.ja,
   keys: [c.ja, c.en, ...c.aliases].map(norm),
 }));
+const PROCESS_ENTRIES: Entry[] = PROCESSES.map((p) => ({
+  label: p.name,
+  keys: [p.name, p.en, ...p.aliases].map(norm),
+}));
 const VARIETY_ENTRIES: Entry[] = VARIETY_SHELVES.map((v) => ({
   label: v.name,
   keys: [v.name, v.en ?? '', ...v.aliases].filter(Boolean).map(norm),
@@ -72,4 +77,9 @@ export function suggestVarieties(query: string, recent: readonly string[] = []):
     VARIETY_ENTRIES,
     dedupeRecent(singles, (v) => v),
   );
+}
+
+/** 精製方法の候補。`recent` は自分の豆に出てくる精製方法（生の値）。 */
+export function suggestProcesses(query: string, recent: readonly string[] = []): string[] {
+  return suggest(query, PROCESS_ENTRIES, dedupeRecent(recent, processDisplayName));
 }

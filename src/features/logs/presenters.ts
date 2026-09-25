@@ -1,7 +1,7 @@
 import type { LogListItemProps } from '@/components/logs/log-list-item';
 import { frontImagePath } from '@/features/beans/images';
 import type { LogFilters, LogWithRelations } from './queries';
-import { countryKeyOf } from '@/lib/vocab';
+import { countryKeyOf, processKeyOf } from '@/lib/vocab';
 
 // DB の行（LogWithRelations）を表示用の平らな型に変換する純関数（Issue #17 段階 2）。
 // 画面コンポーネントは DB の形を知らない。
@@ -67,9 +67,13 @@ export function groupByDate(items: readonly TimelineItem[]): TimelineGroup[] {
 
 /**
  * S2 の絞り込みチップの値（URL の ?f=）を useLogs の条件に変換する。
- * all / rating4 / home / shop / country:<国> / process:<精製>
+ * all / rating4 / home / shop / country:<国のキー> / process:<精製のキー>
  */
-export function chipToFilters(value: string, knownCountries: readonly string[] = []): LogFilters {
+export function chipToFilters(
+  value: string,
+  knownCountries: readonly string[] = [],
+  knownProcesses: readonly string[] = [],
+): LogFilters {
   if (value === 'rating4') return { minRating: 4 };
   if (value === 'home') return { place: 'home' };
   if (value === 'shop') return { place: 'shop' };
@@ -78,7 +82,11 @@ export function chipToFilters(value: string, knownCountries: readonly string[] =
     const key = value.slice('country:'.length);
     return { countries: knownCountries.filter((c) => countryKeyOf(c) === key) };
   }
-  if (value.startsWith('process:')) return { process: value.slice('process:'.length) };
+  if (value.startsWith('process:')) {
+    // 精製方法も語彙のキー（washed）。Washed / ウォッシュド をまとめて絞る
+    const key = value.slice('process:'.length);
+    return { processes: knownProcesses.filter((p) => processKeyOf(p) === key) };
+  }
   return {};
 }
 

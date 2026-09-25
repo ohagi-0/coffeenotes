@@ -26,7 +26,7 @@ import {
 import { useStatsRows } from '@/features/stats/queries';
 import { routes } from '@/lib/routes';
 import { BEAN_ROAST_LEVEL_LABELS, type BeanRoastLevel } from '@/lib/schemas/bean';
-import { countryDisplayName } from '@/lib/vocab';
+import { countryDisplayName, processDisplayName } from '@/lib/vocab';
 
 // S8 好みの分析（F-STAT-1〜4）。期間は ?p= に持つ（ADR 0008）。集計は features/stats/aggregate の純粋関数。
 
@@ -85,7 +85,10 @@ function StatsInner() {
     () => topHighRated(filtered, 'country', 5, (v) => countryDisplayName(v) ?? v),
     [filtered],
   );
-  const processes = useMemo(() => topHighRated(filtered, 'process'), [filtered]);
+  const processes = useMemo(
+    () => topHighRated(filtered, 'process', 5, (v) => processDisplayName(v) ?? v),
+    [filtered],
+  );
   const roasts = useMemo(
     () =>
       topHighRated(filtered, 'roast_level', 3, (v) =>
