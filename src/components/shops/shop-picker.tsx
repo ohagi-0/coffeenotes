@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 // 店を選ぶ全画面の検索シート（S3 ③、F-SHOP-2/3/4）。Instagram の場所検索のように、
 // 上に検索欄。並びは 地図で見つかった店（第一候補）→ 近くの店 → 登録済みの店（該当）→ 最後に「自分で登録する」（2026-09-24 に並び替え）。
 // ネイティブの <dialog> で開き、フォーカストラップ・Esc・最前面はブラウザに任せる（nav-drawer と同じ）。
-// 候補検索（/api/geo）は入力補助で、失敗しても「自分で登録する」から店名だけで作れる（ADR 0003）。
+// 候補検索（/api/geo）は入力補助で、失敗しても「自分で登録する」から店名 + 住所で作れる（ADR 0003）。
 
 export type ShopPickerOption = { id: string; name: string; address?: string | null };
 
@@ -327,7 +327,7 @@ export function ShopPicker({
                 {q ? `「${q}」を自分で登録する` : '自分で登録する'}
               </span>
               <span className="text-muted-foreground block text-[11px]">
-                地図で見つからないときに。店名を手で入れて、位置は地図で指定するか、あとから付けられます
+                地図で見つからないときに。店名と住所を入れると登録できます（住所から地図の位置を付けます）
               </span>
             </span>
             <ChevronRight className="text-muted-foreground size-[18px] shrink-0" aria-hidden />

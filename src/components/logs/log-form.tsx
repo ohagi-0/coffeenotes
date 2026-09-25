@@ -9,7 +9,7 @@ import { ChevronDown, ChevronRight, Copy, Plus, Store, X } from 'lucide-react';
 import { AppButton } from '@/components/app-button';
 import { Field, TextInput, Textarea } from '@/components/form/field';
 import { PlaceSegment } from '@/components/logs/place-segment';
-import { ShopCandidateTools, type ShopCandidate } from '@/components/shops/shop-candidate-tools';
+import type { ShopCandidate } from '@/components/shops/shop-candidate-tools';
 import { ShopPicker, type ShopPickerHint } from '@/components/shops/shop-picker';
 import { RatingStars } from '@/components/logs/rating-stars';
 import { RoastForm, type GreenShopOption } from '@/components/roasts/roast-form';
@@ -24,7 +24,8 @@ import { cn } from '@/lib/utils';
 // ③ 店・日付・評価・メモ（S3 ③、F-LOG-2/3/4/8、F-SHOP-2/6、F-TAG-1/2）。
 // 星とメモだけでも保存できる。店は「店で」を押すと開く全画面の検索シート（ShopPicker）で選ぶ:
 // 登録済みの店 / カードのロースター名からの候補 / 近くの店 / 地図で見つかった店、一番上に「自分で登録する」。
-// 「自分で登録する」は店名の手入力 + ShopCandidateTools（地図で指定）。選んだ候補の座標は shopMeta に持って submit に含める。
+// 「自分で登録する」は店名 + 住所の手入力。決定時に住所から位置を引く（F-SHOP-6。地図のピン刺しはスマホでは無理があるので使わない。2026-09-25）。
+// 選んだ候補や住所から引いた座標は shopMeta に持って submit に含める。
 
 export type ShopOption = { id: string; name: string; address?: string | null };
 
@@ -133,13 +134,17 @@ export function LogForm({
   const [pickerQuery, setPickerQuery] = useState('');
   /** 「自分で登録する」を選んで店名を手入力している間 true */
   const [manual, setManual] = useState(false);
-  /** 候補や地図で決めた新規店の付帯情報（既存の店を選んだら null） */
+  /** 候補や住所で決めた新規店の付帯情報（既存の店を選んだら null） */
   const [shopMeta, setShopMeta] = useState<{
     address: string | null;
     lat: number | null;
     lng: number | null;
     externalPlaceId: string | null;
   } | null>(null);
+  /** 「自分で登録する」の住所欄と、決定時の位置の問い合わせ */
+  const [manualAddress, setManualAddress] = useState('');
+  const [manualBusy, setManualBusy] = useState(false);
+  const [manualNote, setManualNote] = useState<string | null>(null);
   const [tagDraft, setTagDraft] = useState('');
   const brewIsOther =
     typeof brewMethod === 'string' &&
@@ -177,12 +182,37 @@ export function LogForm({
     setValue('shop_id', null);
     setValue('shop_name', name, { shouldDirty: true });
     setShopMeta(null);
+    setManualAddress('');
+    setManualNote(null);
     setPickerOpen(false);
     setManual(true);
   }
-  function pickPosition(pos: { lat: number; lng: number }) {
-    setValue('shop_id', null);
-    setShopMeta((m) => ({ address: m?.address ?? null, externalPlaceId: null, lat: pos.lat, lng: pos.lng }));
+  /** 店名 + 住所で決定。住所があれば位置を引く。引けなくても保存はできる（あとから店の編集で直せる） */
+  async function confirmManual() {
+    const address = manualAddress.trim();
+    let meta: NonNullable<typeof shopMeta> = {
+      address: address || null,
+      lat: null,
+      lng: null,
+      externalPlaceId: null,
+    };
+    if (address && shopCandidates?.geocode) {
+      setManualBusy(true);
+      try {
+        const hits = await shopCandidates.geocode(address);
+        const hit = hits[0];
+        if (hit) meta = { ...meta, lat: hit.lat, lng: hit.lng };
+        setManualNote(
+          hit ? null : '住所から位置を特定できませんでした。保存はできます。位置は店の編集で付けられます',
+        );
+      } catch {
+        setManualNote('位置の問い合わせに失敗しました。保存はできます。位置は店の編集で付けられます');
+      } finally {
+        setManualBusy(false);
+      }
+    }
+    setShopMeta(meta);
+    setManual(false);
   }
   function clearShop() {
     setValue('shop_id', null);
@@ -267,8 +297,10 @@ export function LogForm({
                   {shopId
                     ? '登録済みの店'
                     : shopMeta?.lat != null
-                      ? `新しい店として登録します（座標あり${shopMeta.address ? ` · ${shopMeta.address}` : ''}）`
-                      : '新しい店として登録します'}
+                      ? `新しい店として登録します（地図に出ます${shopMeta.address ? ` · ${shopMeta.address}` : ''}）`
+                      : shopMeta?.address
+                        ? `新しい店として登録します（${shopMeta.address}）`
+                        : '新しい店として登録します'}
                 </span>
               </span>
               <ChevronRight className="text-muted-foreground size-[18px]" aria-hidden />
@@ -292,28 +324,28 @@ export function LogForm({
                   })}
                 />
               </div>
-              <ShopCandidateTools
-                query={shopName}
-                geocode={shopCandidates?.geocode}
-                onPick={pickCandidate}
-                onPickPosition={pickPosition}
-                position={
-                  shopMeta?.lat != null && shopMeta.lng != null
-                    ? { lat: shopMeta.lat, lng: shopMeta.lng }
-                    : null
-                }
+              <TextInput
+                id={id('shop-address')}
+                placeholder="住所（例: 東京都台東区蔵前 3-1-2）"
+                autoComplete="off"
+                aria-label="店の住所"
+                value={manualAddress}
+                onChange={(e) => setManualAddress(e.target.value)}
               />
+              <p className="text-muted-foreground text-[11px]">
+                住所を入れると地図に出ます。店名だけでも登録できます
+              </p>
               <div className="flex items-center justify-between">
                 <button type="button" onClick={openPicker} className="text-primary text-[12px] font-medium">
                   検索に戻る
                 </button>
                 <button
                   type="button"
-                  onClick={() => setManual(false)}
-                  disabled={!shopName.trim()}
+                  onClick={() => void confirmManual()}
+                  disabled={!shopName.trim() || manualBusy}
                   className="text-primary text-[12px] font-bold disabled:opacity-50"
                 >
-                  この店名で決定
+                  {manualBusy ? '位置を調べています…' : 'この内容で決定'}
                 </button>
               </div>
             </div>
@@ -335,8 +367,13 @@ export function LogForm({
               <ChevronRight className="text-muted-foreground size-[18px]" aria-hidden />
             </button>
           )}
+          {manualNote && !manual && (
+            <p role="status" className="text-muted-foreground text-xs">
+              {manualNote}
+            </p>
+          )}
           <p className="text-muted-foreground text-xs">
-            店は後から付けることもできます。座標が無くても保存できます。
+            店は後から付けることもできます。店の情報はあとから編集できます。
           </p>
           <ShopPicker
             open={pickerOpen}

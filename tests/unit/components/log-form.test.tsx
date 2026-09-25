@@ -44,13 +44,64 @@ describe('LogForm', () => {
     fireEvent.click(screen.getByRole('button', { name: /「KIELO COFFEE 蔵前」を自分で登録する/ }));
     // 手入力欄に検索語が入った状態で開く
     expect(screen.getByLabelText('店')).toHaveValue('KIELO COFFEE 蔵前');
-    fireEvent.click(screen.getByRole('button', { name: 'この店名で決定' }));
-    expect(screen.getByText('新しい店として登録します')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'この内容で決定' }));
+    await waitFor(() => expect(screen.getByText('新しい店として登録します')).toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: '保存する' }));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     const arg = onSubmit.mock.calls[0][0];
-    expect(arg.shop).toEqual({ id: null, name: 'KIELO COFFEE 蔵前' });
+    expect(arg.shop).toEqual({
+      id: null,
+      name: 'KIELO COFFEE 蔵前',
+      address: null,
+      lat: null,
+      lng: null,
+      externalPlaceId: null,
+    });
     expect(arg.fields.rating).toBeNull();
+  });
+
+  it('「自分で登録する」で住所も入れると、決定時に住所から位置を引いて新しい店に付ける', async () => {
+    const onSubmit = vi.fn();
+    const geocode = vi
+      .fn()
+      .mockResolvedValue([
+        { name: 'x', address: '東京都台東区蔵前3-1-2', lat: 35.7, lng: 139.79, externalPlaceId: null },
+      ]);
+    render(<LogForm beanName="Geisha" onSubmit={onSubmit} shopCandidates={{ nearby: vi.fn(), geocode }} />);
+    fireEvent.click(screen.getByRole('button', { name: /店を選ぶ/ }));
+    fireEvent.click(screen.getByRole('button', { name: /自分で登録する/ }));
+    fireEvent.change(screen.getByLabelText('店'), { target: { value: 'ぽぽろ' } });
+    fireEvent.change(screen.getByLabelText('店の住所'), { target: { value: '東京都台東区蔵前 3-1-2' } });
+    fireEvent.click(screen.getByRole('button', { name: 'この内容で決定' }));
+    await waitFor(() =>
+      expect(screen.getByText(/地図に出ます · 東京都台東区蔵前 3-1-2/)).toBeInTheDocument(),
+    );
+    expect(geocode).toHaveBeenCalledWith('東京都台東区蔵前 3-1-2');
+    fireEvent.click(screen.getByRole('button', { name: '保存する' }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0].shop).toEqual({
+      id: null,
+      name: 'ぽぽろ',
+      address: '東京都台東区蔵前 3-1-2',
+      lat: 35.7,
+      lng: 139.79,
+      externalPlaceId: null,
+    });
+  });
+
+  it('住所から位置が引けなくても、案内を出して保存はできる', async () => {
+    const onSubmit = vi.fn();
+    const geocode = vi.fn().mockResolvedValue([]);
+    render(<LogForm beanName="Geisha" onSubmit={onSubmit} shopCandidates={{ nearby: vi.fn(), geocode }} />);
+    fireEvent.click(screen.getByRole('button', { name: /店を選ぶ/ }));
+    fireEvent.click(screen.getByRole('button', { name: /自分で登録する/ }));
+    fireEvent.change(screen.getByLabelText('店'), { target: { value: 'ぽぽろ' } });
+    fireEvent.change(screen.getByLabelText('店の住所'), { target: { value: 'どこか' } });
+    fireEvent.click(screen.getByRole('button', { name: 'この内容で決定' }));
+    await waitFor(() =>
+      expect(screen.getByRole('status')).toHaveTextContent('住所から位置を特定できませんでした'),
+    );
+    expect(screen.getByText('新しい店として登録します（どこか）')).toBeInTheDocument();
   });
 
   it('「店で」を押すと検索シートが開き、登録済みの店を選ぶと id 付き。選び直しもできる', async () => {

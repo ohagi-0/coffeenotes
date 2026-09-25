@@ -1,9 +1,11 @@
 'use client';
 
 import { Suspense, useMemo } from 'react';
+import type { Route } from 'next';
 import Link from 'next/link';
 import { ExternalLink } from 'lucide-react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { toast } from 'sonner';
 import { AppButton } from '@/components/app-button';
 import { BeanSpecGrid } from '@/components/beans/bean-spec-grid';
 import { ErrorCallout } from '@/components/error-callout';
@@ -11,6 +13,9 @@ import { FullScreenLoading } from '@/components/full-screen-loading';
 import { LogTimeline } from '@/components/logs/log-timeline';
 import { RatingStars } from '@/components/logs/rating-stars';
 import { ADD_LOG_HREF } from '@/components/nav';
+import { ShopForm } from '@/components/shops/shop-form';
+import { geocodePlace, searchNearbyPlaces } from '@/features/geo/search';
+import { useUpdateShop } from '@/features/shops/mutations';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toTimelineItem } from '@/features/logs/presenters';
 import { useLogsByShop, useRatingStats } from '@/features/logs/queries';
@@ -19,10 +24,15 @@ import { useShop } from '@/features/shops/queries';
 import { idFromSearchParams, routes } from '@/lib/routes';
 
 // 店詳細（S6 の行から。F-MAP-2）。店情報 + その店の記録一覧。URL は /shops/detail?id=（ADR 0008）。
+// ?edit=1 で同じページ内に店フォームを出し、店名・住所・種別・位置をあとから直せる（F-SHOP-1。2026-09-25）。
 
 function ShopDetailInner() {
-  const id = idFromSearchParams(useSearchParams());
+  const router = useRouter();
+  const params = useSearchParams();
+  const id = idFromSearchParams(params);
+  const editing = params.get('edit') === '1';
   const shop = useShop(id);
+  const updateShop = useUpdateShop();
   const logs = useLogsByShop(id);
   const stats = useRatingStats();
   const stat = id ? stats.data?.byShop.get(id) : undefined;
@@ -36,6 +46,11 @@ function ShopDetailInner() {
         </Link>{' '}
         › 店
       </span>
+      {id && !editing && (
+        <a href={`${routes.shop(id)}&edit=1`} className="text-primary text-[13px] font-medium">
+          編集
+        </a>
+      )}
     </div>
   );
 
@@ -76,6 +91,56 @@ function ShopDetailInner() {
   }
 
   const s = shop.data;
+
+  if (editing) {
+    return (
+      <div className="pb-2">
+        {crumb}
+        <div className="flex items-center justify-between pb-3">
+          <h1 className="text-2xl font-bold">店を編集</h1>
+          <a href={routes.shop(s.id)} className="text-primary text-[13px] font-medium">
+            やめる
+          </a>
+        </div>
+        {updateShop.error && (
+          <ErrorCallout
+            title="保存できませんでした"
+            what={updateShop.error.message}
+            next="入力は残っています。もう一度お試しください。"
+            className="mb-4"
+          />
+        )}
+        <ShopForm
+          defaultValues={{
+            name: s.name,
+            kind: (s.kind as 'cafe' | 'roaster' | 'green_bean_shop' | 'other' | null) ?? 'cafe',
+            address: s.address ?? '',
+            lat: s.lat ?? '',
+            lng: s.lng ?? '',
+            external_place_id: s.external_place_id ?? '',
+          }}
+          candidates={{
+            nearby: (pos) => searchNearbyPlaces(pos),
+            geocode: (query, near) => geocodePlace({ query, near }),
+          }}
+          submitting={updateShop.isPending}
+          submitLabel="保存する"
+          onSubmit={(values) =>
+            updateShop.mutate(
+              { id: s.id, ...values },
+              {
+                onSuccess: () => {
+                  toast.success('保存しました');
+                  router.replace(routes.shop(s.id) as Route);
+                },
+              },
+            )
+          }
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="pb-2">
       {crumb}
@@ -115,7 +180,7 @@ function ShopDetailInner() {
       )}
       {(s.lat === null || s.lng === null) && (
         <p className="text-muted-foreground mt-2 text-xs">
-          座標が無いので地図には出ません。編集で「店名で検索」か「地図で指定」を使うと付けられます。
+          地図には出ていません。「編集」で住所を入れて「店名で検索」を押すと位置が付きます。
         </p>
       )}
       <h2 className="mt-6 mb-1 text-[13px] font-bold">この店の記録</h2>
