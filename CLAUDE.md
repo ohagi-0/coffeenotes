@@ -72,9 +72,9 @@ REQUIREMENTS.md §13.2 の N-1〜N-5。要点:
 │   │   ├── (auth)/login/
 │   │   ├── (legal)/           # /privacy /terms（ログイン不要。Google 同意画面・App Store 申請の参照先）
 │   │   ├── (app)/             # ログイン後。layout に認証ガード + ナビ（Web はサイトヘッダー + ドロワー、PC はサイドバー、下タブは iOS 版のみ）
-│   │   │   ├── page.tsx       # ホーム（タイムライン）
+│   │   │   ├── page.tsx       # ホーム = 豆のコレクション（棚。S10。2026-09-24 にホームへ）
 │   │   │   ├── logs/new/      # 記録作成ウィザード
-│   │   │   ├── logs/              # 記録詳細・編集 `/logs?id=…`（ADR 0008。[id] は使わない）
+│   │   │   ├── logs/              # id なしは入力記録一覧 `/logs?f=…&q=…`、id ありは記録詳細・編集 `/logs?id=…`（ADR 0008。[id] は使わない）
 │   │   │   ├── beans/             # 豆詳細 `/beans?id=…`
 │   │   │   ├── shops/             # 記録したお店 = 地図 + 一覧（`/shops?shop=…&f=…`。Leaflet は dynamic import）。詳細は shops/detail/ `/shops/detail?id=…`
 │   │   │   ├── map/               # 旧地図。`/shops` へ転送するだけ（2026-09-24 に統合）
@@ -194,8 +194,9 @@ export interface OcrProvider {
 ### 5.4 テスト
 
 - `src/lib/` 配下の純粋ロジック（Zod スキーマ、OCR 出力の正規化、統計集計）は Vitest で単体テスト必須。
-- E2E は「ログイン → 手入力で記録作成 → タイムラインに表示」の 1 本を最低限維持する。
+- E2E は「ログイン → 手入力で記録作成 → 入力記録一覧に表示」の 1 本を最低限維持する（`tests/e2e/create-log.spec.ts`）。
 - OCR プロバイダのテストは実 API を叩かず、`tests/fixtures/cards/` のサンプル画像と録画済みレスポンスを使う。
+- Supabase を触るロジックは、`SupabaseClient` を引数に取る純粋な関数（`features/logs/create-log.ts`、`delete-log.ts`、`features/account/` など）に切り出し、`tests/unit/features/fake-client.ts` の偽クライアント（insert / select / update / delete の結果を順に消費し、呼び出し順を記録する）で検証する。React Query のフック（`useXxx`）は薄い包み紙にして直接テストしない。
 
 ## 6. 開発コマンド
 
