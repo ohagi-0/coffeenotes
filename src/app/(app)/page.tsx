@@ -118,8 +118,8 @@ function CollectionInner() {
     <div className="pb-2">
       <div className="pt-5 pb-4">
         <h1 className="text-2xl font-bold">豆のコレクション</h1>
-        {/* これまでに記録した杯数を大きく（2026-09-25）。0 杯のときは下の空状態に任せる */}
-        {logs.data && logs.data.length > 0 && (
+        {/* これまでに記録した杯数を大きく（2026-09-25）。0 杯でも「0 杯」と出す */}
+        {logs.data && (
           <p
             className="mt-2.5 flex items-baseline gap-1.5"
             aria-label={`これまでに ${logs.data.length} 杯を記録`}
@@ -132,7 +132,7 @@ function CollectionInner() {
           </p>
         )}
         <p className="text-muted-foreground font-num mt-1.5 text-xs">
-          {logs.data && logs.data.length > 0
+          {logs.data
             ? byCountry
               ? `${items.length} 種類の豆 · ${byCountry.total} の${view === 'variety' ? '品種' : '産地'}のうち ${byCountry.visited} を制覇`
               : `${items.length} 種類の豆`
