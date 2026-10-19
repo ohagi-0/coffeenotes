@@ -1,12 +1,16 @@
 // Service Worker（F-MISC-1、serwist）。オフライン時は「閲覧のみ」を実現する。
 // - アプリの静的資産はプリキャッシュ
 // - Supabase REST の GET は NetworkFirst（オンラインなら最新、オフラインなら最後に見た内容）
-// - カード画像の署名付き URL と地図タイルは StaleWhileRevalidate
+// - カード画像の署名付き URL と OSM の地図タイルは StaleWhileRevalidate
 // 書き込み（POST/PATCH/DELETE、/api/*）はキャッシュしない。
+// Google の地図・API（maps.googleapis.com / maps.gstatic.com / places.googleapis.com など）は **キャッシュしない**
+// （Google の規約で内容を手元に残せない。ADR 0011）。defaultCache の「別オリジンは NetworkFirst でキャッシュ」より前で NetworkOnly にする。
+// OSM のタイルは、OSM の地図がまだ使われている間だけ残す（Google への切り替え完了後に消す。#40）。
 import { defaultCache } from '@serwist/next/worker';
 import {
   ExpirationPlugin,
   NetworkFirst,
+  NetworkOnly,
   Serwist,
   StaleWhileRevalidate,
   type PrecacheEntry,
@@ -53,6 +57,10 @@ const serwist = new Serwist({
         cacheName: 'osm-tiles',
         plugins: [new ExpirationPlugin({ maxEntries: 400, maxAgeSeconds: 7 * DAY })],
       }),
+    },
+    {
+      matcher: ({ url }) => /(^|\.)(googleapis|gstatic|google|googleusercontent)\.com$/.test(url.hostname),
+      handler: new NetworkOnly(),
     },
     ...defaultCache,
   ],

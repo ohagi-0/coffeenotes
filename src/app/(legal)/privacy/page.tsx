@@ -43,6 +43,11 @@ export default function PrivacyPage() {
           API 経由で送られたデータをモデルの学習に使用しません）
         </li>
         <li>Google（Google ログインを使う場合）</li>
+        <li>
+          Google Maps
+          Platform（店の検索と地図の表示。店を探すときの検索語や現在地の位置情報、地図を表示するときの閲覧範囲が
+          Google に送られます）
+        </li>
       </ul>
       <p>これら以外の第三者に、あなたの情報を提供・販売することはありません。</p>
 

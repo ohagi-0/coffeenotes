@@ -19,6 +19,7 @@ export function SiteFooter() {
       </div>
       <div className="mt-1.5 flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
         <span>© 2026 Coffeenotes</span>
+        <span>地図データ © OpenStreetMap contributors</span>
         <Link href={routes.privacy} className="text-foreground">
           プライバシー
         </Link>

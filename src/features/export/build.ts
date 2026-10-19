@@ -1,4 +1,6 @@
 // エクスポート（F-MISC-2）。記録を CSV / JSON の文字列にする純粋関数。ダウンロードは platform/download.ts。
+// Google の店（place_provider = 'google'）は、店名と Google マップへのリンク（place_id）だけを出し、住所・座標は出さない
+// （Google から取った内容は place_id 以外を手元の写しとして配らない。ADR 0011）。
 import type { LogWithRelations } from '@/features/logs/queries';
 
 export const EXPORT_COLUMNS = [
@@ -13,6 +15,7 @@ export const EXPORT_COLUMNS = [
   'variety',
   'process',
   'shop',
+  'shop_map_url',
   'brew_method',
   'grinder',
   'grind_setting',
@@ -37,6 +40,18 @@ export function csvCell(v: Cell): string {
   return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
+/** Google の店だけ、place_id から Google マップのリンクを作る。それ以外は null */
+export function shopMapUrl(shop: LogWithRelations['shop']): string | null {
+  if (shop?.place_provider !== 'google' || !shop.external_place_id) return null;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shop.name)}&query_place_id=${encodeURIComponent(shop.external_place_id)}`;
+}
+
+/** JSON 用: Google の店は住所を落とし、リンクを足す。手入力・OSM の店はそのまま */
+function exportShop(shop: LogWithRelations['shop']) {
+  if (!shop || shop.place_provider !== 'google') return shop;
+  return { ...shop, address: null, shop_map_url: shopMapUrl(shop) };
+}
+
 export function logToExportRow(l: LogWithRelations): Record<(typeof EXPORT_COLUMNS)[number], Cell> {
   return {
     logged_on: l.logged_on,
@@ -50,6 +65,7 @@ export function logToExportRow(l: LogWithRelations): Record<(typeof EXPORT_COLUM
     variety: l.bean.variety,
     process: l.bean.process,
     shop: l.shop?.name ?? null,
+    shop_map_url: shopMapUrl(l.shop),
     brew_method: l.brew_method,
     grinder: l.grinder,
     grind_setting: l.grind_setting,
@@ -81,7 +97,12 @@ export function buildCsv(logs: readonly LogWithRelations[]): string {
 
 export function buildJson(logs: readonly LogWithRelations[]): string {
   return JSON.stringify(
-    { exportedAt: new Date().toISOString(), app: 'coffeenotes', version: 1, logs },
+    {
+      exportedAt: new Date().toISOString(),
+      app: 'coffeenotes',
+      version: 1,
+      logs: logs.map((l) => ({ ...l, shop: exportShop(l.shop) })),
+    },
     null,
     2,
   );

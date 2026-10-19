@@ -68,3 +68,51 @@ describe('qrTextToUrl', () => {
     expect(qrTextToUrl(null)).toBeNull();
   });
 });
+
+describe('Google の店のエクスポート（ADR 0011）', () => {
+  const withShop = (shop: unknown) => ({ ...log, shop }) as unknown as LogWithRelations;
+  const google = {
+    id: 's1',
+    name: 'FUGLEN TOKYO',
+    kind: 'cafe',
+    address: '渋谷区富ケ谷１丁目１６−１１',
+    place_provider: 'google',
+    external_place_id: 'ChIJrWB6',
+  };
+  const col = (csv: string, name: string) => {
+    const head = csv.replace('\uFEFF', '').split('\r\n');
+    return head[1]!.split(',')[head[0]!.split(',').indexOf(name)];
+  };
+
+  it('CSV: Google の店は店名と shop_map_url だけ。住所・座標の列は無い', () => {
+    const csv = buildCsv([withShop(google)]);
+    expect(csv).not.toContain('渋谷区富ケ谷');
+    expect(csv.split('\r\n')[0]).not.toMatch(/address|lat|lng/);
+    expect(col(csv, 'shop')).toBe('FUGLEN TOKYO');
+    expect(col(csv, 'shop_map_url')).toBe(
+      'https://www.google.com/maps/search/?api=1&query=FUGLEN%20TOKYO&query_place_id=ChIJrWB6',
+    );
+  });
+
+  it('CSV: 手入力・OSM の店・店なしは shop_map_url が空', () => {
+    for (const shop of [
+      { ...google, place_provider: null, external_place_id: null },
+      { ...google, place_provider: 'osm', external_place_id: 'node/1' },
+      null,
+    ]) {
+      expect(col(buildCsv([withShop(shop)]), 'shop_map_url')).toBe('');
+    }
+    expect(col(buildCsv([withShop({ ...google, place_provider: null })]), 'shop')).toBe('FUGLEN TOKYO');
+  });
+
+  it('JSON: Google の店は住所を落としてリンクを足す。手入力の店は従来どおり住所を残す', () => {
+    const g = JSON.parse(buildJson([withShop(google)])).logs[0].shop;
+    expect(g.address).toBeNull();
+    expect(g.shop_map_url).toContain('query_place_id=ChIJrWB6');
+    const manual = JSON.parse(
+      buildJson([withShop({ ...google, place_provider: null, external_place_id: null })]),
+    ).logs[0].shop;
+    expect(manual.address).toBe('渋谷区富ケ谷１丁目１６−１１');
+    expect(manual).not.toHaveProperty('shop_map_url');
+  });
+});
