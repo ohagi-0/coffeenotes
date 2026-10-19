@@ -42,24 +42,40 @@
 .b1 .ft{margin-top:auto;padding-top:6px;border-top:1px solid rgba(0,0,0,.12);display:flex;justify-content:space-between;align-items:baseline;font:600 8.5px var(--f-num),sans-serif;color:#7A6A58}
 .b1 .ft b{color:#2A2118;font-weight:700}
 
-/* ---------- 案 2 手書きラベル ---------- */
-.hand[data-latin="caveat"]{--hand-latin:"Caveat",cursive;--hand-size:24px}
-.hand[data-latin="kalam"]{--hand-latin:"Kalam",cursive;--hand-size:17px}
-.hand[data-latin="apple"]{--hand-latin:"Homemade Apple",cursive;--hand-size:13px}
+/* ---------- 案 2 手書きラベル（改）: スタンドパックの袋 ---------- */
+.hand[data-latin="caveat"]{--hand-latin:"Caveat",cursive;--hand-size:22px;--hand-w:700}
+.hand[data-latin="kalam"]{--hand-latin:"Kalam",cursive;--hand-size:16px;--hand-w:700}
+.hand[data-latin="apple"]{--hand-latin:"Homemade Apple",cursive;--hand-size:12.5px;--hand-w:400}
 .hand[data-jp="klee"]{--hand-jp:"Klee One",cursive}
 .hand[data-jp="yomogi"]{--hand-jp:"Yomogi",cursive}
 .hand[data-jp="kurenaido"]{--hand-jp:"Zen Kurenaido",cursive}
-.b2{position:relative;display:flex;flex-direction:column;border-radius:7px 7px 12px 12px;padding:0 7% 8%;background:linear-gradient(170deg,#CDB08A 0%,#B28D63 55%,#9C7A56 100%);box-shadow:0 14px 22px -14px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.08)}
-.b2 .fold{margin:0 -7% 10%;height:14px;border-radius:6px 6px 0 0;background:#B48D62;box-shadow:0 3px 4px rgba(0,0,0,.4)}
-.b2 .lab{position:relative;flex:1;min-width:0;display:flex;flex-direction:column;background:#F8F3EA;color:#2B2118;padding:14px 9px 8px;min-height:128px;transform:rotate(-1.2deg);box-shadow:0 2px 3px rgba(0,0,0,.25)}
-.b2 .tape{position:absolute;left:50%;top:-7px;width:46px;height:13px;transform:translateX(-50%) rotate(2deg);background:rgba(240,228,200,.85);box-shadow:0 1px 1px rgba(0,0,0,.15)}
-.b2 .ro{font:500 8px/1 var(--f-num),sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#8A7A66;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.b2 .nm{font-family:var(--hand-latin);font-weight:700;font-size:var(--hand-size);line-height:1.05;margin-top:6px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;color:#1F1812}
-.b2 .og{font-family:var(--hand-jp);font-size:11.5px;color:#4A3C30;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.b2 .ft{margin-top:auto;padding-top:8px;display:flex;justify-content:space-between;align-items:baseline;gap:6px;white-space:nowrap;font-family:var(--hand-jp);font-size:11px;color:#6B5B4B}
-.b2 .rt{font-family:var(--hand-latin);font-size:calc(var(--hand-size) * .85);color:#B8412E;line-height:1}
-.b2 .rt.none{color:#B9AE9C;font-size:12px}
-
+.hand .shelf{gap:18px;padding:0 10px 16px}
+.b2{position:relative;display:flex;flex-direction:column;aspect-ratio:3/4.1;border-radius:6px 6px 16px 16px;
+  padding:24px 9% 30px;
+  background:
+    linear-gradient(90deg,rgba(0,0,0,.28) 0,rgba(0,0,0,.06) 9%,rgba(255,255,255,.06) 16%,rgba(255,255,255,0) 30%,rgba(255,255,255,0) 70%,rgba(255,255,255,.05) 84%,rgba(0,0,0,.06) 91%,rgba(0,0,0,.32) 100%),
+    repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 1px,transparent 1px 5px),
+    linear-gradient(175deg,#C9AA82 0%,#B5906A 45%,#9E7A57 100%);
+  box-shadow:0 16px 24px -14px rgba(0,0,0,.95),inset 0 -10px 14px -10px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.14)}
+/* 上部: 折り返しとティンタイ（針金）、片面バルブ */
+.b2 .top{position:absolute;left:0;right:0;top:0;height:17px;border-radius:6px 6px 0 0;background:linear-gradient(180deg,#B8936A,#A98461);box-shadow:0 2px 3px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.14)}
+.b2 .top::before{content:"";position:absolute;left:18%;right:18%;top:7px;height:2px;border-radius:1px;background:#5E4B3A;box-shadow:0 1px 0 rgba(255,255,255,.18)}
+.b2 .top::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;background:rgba(0,0,0,.35)}
+.b2 .valve{position:absolute;right:13%;top:30px;width:9px;height:9px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#D9C4A8,#8F6E4C 70%);box-shadow:inset 0 0 0 1px rgba(0,0,0,.35),0 1px 1px rgba(255,255,255,.15)}
+/* 底: 立つ袋の底面 */
+.b2::after{content:"";position:absolute;left:6%;right:6%;bottom:0;height:10px;border-radius:0 0 14px 14px;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.38));pointer-events:none}
+/* ラベル */
+.b2 .lab{position:relative;flex:1;display:flex;flex-direction:column;min-width:0;margin-top:22px;background:#F8F3EA;color:#2B2118;padding:13px 9px 9px;transform:rotate(-1.4deg);box-shadow:0 2px 3px rgba(0,0,0,.28),inset 0 0 0 1px rgba(0,0,0,.05)}
+.b2 .tape{position:absolute;left:50%;top:-7px;width:44px;height:12px;transform:translateX(-50%) rotate(2deg);background:rgba(236,224,196,.88);box-shadow:0 1px 1px rgba(0,0,0,.15)}
+.b2 .ro{font:500 7.5px/1.35 var(--f-num),sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#8A7A66;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.b2 .nm{font-family:var(--hand-latin);font-weight:var(--hand-w);font-size:var(--hand-size);line-height:1.05;margin-top:6px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;color:#1F1812;overflow-wrap:anywhere}
+.b2 .og{font-family:var(--hand-jp);font-size:11px;line-height:1.35;color:#4A3C30;margin-top:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.b2 .ft{margin-top:auto;padding-top:6px;display:flex;justify-content:space-between;align-items:flex-end;gap:6px}
+.b2 .dy{font:500 8px/1 var(--f-num),sans-serif;letter-spacing:.06em;color:#9A8A76;padding-bottom:3px}
+.b2 .rt{font-family:var(--hand-latin);font-weight:var(--hand-w);font-size:calc(var(--hand-size) * .9);line-height:1;color:#B8412E;white-space:nowrap;transform:rotate(-4deg)}
+.b2 .rt.none{color:#B9AE9C;font-size:11px}
+/* 杯数: 2 杯以上のときだけ、袋の下に小さな押印 */
+.b2 .cups{position:absolute;left:0;right:0;bottom:11px;text-align:center;font:600 8.5px/1 var(--f-num),sans-serif;letter-spacing:.14em;color:rgba(40,28,18,.72);white-space:nowrap}
 /* ---------- 案 3 タグ札（タイプライター） ---------- */
 .b3{position:relative;display:flex;flex-direction:column;min-height:168px;border-radius:7px 7px 12px 12px;background:linear-gradient(170deg,#2E261F 0%,#241D18 60%,#1E1813 100%);box-shadow:0 14px 22px -14px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.06);padding:14px 10px 10px}
 .b3 .fold{position:absolute;left:0;right:0;top:0;height:12px;border-radius:6px 6px 0 0;background:#352B23;box-shadow:0 3px 4px rgba(0,0,0,.5)}
@@ -141,29 +157,25 @@
     </div>
 
     <!-- 案 2 -->
-    <div class="cmp-col hand" id="hand" data-latin="caveat" data-jp="klee">
-      <div class="cmp-lab">案 2 · 手書きラベル</div>
+    <div class="cmp-col hand" id="hand" data-latin="kalam" data-jp="klee">
+      <div class="cmp-lab">案 2 · 手書きラベル（改）</div>
       <div class="ph"><div class="a-status"></div><div class="a-body">
         <div class="sec"><span class="n">コロンビア</span><span class="en">COLOMBIA</span><span class="r">2 袋</span></div>
         <div class="shelf">
-          <a class="b2" href="#compare"><span class="fold"></span>
-            <span class="lab"><span class="tape"></span><span class="ro">TAOCA COFFEE 南青山店</span><span class="nm">Colombia Las Flores Tabi Lot 2025</span><span class="og">コロンビア・サーマルショック</span><span class="ft"><span>9/27 · 1杯</span><span class="rt">★4.5</span></span></span></a>
-          <a class="b2" href="#compare"><span class="fold"></span>
-            <span class="lab"><span class="tape"></span><span class="ro">KIELO COFFEE</span><span class="nm">Lusitania Lime Geisha</span><span class="og">コロンビア・ライムインフューズド</span><span class="ft"><span>9/25 · 1杯</span><span class="rt">★5.0</span></span></span></a>
+          <a class="b2" href="#compare"><span class="top"></span><span class="valve"></span><span class="lab"><span class="tape"></span><span class="ro">TAOCA COFFEE 南青山店</span><span class="nm">Colombia Las Flores Tabi Lot 2025</span><span class="og">コロンビア・サーマルショック</span><span class="ft"><span class="dy">2026.09.27</span><span class="rt">★ 4.5</span></span></span></a>
+          <a class="b2" href="#compare"><span class="top"></span><span class="valve"></span><span class="lab"><span class="tape"></span><span class="ro">KIELO COFFEE</span><span class="nm">Lusitania Lime Geisha</span><span class="og">コロンビア・ライムインフューズド</span><span class="ft"><span class="dy">2026.09.25</span><span class="rt">★ 5.0</span></span></span></a>
         </div>
         <div class="sec"><span class="n">エチオピア</span><span class="en">ETHIOPIA</span><span class="r">2 袋</span></div>
         <div class="shelf">
-          <a class="b2" href="#compare"><span class="fold"></span>
-            <span class="lab"><span class="tape"></span><span class="ro">THE WORD COFFEE</span><span class="nm">Bench Maji Gesha Natural</span><span class="og">エチオピア・ナチュラル</span><span class="ft"><span>10/18 · 1杯</span><span class="rt">★5.0</span></span></span></a>
-          <a class="b2" href="#compare"><span class="fold"></span>
-            <span class="lab"><span class="tape"></span><span class="ro">Nagare Roastery</span><span class="nm">Ethiopia Guji Anaerobic</span><span class="og">エチオピア・ナチュラル</span><span class="ft"><span>10/17 · 4杯</span><span class="rt">★4.0</span></span></span></a>
+          <a class="b2" href="#compare"><span class="top"></span><span class="valve"></span><span class="lab"><span class="tape"></span><span class="ro">THE WORD COFFEE</span><span class="nm">Bench Maji Gesha Natural</span><span class="og">エチオピア・ナチュラル</span><span class="ft"><span class="dy">2026.10.18</span><span class="rt">★ 5.0</span></span></span></a>
+          <a class="b2" href="#compare"><span class="top"></span><span class="valve"></span><span class="lab"><span class="tape"></span><span class="ro">Nagare Roastery</span><span class="nm">Ethiopia Guji Anaerobic</span><span class="og">エチオピア・ナチュラル</span><span class="ft"><span class="dy">2026.10.17</span><span class="rt">★ 4.0</span></span></span><span class="cups">4 杯</span></a>
         </div>
         <div class="sec"><span class="n">インドネシア</span><span class="en">INDONESIA</span><span class="r">アジア</span></div>
         <div class="shelf"><div class="empty">まだ飲んでいません</div></div>
       </div></div>
       <div class="sw" role="group" aria-label="英字の手書き書体">
-        <button type="button" data-latin="caveat" aria-pressed="true">Caveat</button>
-        <button type="button" data-latin="kalam" aria-pressed="false">Kalam</button>
+        <button type="button" data-latin="caveat" aria-pressed="false">Caveat</button>
+        <button type="button" data-latin="kalam" aria-pressed="true">Kalam</button>
         <button type="button" data-latin="apple" aria-pressed="false">Homemade Apple</button>
       </div>
       <div class="sw" role="group" aria-label="日本語の手書き書体">
@@ -171,7 +183,7 @@
         <button type="button" data-jp="yomogi" aria-pressed="false">Yomogi</button>
         <button type="button" data-jp="kurenaido" aria-pressed="false">Zen Kurenaido</button>
       </div>
-      <p class="cmp-note">焙煎所が手で書いた袋。ラベルは少し傾け、上にマスキングテープ。豆名は手書き書体、星はペンで書いた朱。上のボタンで英字・日本語の手書き書体を切り替えて比べる。</p>
+      <p class="cmp-note">縦長のスタンドパック。上に折り返しと針金（ティンタイ）、右上に片面バルブ、左右に側面の折り（ガゼット）、底に影。ラベルは手で貼った傾きとマスキングテープ。文字は省略せず、ロースター 2 行・豆名 3 行・産地 2 行まで折り返す。ラベル下段は「日付」と、ペンで書いた朱の星だけ。杯数は 2 杯以上のときだけ、袋の下に小さく押印する。</p>
     </div>
 
     <!-- 案 3 -->
@@ -204,13 +216,13 @@
       <div class="ph"><div class="a-status"></div><div class="a-body">
         <div class="sec"><span class="n">コロンビア</span><span class="en">COLOMBIA</span><span class="r">2 袋</span></div>
         <div class="shelf">
-          <a class="b4" href="#compare"><span class="fold"></span><span class="ro">TAOCA COFFEE 南青山店</span><span class="nm">Colombia Las Flores Tabi Lot 2025</span><span class="og">コロンビア · Thermal shock</span><span class="ft"><span>09.27 · 1 杯</span><span class="rt">★ 4.5</span></span></a>
-          <a class="b4" href="#compare"><span class="fold"></span><span class="ro">KIELO COFFEE</span><span class="nm">Lusitania Lime Geisha</span><span class="og">コロンビア · Lime infused</span><span class="ft"><span>09.25 · 1 杯</span><span class="rt">★ 5.0</span></span></a>
+          <a class="b4" href="#compare"><span class="fold"></span><span class="ro">TAOCA COFFEE 南青山店</span><span class="nm">Colombia Las Flores Tabi Lot 2025</span><span class="og">コロンビア · Thermal shock</span><span class="ft"><span>09.27 · 1 杯</span><span class="rt">★  4.5</span></span></a>
+          <a class="b4" href="#compare"><span class="fold"></span><span class="ro">KIELO COFFEE</span><span class="nm">Lusitania Lime Geisha</span><span class="og">コロンビア · Lime infused</span><span class="ft"><span>09.25 · 1 杯</span><span class="rt">★  5.0</span></span></a>
         </div>
         <div class="sec"><span class="n">エチオピア</span><span class="en">ETHIOPIA</span><span class="r">2 袋</span></div>
         <div class="shelf">
-          <a class="b4" href="#compare"><span class="fold"></span><span class="ro">THE WORD COFFEE</span><span class="nm">Bench Maji Gesha Natural</span><span class="og">エチオピア · Natural</span><span class="ft"><span>10.18 · 1 杯</span><span class="rt">★ 5.0</span></span></a>
-          <a class="b4" href="#compare"><span class="fold"></span><span class="ro">Nagare Roastery</span><span class="nm">Ethiopia Guji Anaerobic</span><span class="og">エチオピア · Natural</span><span class="ft"><span>10.17 · 4 杯</span><span class="rt">★ 4.0</span></span></a>
+          <a class="b4" href="#compare"><span class="fold"></span><span class="ro">THE WORD COFFEE</span><span class="nm">Bench Maji Gesha Natural</span><span class="og">エチオピア · Natural</span><span class="ft"><span>10.18 · 1 杯</span><span class="rt">★  5.0</span></span></a>
+          <a class="b4" href="#compare"><span class="fold"></span><span class="ro">Nagare Roastery</span><span class="nm">Ethiopia Guji Anaerobic</span><span class="og">エチオピア · Natural</span><span class="ft"><span>10.17 · 4 杯</span><span class="rt">★  4.0</span></span></a>
         </div>
         <div class="sec"><span class="n">インドネシア</span><span class="en">INDONESIA</span><span class="r">アジア</span></div>
         <div class="shelf"><div class="empty">まだ飲んでいません</div></div>
