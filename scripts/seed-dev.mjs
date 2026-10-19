@@ -80,8 +80,8 @@ function check(label, { error }) {
 // ロースターは共有マスタ。既にあれば再利用し、重複登録しない。
 // 自家焙煎の豆にもロースターが要る（F-BEAN-2 / F-BEAN-15）ため「自家焙煎」を 1 件置く。
 const ROASTERS = [
-  { name: 'KIELO COFFEE', website: 'https://kielocoffee.com' },
-  { name: 'GLITCH COFFEE&ROASTERS', website: 'https://glitchcoffee.com' },
+  { name: 'ハナレ珈琲焙煎所', website: null },
+  { name: 'アオゾラ珈琲焙煎所', website: null },
   { name: '自家焙煎', website: null },
 ];
 
@@ -127,13 +127,13 @@ const SHOPS = [
 const BEANS = [
   {
     key: 'bean:lusitania',
-    name: 'Lusitania Lime Geisha',
-    roaster: 'KIELO COFFEE',
+    name: 'El Mirador Geisha Natural',
+    roaster: 'ハナレ珈琲焙煎所',
     source: 'purchased',
     country: 'Colombia',
-    region: 'Caicedonia, Valle del Cauca',
+    region: 'Huila',
     variety: 'Geisha',
-    process: 'Lime infused',
+    process: 'Natural',
     altitude_m: 1650,
     flavor_notes: ['Lime', 'Bergamot', 'Laurier'],
     description: 'ライムを思わせるシトラスの香りと、ベルガモットのような華やかさ。後味に月桂樹のハーブ感。',
@@ -147,7 +147,7 @@ const BEANS = [
   {
     key: 'bean:hambela',
     name: 'Hambela Buku Natural',
-    roaster: 'GLITCH COFFEE&ROASTERS',
+    roaster: 'アオゾラ珈琲焙煎所',
     source: 'purchased',
     country: 'Ethiopia',
     region: 'Guji, Hambela',
@@ -166,7 +166,7 @@ const BEANS = [
   {
     key: 'bean:elpuente',
     name: 'Finca El Puente Washed',
-    roaster: 'KIELO COFFEE',
+    roaster: 'ハナレ珈琲焙煎所',
     source: 'purchased',
     country: 'Honduras',
     region: 'Marcala, La Paz',
@@ -185,7 +185,7 @@ const BEANS = [
   {
     key: 'bean:kiriga',
     name: 'Kiriga AA',
-    roaster: 'GLITCH COFFEE&ROASTERS',
+    roaster: 'アオゾラ珈琲焙煎所',
     source: 'purchased',
     country: 'Kenya',
     region: 'Nyeri, Kiriga',
@@ -204,7 +204,7 @@ const BEANS = [
   {
     key: 'bean:esperanza',
     name: 'Nueva Esperanza Anaerobic',
-    roaster: 'KIELO COFFEE',
+    roaster: 'ハナレ珈琲焙煎所',
     source: 'purchased',
     country: 'Guatemala',
     region: 'Huehuetenango',

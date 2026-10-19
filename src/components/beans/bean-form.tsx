@@ -199,7 +199,7 @@ export function BeanForm({
       >
         <TextInput
           id={id('name')}
-          placeholder="Lusitania Lime Geisha"
+          placeholder="El Mirador Geisha Natural"
           autoComplete="off"
           aria-invalid={!!errors.name}
           {...register('name')}
@@ -224,7 +224,7 @@ export function BeanForm({
         <div className="relative">
           <TextInput
             id={id('roaster')}
-            placeholder="KIELO COFFEE"
+            placeholder="ハナレ珈琲焙煎所"
             autoComplete="off"
             aria-invalid={!!errors.roaster_name}
             aria-autocomplete="list"
@@ -312,19 +312,14 @@ export function BeanForm({
       </div>
 
       <F name="region" ocr={ocr} label="地域" htmlFor={id('region')} error={errors.region?.message}>
-        <TextInput
-          id={id('region')}
-          placeholder="Caicedonia, Valle del Cauca"
-          autoComplete="off"
-          {...register('region')}
-        />
+        <TextInput id={id('region')} placeholder="Huila" autoComplete="off" {...register('region')} />
       </F>
 
       <div className="grid grid-cols-2 gap-3">
         <F name="farm" ocr={ocr} label="農園" htmlFor={id('farm')} error={errors.farm?.message}>
           <TextInput
             id={id('farm')}
-            placeholder="Finca Los Senisos"
+            placeholder="Finca El Mirador"
             autoComplete="off"
             {...register('farm')}
           />
@@ -412,7 +407,7 @@ export function BeanForm({
         <div className="flex gap-2">
           <TextInput
             id={id('flavor')}
-            placeholder="Lime"
+            placeholder="Jasmine"
             autoComplete="off"
             value={flavorDraft}
             onChange={(e) => setFlavorDraft(e.target.value)}

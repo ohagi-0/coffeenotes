@@ -82,7 +82,7 @@ export function ShopForm({
       <Field label="店名" htmlFor={id('name')} error={errors.name?.message}>
         <TextInput
           id={id('name')}
-          placeholder="KIELO COFFEE 蔵前"
+          placeholder="喫茶 ハナレ"
           autoComplete="off"
           aria-invalid={!!errors.name}
           {...register('name')}
@@ -105,7 +105,7 @@ export function ShopForm({
       >
         <TextInput
           id={id('address')}
-          placeholder="東京都台東区蔵前 3-1-2"
+          placeholder="東京都千代田区神田神保町 1-2-3"
           autoComplete="off"
           {...register('address')}
         />
@@ -126,7 +126,7 @@ export function ShopForm({
             type="number"
             inputMode="decimal"
             step="any"
-            placeholder="35.7037"
+            placeholder="35.6960"
             className="font-num"
             aria-invalid={!!errors.lat}
             {...register('lat')}
@@ -138,7 +138,7 @@ export function ShopForm({
             type="number"
             inputMode="decimal"
             step="any"
-            placeholder="139.7907"
+            placeholder="139.7576"
             className="font-num"
             aria-invalid={!!errors.lng}
             {...register('lng')}

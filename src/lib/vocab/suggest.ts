@@ -6,6 +6,8 @@ import { VARIETY_SHELVES, varietyDisplayName, varietyKeysOf } from './varieties'
 import { PROCESSES, processDisplayName } from './processes';
 
 export const SUGGEST_LIMIT = 8;
+/** 過去の値を候補に出す最短の長さ（正規化後）。1 文字の打ち損じを除く */
+export const RECENT_MIN_LENGTH = 2;
 
 function norm(s: string): string {
   return s
@@ -27,8 +29,13 @@ function suggest(query: string, entries: readonly Entry[], recent: readonly stri
   const push = (label: string) => {
     if (out.length < SUGGEST_LIMIT && !out.includes(label)) out.push(label);
   };
-  // 自分が過去に入れた値（表示名に寄せて重複を落とす）を先に
-  for (const r of recent) if (q === '' || norm(r).includes(q)) push(r);
+  // 自分が過去に入れた値（表示名に寄せて重複を落とす）を先に。
+  // 「a」のような打ち損じ（正規化して 2 文字未満）は候補に出さない（2026-10-20）
+  for (const r of recent) {
+    const n = norm(r);
+    if (n.length < RECENT_MIN_LENGTH) continue;
+    if (q === '' || n.includes(q)) push(r);
+  }
   for (const e of entries) if (q === '' || e.keys.some((k) => k.includes(q))) push(e.label);
   // 入力そのものと同じ 1 件だけなら出す意味が無い
   if (out.length === 1 && norm(out[0]!) === q) return [];

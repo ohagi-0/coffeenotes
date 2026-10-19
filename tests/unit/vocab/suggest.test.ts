@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SUGGEST_LIMIT, suggestCountries, suggestVarieties } from '@/lib/vocab';
+import { SUGGEST_LIMIT, suggestCountries, suggestProcesses, suggestVarieties } from '@/lib/vocab';
 
 describe('suggestCountries', () => {
   it('空なら過去の値（表示名に寄せて重複なし）→ 語彙の順、上限まで', () => {
@@ -28,5 +28,14 @@ describe('suggestVarieties', () => {
   it('入力で絞る', () => {
     expect(suggestVarieties('ブル')).toEqual(['ブルボン', 'ピンクブルボン', 'ブルーマウンテン']);
     expect(suggestVarieties('sl')).toEqual(['SL28', 'SL34']);
+  });
+});
+
+describe('過去の値の打ち損じ', () => {
+  it('1 文字の値（a など）は候補に出さない。2 文字以上の自分の値は出す', () => {
+    expect(suggestVarieties('', ['a', 'タビ', 'sl-50'])).not.toContain('a');
+    expect(suggestVarieties('', ['a', 'タビ', 'sl-50'])).toContain('タビ');
+    expect(suggestProcesses('', ['a', 'x'])).not.toContain('a');
+    expect(suggestCountries('', ['a'])).not.toContain('a');
   });
 });

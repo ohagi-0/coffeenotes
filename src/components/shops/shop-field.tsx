@@ -210,7 +210,7 @@ export function ShopField({
           </div>
           <TextInput
             id={`${uid}-shop-address`}
-            placeholder="住所（例: 東京都台東区蔵前 3-1-2）"
+            placeholder="住所（例: 東京都千代田区神田神保町 1-2-3）"
             autoComplete="off"
             maxLength={300}
             aria-label="店の住所"
