@@ -8,7 +8,7 @@
 
 ---
 
-## 1. Anthropic の API キー（カード読み取りを有効にする）— 10 分
+## 1. Anthropic の API キー（カード読み取りを有効にする）— 済み（2026-09-24）
 
 いま本番は `OCR_PROVIDER=none` で、「カードを撮る」は撮影と画像保存だけ動く。キーを入れると項目の自動読み取りが動く。
 
@@ -31,7 +31,7 @@
 
 ---
 
-## 2. Google ログイン（要件 F-AUTH-1 の Must）— 20 分
+## 2. Google ログイン（要件 F-AUTH-1 の Must）— 済み（2026-09-24）
 
 Google Cloud で「このアプリが Google ログインを使う」ための登録をし、その ID とシークレットを Supabase に渡す。
 
@@ -50,7 +50,7 @@ Google Cloud で「このアプリが Google ログインを使う」ための�
    - アプリのホームページ: `https://coffee-notes.app`
    - アプリのプライバシー ポリシー リンク: `https://coffee-notes.app/privacy`
    - アプリの利用規約リンク: `https://coffee-notes.app/terms`
-   - 承認済みドメイン: `coffee-notes.app` と `supabase.co` の 2 つ
+   - 承認済みドメイン: `coffee-notes.app` と `gayhfwmvlxwyuzrvmkoy.supabase.co` の 2 つ（`supabase.co` だけだと「最上位のプライベート ドメインを指定する必要があります」と弾かれる）
 6. 左の **対象（Audience）** → 公開ステータスが「テスト」なら **アプリを公開** を押して「本番環境」にする。確認ダイアログは「確認」。
    （メールとプロフィールしか使わないので Google の審査は不要。警告が出ても進んでよい）
 
@@ -84,7 +84,7 @@ Google Cloud で「このアプリが Google ログインを使う」ための�
 
 ---
 
-## 3. 実機での確認（スマホ）— 15 分
+## 3. 実機での確認（スマホ）— 済み（2026-09-24。カード読み取りのキー設定後の項目も確認済み）
 
 iPhone の Safari（または Android の Chrome）で https://coffee-notes.app を開いて、上から順に触る。
 気になった見た目・文言・動きは、後でまとめて Claude Code に送る（スクリーンショット可）。UI の微調整はそのあと。
