@@ -329,10 +329,10 @@ export function ShopPicker({
           {candidates && <LocateStatus locate={locate} onRetry={() => void runNearby()} />}
 
           {candidates && q === '' && nearbyResult.status !== 'idle' && (
-            <Section title="近くの店" note="現在地から 2 km 以内のカフェ・コーヒー店を近い順に">
+            <Section title="近くの店" note="現在地から 2 km 以内、近い順">
               <CandidateList
                 result={nearbyResult.status === 'ok' ? { status: 'ok', items: nearbyShown } : nearbyResult}
-                emptyText="近くにカフェ・コーヒー店が見つかりませんでした。店名で検索するか、自分で登録できます"
+                emptyText="近くに店が見つかりませんでした。店名で探すか、自分で登録してください"
                 onPick={pick}
                 picking={picking}
               />
@@ -374,7 +374,7 @@ export function ShopPicker({
                 found.length === 0 &&
                 (q.length >= SHOP_PICKER_MIN_QUERY || nearbyAll.length > 0) && (
                   <p className="text-muted-foreground py-3 text-xs">
-                    見つかりませんでした。別の書き方（英字・カタカナ）で探すか、下の「自分で登録する」から登録できます
+                    見つかりませんでした。英字やカタカナなど別の書き方で探すか、自分で登録してください
                   </p>
                 )
               )}
@@ -444,7 +444,7 @@ export function ShopPicker({
                 {q ? `「${q}」を自分で登録する` : '自分で登録する'}
               </span>
               <span className="text-muted-foreground block text-[11px]">
-                地図で見つからないときに。店名と住所を入れると登録できます（住所から地図の位置を付けます）
+                店名と住所を入れて登録します。位置は住所から付けます
               </span>
             </span>
             <ChevronRight className="text-muted-foreground size-[18px] shrink-0" aria-hidden />
@@ -471,7 +471,7 @@ function LocateStatus({ locate, onRetry }: { locate: Locate; onRetry: () => void
   }
   const message =
     locate.status === 'denied'
-      ? '位置情報が許可されていないため、近くの店を出せません。端末やブラウザの設定で許可すると、近い店から順に出ます。'
+      ? '位置情報が許可されていないため、近くの店を出せません。許可すると近い順に出ます。'
       : locate.status === 'error'
         ? `現在地を取得できませんでした（${locate.message}）。店名で検索できます。`
         : null;

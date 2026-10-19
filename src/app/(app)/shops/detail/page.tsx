@@ -195,7 +195,7 @@ function ShopDetailInner() {
       )}
       {(s.lat === null || s.lng === null) && (
         <p className="text-muted-foreground mt-2 text-xs">
-          地図には出ていません。「編集」で住所を入れて「店名で検索」を押すと位置が付きます。
+          地図に出すには、「編集」から住所を入れて「店名で検索」を押してください。
         </p>
       )}
       {logs.isPending ? (
@@ -213,10 +213,7 @@ function ShopDetailInner() {
           className="mt-6"
         />
       ) : recap.count === 0 ? (
-        <EmptyState
-          title="まだ記録がありません"
-          description="この店で飲んだ一杯を記録すると、ここに振り返りが貯まります。"
-        />
+        <EmptyState title="まだ記録がありません" description="この店で飲んだ記録が、ここに並びます。" />
       ) : (
         <>
           {recap.best && <ShopBestCard best={recap.best} />}

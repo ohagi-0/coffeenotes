@@ -208,7 +208,7 @@ function ShopsInner() {
     } catch (e) {
       setLocError(
         e instanceof PlatformGeolocationError && e.kind === 'permission-denied'
-          ? '位置情報が許可されていません。端末の設定で許可すると、現在地からの距離と近い順が使えます。'
+          ? '位置情報が許可されていません。許可すると、距離と近い順が使えます。'
           : e instanceof Error
             ? e.message
             : '現在地を取得できませんでした',
@@ -293,7 +293,7 @@ function ShopsInner() {
           role="status"
           className="border-border bg-card text-muted-foreground mb-3 rounded-[12px] border px-3.5 py-2 text-xs"
         >
-          オフラインです。地図のタイルは表示できないことがあります。
+          オフラインです。地図は表示できないことがあります。
         </p>
       )}
 
@@ -318,7 +318,7 @@ function ShopsInner() {
         <EmptyState
           icon={Store}
           title="店はまだありません"
-          description="記録を作るときに店を選ぶと増えます。先に登録しておくこともできます。"
+          description="記録するときに店を選ぶと、ここに並びます。"
           action={
             <AppButton width="auto" href={newHref}>
               お店を登録
@@ -371,7 +371,7 @@ function ShopsInner() {
                 ? `「${focusMiss}」に合う登録済みの店も、地図上の場所も見つかりませんでした。`
                 : filtered
                   ? '条件に合う店に座標のあるものがありません。'
-                  : '座標のある店がまだありません。店を登録するときに「店名で検索」か「地図で指定」で位置を入れると、ここに地図が出ます。'}
+                  : '位置のある店がまだありません。店名で検索するか地図で指定して登録すると、ここに地図が出ます。'}
             </p>
           )}
           {locError && (
@@ -470,7 +470,7 @@ function SelectedShopCard({
       ) : null}
       <div className="mt-3 grid grid-cols-2 gap-2">
         <AppButton variant="secondary" size="md" href={routes.shop(shop.id) as Route}>
-          店の詳細
+          このお店での記録を見る
         </AppButton>
         <AppButton size="md" href={routes.newLog}>
           ここで記録

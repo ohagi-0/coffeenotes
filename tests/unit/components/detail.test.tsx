@@ -107,7 +107,7 @@ describe('LogDetail', () => {
     const { container } = render(<LogDetail {...props} onDelete={onDelete} />);
     expect(screen.getByText('2026年9月21日（月）')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: '豆の詳細を見る' })).toHaveAttribute('href', '/beans?id=b1');
-    expect(screen.getByRole('link', { name: '店の詳細を見る' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'このお店での記録を見る' })).toHaveAttribute(
       'href',
       '/shops/detail?id=s1',
     );

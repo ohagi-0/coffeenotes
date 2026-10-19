@@ -121,10 +121,12 @@ export function ShopField({
         const hit = (await candidates.geocode(address))[0];
         if (hit) picked = { ...picked, lat: hit.lat, lng: hit.lng };
         setManualNote(
-          hit ? null : '住所から位置を特定できませんでした。保存はできます。位置は店の編集で付けられます',
+          hit
+            ? null
+            : '住所から位置を見つけられませんでした。このまま保存して、あとから店の編集で付けられます',
         );
       } catch {
-        setManualNote('位置の問い合わせに失敗しました。保存はできます。位置は店の編集で付けられます');
+        setManualNote('位置を調べられませんでした。このまま保存して、あとから店の編集で付けられます');
       } finally {
         setManualBusy(false);
       }
@@ -246,9 +248,7 @@ export function ShopField({
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-bold">店を選ぶ</span>
-            <span className="text-muted-foreground block text-xs">
-              近くの店・店名から探す。見つからなければ自分で登録
-            </span>
+            <span className="text-muted-foreground block text-xs">近くの店や店名から探せます</span>
           </span>
           <ChevronRight className="text-muted-foreground size-[18px]" aria-hidden />
         </button>

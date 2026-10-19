@@ -91,9 +91,7 @@ export function RoastBatches({
         <ErrorCallout title="焙煎バッチを読み込めませんでした" what={error.message} onRetry={onRetry} />
       )}
       {!isPending && !error && (roasts?.length ?? 0) === 0 && !adding && (
-        <p className="text-muted-foreground py-3 text-sm">
-          まだバッチがありません。焙煎したら「バッチを追加」で日付と条件を残せます。
-        </p>
+        <p className="text-muted-foreground py-3 text-sm">まだバッチがありません。</p>
       )}
       {(roasts ?? []).map((r) => {
         const st = statByRoast?.get(r.id);

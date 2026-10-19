@@ -128,7 +128,7 @@ export function LogDetail({
           href={routes.shop(shopId) as Route}
           className="text-primary mt-2 inline-block text-[13px] font-medium"
         >
-          店の詳細を見る
+          このお店での記録を見る
         </Link>
       )}
 

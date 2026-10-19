@@ -42,7 +42,7 @@ export function InactiveShops({ shops }: { shops: InactiveShop[] }) {
       {open && (
         <>
           <p className="text-muted-foreground text-[11px]">
-            先に登録した店や、記録が無くなった店です。記録を作るときの店選びには出ます。
+            まだ記録を付けていない店です。記録するときの店選びには出ます。
           </p>
           {del.error && (
             <p role="alert" className="text-destructive py-2 text-xs">

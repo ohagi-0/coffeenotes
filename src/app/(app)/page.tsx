@@ -167,7 +167,7 @@ function CollectionInner() {
             title="まだ記録がありません"
             description={
               <span className="mx-auto block max-w-[21em]">
-                飲んだコーヒーを記録すると、豆ごとにここに並んでいきます。お店のテイスティングカードを撮れば、豆の名前や生産国を自動で読み取ります。
+                記録した豆がここに並びます。カードを撮れば、豆の名前や生産国は自動で入ります。
               </span>
             }
             action={

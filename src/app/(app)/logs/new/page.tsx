@@ -129,9 +129,7 @@ function Entry() {
         )}
         {beans.data && list.length === 0 && (
           <p className="text-muted-foreground py-3 text-sm">
-            {q
-              ? '一致する豆はありません。'
-              : 'まだ豆がありません。「手で入力する」から最初の豆を登録できます。'}
+            {q ? '一致する豆はありません。' : 'まだ豆がありません。「手で入力する」から登録してください。'}
           </p>
         )}
         <ul aria-label="登録済みの豆">
@@ -184,7 +182,7 @@ function Entry() {
         )}
         {!beans.isPending && !beans.error && recent.length === 0 && (
           <p className="text-muted-foreground py-3 text-sm">
-            まだ豆がありません。「手で入力する」から最初の豆を登録できます。
+            まだ豆がありません。「手で入力する」から登録してください。
           </p>
         )}
         {recent.map((b) => (
@@ -382,7 +380,7 @@ function OcrStepPage() {
           </div>
           <p className="text-muted-foreground text-[12px]" role="status">
             {slow
-              ? '時間がかかっています（初回や混み合うときは 30 秒ほど）。このまま待つか、下のボタンで手入力に切り替えられます。'
+              ? '少し時間がかかっています。混み合うときは 30 秒ほどかかります。待たずに手で入力することもできます。'
               : '読み取っています。通常 3〜8 秒かかります。'}
           </p>
           <div className="flex flex-col gap-3" aria-hidden>
@@ -428,7 +426,7 @@ function OcrStepPage() {
           <p className="text-muted-foreground mb-3 text-[12px] leading-relaxed">
             {phase === 'ready' ? (
               <>
-                読み取った内容を確認してください。「要確認」の項目は自信が低いものです。
+                読み取った内容を確かめてください。「要確認」は読み取りに自信がない項目です。
                 <button
                   type="button"
                   className="text-primary ml-1 underline underline-offset-2"
@@ -540,8 +538,8 @@ function PlaceStep() {
         <h1 className="pt-2 pb-3 text-2xl font-bold">どこで、どうだった？</h1>
         <ErrorCallout
           title="豆の情報が見つかりません"
-          what="この画面は豆を選んでから開きます。ブラウザを閉じると途中の入力は消えます。"
-          next="入口に戻って、もう一度豆を選んでください。"
+          what="途中の入力が見つかりません。"
+          next="最初からやり直してください。"
           onRetry={() => router.replace(routes.newLog)}
           retryLabel="入口に戻る"
         />

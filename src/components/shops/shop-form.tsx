@@ -101,7 +101,7 @@ export function ShopForm({
         label="住所"
         htmlFor={id('address')}
         error={errors.address?.message}
-        hint="任意。「店名で検索」で住所と座標を補完できます"
+        hint="任意。「店名で検索」で住所と位置が入ります"
       >
         <TextInput
           id={id('address')}

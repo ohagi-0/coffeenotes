@@ -207,7 +207,7 @@ export function LogForm({
           candidates={shopCandidates}
           hint={shopHint}
           openSignal={pickerSignal}
-          note="店は後から付けることもできます。店の情報はあとから編集できます。"
+          note="店はあとから付けることもできます。"
         />
       )}
 
@@ -434,7 +434,7 @@ export function LogForm({
           />
         )}
         <p className="text-muted-foreground text-[11px]">
-          星の左半分で .5、右半分で .0。空のままでも保存できます。
+          星の左半分を押すと .5、右半分で .0。付けなくても保存できます。
         </p>
         {errors.rating?.message && (
           <p role="alert" className="text-destructive text-xs">

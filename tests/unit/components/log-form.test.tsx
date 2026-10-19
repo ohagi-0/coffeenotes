@@ -111,7 +111,7 @@ describe('LogForm', () => {
     fireEvent.change(screen.getByLabelText('店の住所'), { target: { value: 'どこか' } });
     fireEvent.click(screen.getByRole('button', { name: 'この内容で決定' }));
     await waitFor(() =>
-      expect(screen.getByRole('status')).toHaveTextContent('住所から位置を特定できませんでした'),
+      expect(screen.getByRole('status')).toHaveTextContent('住所から位置を見つけられませんでした'),
     );
     expect(screen.getByText('新しい店として登録します（どこか）')).toBeInTheDocument();
   });

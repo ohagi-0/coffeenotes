@@ -184,7 +184,7 @@ export function ShopCandidateTools({
         <div>
           {candidates.length === 0 ? (
             <p className="text-muted-foreground text-xs">
-              候補が見つかりませんでした。店名を手で入力して登録できます。
+              見つかりませんでした。店名を入力して登録してください。
             </p>
           ) : (
             <ul

@@ -75,7 +75,7 @@ export function BeanLogShops({
         飲んだ店
       </h2>
       <p className="text-muted-foreground mt-0.5 mb-3 text-xs">
-        この豆を飲んだ店を、記録ごとに付けたり変えたりできます。下の「保存する」で反映します。
+        記録ごとに店を付けたり変えたりできます。「保存する」で反映されます。
       </p>
 
       {isPending ? (
@@ -90,12 +90,10 @@ export function BeanLogShops({
           onRetry={onRetry}
         />
       ) : (logs ?? []).length === 0 ? (
-        <p className="text-muted-foreground text-xs">
-          この豆の記録はまだありません。記録を追加すると、そこで店を付けられます。
-        </p>
+        <p className="text-muted-foreground text-xs">この豆の記録はまだありません。</p>
       ) : shopLogs.length === 0 ? (
         <p className="text-muted-foreground text-xs">
-          この豆の記録はすべて自宅で淹れたものです。店で飲んだ記録にするには、記録の編集で「店で」を選んでください。
+          自宅で淹れた記録だけです。店を付けるには、記録の編集で「店で」を選んでください。
         </p>
       ) : (
         <ul className="flex flex-col gap-4">
@@ -119,8 +117,8 @@ export function BeanLogShops({
                   note={
                     dirty
                       ? value
-                        ? '変更あり。保存すると反映されます'
-                        : '店を外します。保存すると反映されます'
+                        ? '保存すると変わります'
+                        : '保存すると店が外れます'
                       : !value
                         ? 'まだ店が付いていません'
                         : undefined

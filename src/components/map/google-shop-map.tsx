@@ -285,7 +285,7 @@ export default function GoogleShopMap(props: ShopMapProps) {
   if (!online) {
     return (
       <MapStatus height={height} className={className}>
-        オフラインでは地図を出せません。店の一覧は使えます
+        オフラインのため地図を表示できません
       </MapStatus>
     );
   }

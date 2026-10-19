@@ -147,7 +147,7 @@ function StatsInner() {
               title="記録が 3 件たまると傾向が出ます"
               description={
                 period === 'all'
-                  ? '星を付けた記録が増えると、好みの生産国や精製方法、味の形が見えてきます。'
+                  ? '記録が増えると、好きな生産国や精製、味の形が見えてきます。'
                   : 'この期間の記録が少ないので、期間を広げると傾向が出ます。'
               }
               action={<AppButton href={routes.newLog}>記録を追加</AppButton>}
