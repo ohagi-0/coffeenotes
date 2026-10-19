@@ -13,4 +13,6 @@ export default defineConfig({
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
+  // CSS Modules（loading-scene.module.css）を読み込むテストが、Next 用の postcss.config.mjs を拾って落ちないように
+  css: { postcss: { plugins: [] } },
 });

@@ -31,8 +31,8 @@
 @keyframes a-kettle{0%,6%{transform:translate(10px,-8px) rotate(6deg);opacity:0}16%,70%{transform:translate(0,0) rotate(0);opacity:1}80%,100%{transform:translate(10px,-8px) rotate(6deg);opacity:0}}
 .a-stream{stroke-dasharray:60;stroke-dashoffset:60;animation:a-stream 8s ease-in-out infinite}
 @keyframes a-stream{0%,15%{stroke-dashoffset:60;opacity:0}20%{stroke-dashoffset:0;opacity:1}68%{stroke-dashoffset:0;opacity:1}74%,100%{stroke-dashoffset:-60;opacity:0}}
-.a-sway{animation:a-sway 1.7s ease-in-out infinite alternate}
-@keyframes a-sway{from{transform:translateX(-.6px)}to{transform:translateX(.6px)}}
+.a-circle{animation:a-circle 2.6s linear infinite}
+@keyframes a-circle{0%{transform:translate(5px,0)}12.5%{transform:translate(3.5px,3.5px)}25%{transform:translate(0,5px)}37.5%{transform:translate(-3.5px,3.5px)}50%{transform:translate(-5px,0)}62.5%{transform:translate(-3.5px,-3.5px)}75%{transform:translate(0,-5px)}87.5%{transform:translate(3.5px,-3.5px)}100%{transform:translate(5px,0)}}
 .a-drop{opacity:0;animation:a-drop 1.1s cubic-bezier(.5,0,.9,.4) infinite}
 .a-drop.d2{animation-delay:.37s}.a-drop.d3{animation-delay:.74s}
 @keyframes a-drop{0%{transform:translateY(0) scaleY(1);opacity:0}12%{opacity:.9}85%{transform:translateY(20px) scaleY(1.25);opacity:.9}100%{transform:translateY(22px) scaleY(.6);opacity:0}}
@@ -91,7 +91,7 @@
 <header class="phead wrap">
   <div class="secno">LOADING · 2026-10-20</div>
   <h1>読み込みの動き — 3 案</h1>
-  <p class="lead">ログイン直後や画面を開くときの「読み込み中…」を、回るだけの印から、コーヒーの所作の小さな動きに替える。線は銅、面は使わない。どれも 140px、CSS だけで動き、「動きを減らす」設定の端末では止めて印だけにする。</p>
+  <p class="lead">ログイン直後や画面を開くときの「読み込み中…」を、回るだけの印から、コーヒーの所作の小さな動きに替えた（2026-10-20 に採用。アプリでは 3 つのうち 1 つをランダムに出す。`components/loading-scene.tsx`）。線は銅と生成り、面は使わない。CSS だけで動き、「動きを減らす」設定の端末では止めて絵だけにする。</p>
 </header>
 
 <section id="compare"><div class="wrap">
@@ -132,25 +132,26 @@
             <ellipse class="a-drop d2 self" cx="70" cy="110" rx="1.5" ry="2"/>
             <ellipse class="a-drop d3 self" cx="70" cy="110" rx="1.5" ry="2"/>
           </g>
-          <!-- 湯の筋 -->
-          <g class="a-sway">
-            <path class="a-stream cu" d="M76 56c-2 10-4 18-5 30"/>
-            <path class="a-stream" d="M76 56c-2 10-4 18-5 30" stroke="#F1E8DA" stroke-width=".7" opacity=".6"/>
-          </g>
-          <!-- 電気ケトル（逆台形の胴、長く細い注ぎ口、後ろに張り出した握り） -->
-          <g class="a-kettle cu">
-            <path d="M104 36l28-6 8 32-32 8z"/>
-            <path d="M104 36l28-6" stroke-width="2.6"/>
-            <path d="M117 33l-1-5" class="thin"/>
-            <circle cx="115.5" cy="27" r="1.6" fill="#D48C4E"/>
-            <path d="M132 30c12 2 20 14 12 26" stroke-width="2.6"/>
-            <path d="M106 62c-12-2-24-4-30-6" stroke-width="2.6"/>
-            <path d="M76 56c-2 0-3 .4-4 1" class="thin"/>
+          <!-- ケトル（入ってくる / 引く）の中で、湯の筋ごと「の」の字に回る -->
+          <g class="a-kettle">
+            <g class="a-circle">
+              <path class="a-stream cu" d="M76 56c-2 10-4 18-5 30"/>
+              <path class="a-stream" d="M76 56c-2 10-4 18-5 30" stroke="#F1E8DA" stroke-width=".7" opacity=".6"/>
+              <g class="cu">
+                <path d="M104 36l28-6 8 32-32 8z"/>
+                <path d="M104 36l28-6" stroke-width="2.6"/>
+                <path d="M117 33l-1-5" class="thin"/>
+                <circle cx="115.5" cy="27" r="1.6" fill="#D48C4E"/>
+                <path d="M132 30c12 2 20 14 12 26" stroke-width="2.6"/>
+                <path d="M106 62c-12-2-24-4-30-6" stroke-width="2.6"/>
+                <path d="M76 56c-2 0-3 .4-4 1" class="thin"/>
+              </g>
+            </g>
           </g>
         </svg>
         <span class="t">お湯を注いでいます…</span>
       </div></div></div>
-      <p class="cmp-note">形は定番の道具に寄せた（ロゴは付けない）: 円すい型ドリッパーはらせんのリブと底のリング、ガラスサーバーは丸い胴と首の黒い帯、ケトルは逆台形の胴に長く細い注ぎ口と後ろに張り出した握り（電気ケトルの定番の形）。ケトルが右上から寄ってきて、細い湯の筋が揺れながら円すいへ。滴は重力の緩急で落ち、サーバーの水面が上がる。注ぎ終えるとケトルが引き、一呼吸おいて最初から。8 秒で一巡。文言は「お湯を注いでいます…」。</p>
+      <p class="cmp-note">形は定番の道具に寄せた（ロゴは付けない）: 円すい型ドリッパーはらせんのリブと底のリング、ガラスサーバーは丸い胴と首の黒い帯、ケトルは逆台形の胴に長く細い注ぎ口と後ろに張り出した握り（電気ケトルの定番の形）。ケトルが右上から寄ってきて、「の」の字（時計回りの小さな円、2.6 秒で 1 周）を描きながら注ぐ。湯の筋もケトルと一緒に回るので、落ちる場所が円を描く。滴は重力の緩急で落ち、サーバーの水面が上がる。注ぎ終えるとケトルが引き、一呼吸おいて最初から。8 秒で一巡。文言は「お湯を注いでいます…」。</p>
     </div>
 
     <div class="cmp-col">

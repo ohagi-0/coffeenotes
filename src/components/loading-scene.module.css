@@ -1,0 +1,415 @@
+/* 読み込み中の小さな動き（DESIGN.md §4、2026-10-20。docs/design/loading.html）。
+   3 つの所作（ハンドドリップ / 手網の焙煎 / 手挽きミル）。線は銅と生成り、面は使わない。
+   「動きを減らす」設定の端末では止めて絵だけ出す。 */
+
+.svg {
+  width: 168px;
+  height: 168px;
+  overflow: visible;
+}
+.self {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* ---- ハンドドリップ（8 秒で一巡）。ケトルは「の」の字に回しながら注ぐ ---- */
+.kettle {
+  transform-origin: 120px 50px;
+  animation: kettle 8s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+@keyframes kettle {
+  0%,
+  6% {
+    transform: translate(10px, -8px) rotate(6deg);
+    opacity: 0;
+  }
+  16%,
+  70% {
+    transform: translate(0, 0) rotate(0);
+    opacity: 1;
+  }
+  80%,
+  100% {
+    transform: translate(10px, -8px) rotate(6deg);
+    opacity: 0;
+  }
+}
+/* 「の」の字: 時計回りの小さな円。湯の筋も一緒に動くので、落ちる場所が円を描く */
+.circle {
+  animation: circle 2.6s linear infinite;
+}
+@keyframes circle {
+  0% {
+    transform: translate(5px, 0);
+  }
+  12.5% {
+    transform: translate(3.5px, 3.5px);
+  }
+  25% {
+    transform: translate(0, 5px);
+  }
+  37.5% {
+    transform: translate(-3.5px, 3.5px);
+  }
+  50% {
+    transform: translate(-5px, 0);
+  }
+  62.5% {
+    transform: translate(-3.5px, -3.5px);
+  }
+  75% {
+    transform: translate(0, -5px);
+  }
+  87.5% {
+    transform: translate(3.5px, -3.5px);
+  }
+  100% {
+    transform: translate(5px, 0);
+  }
+}
+.stream {
+  stroke-dasharray: 60;
+  stroke-dashoffset: 60;
+  animation: stream 8s ease-in-out infinite;
+}
+@keyframes stream {
+  0%,
+  15% {
+    stroke-dashoffset: 60;
+    opacity: 0;
+  }
+  20% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  68% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  74%,
+  100% {
+    stroke-dashoffset: -60;
+    opacity: 0;
+  }
+}
+.drop {
+  opacity: 0;
+  animation: drop 1.1s cubic-bezier(0.5, 0, 0.9, 0.4) infinite;
+}
+.drop2 {
+  animation-delay: 0.37s;
+}
+.drop3 {
+  animation-delay: 0.74s;
+}
+@keyframes drop {
+  0% {
+    transform: translateY(0) scaleY(1);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.9;
+  }
+  85% {
+    transform: translateY(20px) scaleY(1.25);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(22px) scaleY(0.6);
+    opacity: 0;
+  }
+}
+.dropGate {
+  animation: dropGate 8s linear infinite;
+}
+@keyframes dropGate {
+  0%,
+  22% {
+    opacity: 0;
+  }
+  26%,
+  78% {
+    opacity: 1;
+  }
+  84%,
+  100% {
+    opacity: 0;
+  }
+}
+.level {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: level 8s cubic-bezier(0.3, 0.2, 0.2, 1) infinite;
+}
+@keyframes level {
+  0%,
+  20% {
+    transform: scaleY(0.08);
+    opacity: 1;
+  }
+  76% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+  94% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleY(0.08);
+    opacity: 0;
+  }
+}
+.meniscus {
+  animation: meniscus 8s cubic-bezier(0.3, 0.2, 0.2, 1) infinite;
+}
+@keyframes meniscus {
+  0%,
+  20% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  24% {
+    opacity: 1;
+  }
+  76% {
+    transform: translateY(-22px);
+    opacity: 1;
+  }
+  94% {
+    transform: translateY(-22px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+}
+
+/* ---- 手網の焙煎（9 秒で一巡） ---- */
+.net {
+  transform-origin: 70px 78px;
+  animation: shake 0.9s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(-6px) rotate(-1deg);
+  }
+  50% {
+    transform: translateX(6px) rotate(1deg);
+  }
+}
+.bean {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation:
+    jump 0.9s cubic-bezier(0.3, 0, 0.4, 1) infinite,
+    roast 9s linear infinite;
+}
+.bean2 {
+  animation-delay: 0.12s, 0s;
+}
+.bean3 {
+  animation-delay: 0.25s, 0s;
+}
+.bean4 {
+  animation-delay: 0.38s, 0s;
+}
+.bean5 {
+  animation-delay: 0.5s, 0s;
+}
+.bean6 {
+  animation-delay: 0.62s, 0s;
+}
+.bean7 {
+  animation-delay: 0.75s, 0s;
+}
+@keyframes jump {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0);
+  }
+  45% {
+    transform: translateY(-12px) rotate(120deg);
+  }
+  60% {
+    transform: translateY(-9px) rotate(180deg);
+  }
+}
+@keyframes roast {
+  0% {
+    fill: #9db47a;
+  }
+  30% {
+    fill: #d1b870;
+  }
+  55% {
+    fill: #b07e48;
+  }
+  80% {
+    fill: #6b4324;
+  }
+  100% {
+    fill: #4a2a15;
+  }
+}
+.flame {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: flame 0.55s ease-in-out infinite alternate;
+}
+.flame2 {
+  animation-delay: 0.18s;
+}
+.flame3 {
+  animation-delay: 0.33s;
+}
+.flame4 {
+  animation-delay: 0.45s;
+}
+@keyframes flame {
+  from {
+    transform: scaleY(0.85) scaleX(1.04);
+  }
+  to {
+    transform: scaleY(1.12) scaleX(0.96);
+  }
+}
+.smoke {
+  opacity: 0;
+  animation: smoke 9s ease-in-out infinite;
+}
+.smoke2 {
+  animation-delay: 1.2s;
+}
+@keyframes smoke {
+  0%,
+  60% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  70% {
+    opacity: 0.5;
+  }
+  85% {
+    transform: translateY(-16px);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateY(-22px);
+    opacity: 0;
+  }
+}
+.chaff {
+  opacity: 0;
+  animation: chaff 2.6s ease-out infinite;
+}
+.chaff2 {
+  animation-delay: 1.3s;
+}
+@keyframes chaff {
+  0% {
+    transform: translate(0, 0) rotate(0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate(-14px, -30px) rotate(160deg);
+    opacity: 0;
+  }
+}
+
+/* ---- 手挽きミル ---- */
+.crank {
+  transform-origin: 80px 30px;
+  animation: turn 1.9s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
+}
+@keyframes turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.mill {
+  transform-origin: 80px 92px;
+  animation: wobble 1.9s ease-in-out infinite;
+}
+@keyframes wobble {
+  0%,
+  100% {
+    transform: rotate(-0.5deg);
+  }
+  50% {
+    transform: rotate(0.5deg);
+  }
+}
+.grain {
+  opacity: 0;
+  animation: fall 1.3s cubic-bezier(0.5, 0, 0.9, 0.4) infinite;
+}
+.grain2 {
+  animation-delay: 0.32s;
+}
+.grain3 {
+  animation-delay: 0.64s;
+}
+.grain4 {
+  animation-delay: 0.96s;
+}
+@keyframes fall {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.9;
+  }
+  90% {
+    transform: translateY(20px);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(21px);
+    opacity: 0;
+  }
+}
+.pile {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: pile 9s cubic-bezier(0.3, 0.2, 0.2, 1) infinite;
+}
+@keyframes pile {
+  0% {
+    transform: scaleY(0.06);
+    opacity: 1;
+  }
+  88% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+  96% {
+    opacity: 1;
+  }
+  100% {
+    transform: scaleY(0.06);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .svg * {
+    animation: none !important;
+  }
+  .kettle,
+  .stream,
+  .dropGate,
+  .level,
+  .meniscus,
+  .pile {
+    opacity: 1;
+    stroke-dashoffset: 0;
+    transform: none;
+  }
+}
