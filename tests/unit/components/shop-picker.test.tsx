@@ -82,6 +82,38 @@ describe('ShopPicker', () => {
     expect(props.onPickShop).toHaveBeenCalledWith(props.registered[1]);
   });
 
+  it('登録済みの店は最近行った順（記録なしは後ろ）で、前回の一杯と回数を出す', () => {
+    const { props, rerender } = setup({
+      registered: [
+        { id: '1', name: '記録なしの店', address: '台東区' },
+        {
+          id: '2',
+          name: '古い店',
+          lastVisit: '前回 01/05 · 豆A ★3.0',
+          visitCount: 1,
+          lastLoggedOn: '2026-01-05',
+        },
+        {
+          id: '3',
+          name: '新しい店',
+          lastVisit: '前回 10/05 · El Paraiso Lychee ★5.0',
+          visitCount: 3,
+          lastLoggedOn: '2026-10-05',
+        },
+      ],
+    });
+    const names = screen.getAllByRole('option').map((o) => o.textContent ?? '');
+    expect(names[0]).toContain('新しい店');
+    expect(names[0]).toContain('前回 10/05 · El Paraiso Lychee ★5.0');
+    expect(names[0]).toContain('3 回');
+    expect(names[1]).toContain('古い店');
+    expect(names[2]).toContain('記録なしの店');
+    expect(names[2]).toContain('台東区'); // 前回が無ければ住所
+    // 検索語があるときは親が絞った順のまま
+    rerender(<ShopPicker {...props} query="店" />);
+    expect(screen.getAllByRole('option')[0]!.textContent).toContain('記録なしの店');
+  });
+
   it('候補検索が無ければ現在地・地図の欄を出さず、閉じるで onClose', () => {
     const { props } = setup();
     expect(screen.queryByRole('button', { name: /現在地から探す/ })).toBeNull();

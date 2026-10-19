@@ -42,6 +42,43 @@ export function aggregateRatings(rows: readonly RatingRow[]): {
   };
 }
 
+/** 店ごとの「前回の記録」（F-SHOP-8）。記録 1 件の要約 */
+export interface LastLog {
+  logId: string;
+  loggedOn: string;
+  beanName: string;
+  rating: number | null;
+}
+
+export interface LastLogRow {
+  id: string;
+  shop_id: string | null;
+  logged_on: string;
+  created_at?: string | null;
+  rating: number | null;
+  bean: { name: string } | null;
+}
+
+/** 店 ID → 直近の記録 1 件。日付が同じなら作成の新しい方。店の無い記録は数えない */
+export function lastLogByShop(rows: readonly LastLogRow[]): Map<string, LastLog> {
+  const best = new Map<string, LastLogRow>();
+  for (const r of rows) {
+    if (!r.shop_id) continue;
+    const cur = best.get(r.shop_id);
+    const newer =
+      !cur ||
+      r.logged_on > cur.logged_on ||
+      (r.logged_on === cur.logged_on && (r.created_at ?? '') > (cur.created_at ?? ''));
+    if (newer) best.set(r.shop_id, r);
+  }
+  return new Map(
+    Array.from(best, ([shopId, r]) => [
+      shopId,
+      { logId: r.id, loggedOn: r.logged_on, beanName: r.bean?.name ?? '', rating: r.rating },
+    ]),
+  );
+}
+
 /** 自宅レシピの列（F-BREW-1〜6）。前回の複製とフォームの折りたたみ判定で使う */
 export const RECIPE_KEYS = [
   'brew_method',

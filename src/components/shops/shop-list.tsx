@@ -8,7 +8,7 @@ import { ErrorCallout } from '@/components/error-callout';
 import { RatingStars } from '@/components/logs/rating-stars';
 import { Row } from '@/components/row';
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatDistance, type ShopRow } from '@/features/shops/presenters';
+import { shopRowSubtitle, type ShopRow } from '@/features/shops/presenters';
 import { routes } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 
@@ -101,9 +101,7 @@ export function ShopList({
           title={s.name}
           subtitle={
             <>
-              {[s.kindLabel, formatDistance(s.distanceM) ?? s.area, s.count > 0 ? `${s.count} 回` : null]
-                .filter(Boolean)
-                .join(' · ')}
+              {shopRowSubtitle(s)}
               {!s.hasCoordinates && (
                 <span className="bg-secondary text-muted-foreground ml-2 rounded-[4px] px-[7px] text-[10px] leading-[1.7]">
                   座標なし

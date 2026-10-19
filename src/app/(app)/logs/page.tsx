@@ -21,6 +21,7 @@ import type { LogFormDraft } from '@/features/logs/save-new-log';
 import { shopInputFromPick } from '@/features/shops/find-or-create-shop';
 import { useCreateShop } from '@/features/shops/mutations';
 import { useShops } from '@/features/shops/queries';
+import { useShopPickerOptions } from '@/features/shops/use-picker-options';
 import { useTags } from '@/features/tags/queries';
 import { LogListView } from '@/components/logs/log-list-view';
 import { idFromSearchParams, routes } from '@/lib/routes';
@@ -48,6 +49,7 @@ function LogPageInner() {
   const createShop = useCreateShop();
   const [shopQuery, setShopQuery] = useState('');
   const shops = useShops(shopQuery.trim() ? { search: shopQuery } : {});
+  const shopOptions = useShopPickerOptions(shops.data);
   const tags = useTags();
   const [failure, setFailure] = useState<string | null>(null);
 
@@ -160,12 +162,7 @@ function LogPageInner() {
             roast_level: r.roast_level,
           }))}
           greenShops={(greenShops.data ?? []).map((s) => ({ id: s.id, name: s.name }))}
-          shopOptions={(shops.data ?? []).map((s) => ({
-            id: s.id,
-            name: s.name,
-            address: s.address,
-            externalPlaceId: s.external_place_id,
-          }))}
+          shopOptions={shopOptions}
           shopOptionsPending={shops.isPending}
           onShopSearch={setShopQuery}
           shopCandidates={shopCandidateSources}

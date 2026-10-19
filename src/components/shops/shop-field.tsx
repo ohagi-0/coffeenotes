@@ -140,12 +140,16 @@ export function ShopField({
 
   const name = value?.name ?? '';
   const selected = !!value && (!!value.id || (!manual && name.trim() !== ''));
+  const registeredInfo = value?.id ? shopOptions.find((o) => o.id === value.id) : undefined;
   const description = !value
     ? ''
     : value.id
-      ? value.address
-        ? `登録済みの店 · ${value.address}`
-        : '登録済みの店'
+      ? registeredInfo?.lastVisit
+        ? // 前回の一杯と回数（F-SHOP-8）。記録の途中で「前回これ飲んだな」が見える
+          `${registeredInfo.lastVisit} · ${registeredInfo.visitCount} 回`
+        : value.address
+          ? `登録済みの店 · ${value.address}`
+          : '登録済みの店'
       : value.placeProvider === 'google'
         ? `Google マップの店として登録します${value.address ? `（${value.address}）` : ''}`
         : value.lat != null

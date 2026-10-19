@@ -41,6 +41,7 @@ import { useRoastsByBean } from '@/features/roasts/queries';
 import { useRoasterSearch } from '@/features/roasters/queries';
 import { useCreateShop } from '@/features/shops/mutations';
 import { useShops } from '@/features/shops/queries';
+import { useShopPickerOptions } from '@/features/shops/use-picker-options';
 import { useTags } from '@/features/tags/queries';
 import { blobToDataUrl, dataUrlToBlob } from '@/lib/image/data-url';
 import { qrTextToUrl, readQrFromBlob } from '@/lib/image/qr';
@@ -512,6 +513,7 @@ function PlaceStep() {
   const [draft] = useState(() => readNewLogDraft());
   const [shopQuery, setShopQuery] = useState('');
   const shops = useShops(shopQuery.trim() ? { search: shopQuery } : {});
+  const shopOptions = useShopPickerOptions(shops.data);
   const tags = useTags();
   const createRoaster = useCreateRoaster();
   const createBean = useCreateBean();
@@ -607,12 +609,7 @@ function PlaceStep() {
       )}
       <LogForm
         beanName={beanName}
-        shopOptions={(shops.data ?? []).map((s) => ({
-          id: s.id,
-          name: s.name,
-          address: s.address,
-          externalPlaceId: s.external_place_id,
-        }))}
+        shopOptions={shopOptions}
         shopOptionsPending={shops.isPending}
         onShopSearch={setShopQuery}
         shopHint={shopHint}

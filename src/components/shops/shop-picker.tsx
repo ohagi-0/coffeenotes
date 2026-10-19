@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronRight, LocateFixed, MapPin, Plus, Search, Store, X } from 'lucide-react';
 import type { ShopCandidate } from '@/components/shops/shop-candidate-tools';
+import { sortByRecentVisit } from '@/features/shops/last-visit';
 import { GoogleAttribution } from '@/components/shops/google-attribution';
 import { isSuggestion, type ShopCandidateSources, type ShopSearchItem } from '@/features/geo/search';
 import { matchScore, mergeCandidates, rankCandidates } from '@/lib/geo/match';
@@ -27,6 +28,12 @@ export type ShopPickerOption = {
   address?: string | null;
   /** 地図サービス側の ID。同じ店が「登録済み」と「候補」に重ねて出ないようにする */
   externalPlaceId?: string | null;
+  /** 「前回 10/05 · 豆名 ★5.0」。記録が無ければ null（F-SHOP-8） */
+  lastVisit?: string | null;
+  /** 記録の回数 */
+  visitCount?: number;
+  /** 最近行った順に並べる用（YYYY-MM-DD） */
+  lastLoggedOn?: string | null;
 };
 
 export type ShopPickerHint = {
@@ -227,7 +234,11 @@ export function ShopPicker({
     // notRegistered は registeredIds だけに依存する
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q, nearbyItems, searchResult, registeredIds]);
-  const registeredRows = registered.filter((s) => matchScore(q, [s.name], s.address) > 0);
+  // 検索語が空のときは、最近行った順（記録の無い店は後ろ）。語があるときは親が絞った順のまま
+  const registeredRows = useMemo(() => {
+    const rows = registered.filter((s) => matchScore(q, [s.name], s.address) > 0);
+    return q === '' ? sortByRecentVisit(rows) : rows;
+  }, [registered, q]);
   const showHint = !!hint && q === '' && hintResult.status !== 'idle';
   const hintItems = hintResult.status === 'ok' ? notRegistered(hintResult.items) : [];
   const nearbyShown = notRegistered(nearbyAll).slice(0, NEARBY_SHOWN);
@@ -395,12 +406,23 @@ export function ShopPicker({
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm">{s.name}</span>
-                        {s.address && (
+                        {s.lastVisit ? (
                           <span className="text-muted-foreground block truncate text-[11px]">
-                            {s.address}
+                            {s.lastVisit}
                           </span>
+                        ) : (
+                          s.address && (
+                            <span className="text-muted-foreground block truncate text-[11px]">
+                              {s.address}
+                            </span>
+                          )
                         )}
                       </span>
+                      {!!s.visitCount && (
+                        <span className="text-muted-foreground font-num shrink-0 text-[11px]">
+                          {s.visitCount} 回
+                        </span>
+                      )}
                       <Store className="text-muted-foreground size-4 shrink-0" aria-hidden />
                     </button>
                   </li>

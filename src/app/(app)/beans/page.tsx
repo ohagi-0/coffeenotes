@@ -10,6 +10,7 @@ import { RoastBatches } from '@/components/roasts/roast-batches';
 import { useCreateRoast } from '@/features/roasts/mutations';
 import { useRoastsByBean } from '@/features/roasts/queries';
 import { useShops } from '@/features/shops/queries';
+import { useShopPickerOptions } from '@/features/shops/use-picker-options';
 import { BeanDetailSkeleton } from '@/components/beans/bean-detail-skeleton';
 import { BeanForm, type BeanFormSubmit } from '@/components/beans/bean-form';
 import { BeanLogShops, isShopChanged } from '@/components/beans/bean-log-shops';
@@ -56,6 +57,7 @@ function BeanPageInner() {
   const [shopEdits, setShopEdits] = useState<Record<string, PickedShop | null>>({});
   const [shopQuery, setShopQuery] = useState('');
   const shops = useShops(shopQuery.trim() ? { search: shopQuery } : {});
+  const shopOptions = useShopPickerOptions(shops.data);
   const changeLogShops = useChangeLogShops();
 
   const crumb = (
@@ -152,12 +154,7 @@ function BeanPageInner() {
           onRetry={() => void logs.refetch()}
           edits={shopEdits}
           onEdit={(logId, shop) => setShopEdits((prev) => ({ ...prev, [logId]: shop }))}
-          shopOptions={(shops.data ?? []).map((s) => ({
-            id: s.id,
-            name: s.name,
-            address: s.address,
-            externalPlaceId: s.external_place_id,
-          }))}
+          shopOptions={shopOptions}
           shopOptionsPending={shops.isPending}
           onShopSearch={setShopQuery}
           candidates={shopCandidateSources}

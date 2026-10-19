@@ -5,7 +5,7 @@ import type { QueryData } from '@supabase/supabase-js';
 import { format, startOfMonth } from 'date-fns';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import type { LogKind, LogPlace } from '@/lib/schemas/log';
-import { aggregateRatings } from './aggregate';
+import { aggregateRatings, lastLogByShop } from './aggregate';
 
 /**
  * 記録の取得で常に付ける関連。豆は NOT NULL なので `!inner`（豆の列で絞り込める）。
@@ -49,6 +49,7 @@ export const logKeys = {
   byBean: (beanId: string) => [...logKeys.all, 'by-bean', beanId] as const,
   byShop: (shopId: string) => [...logKeys.all, 'by-shop', shopId] as const,
   ratingStats: () => [...logKeys.all, 'rating-stats'] as const,
+  lastByShop: () => [...logKeys.all, 'last-by-shop'] as const,
 };
 
 async function logIdsWithTag(tagId: string): Promise<string[]> {
@@ -195,6 +196,24 @@ export function useRatingStats() {
         .select('bean_id, shop_id, roast_id, rating');
       if (error) throw error;
       return aggregateRatings(data);
+    },
+  });
+}
+
+/**
+ * 店ごとの前回の記録（F-SHOP-8）。店のある全記録の要約だけを取り、店ごとの先頭をクライアントで選ぶ（useRatingStats と同じ作法）。
+ * 取れなくても店の選択はできるので、画面側は失敗を握って「前回」を出さないだけにしてよい。
+ */
+export function useLastLogByShop() {
+  return useQuery({
+    queryKey: logKeys.lastByShop(),
+    queryFn: async () => {
+      const { data, error } = await getSupabaseBrowserClient()
+        .from('logs')
+        .select('id, shop_id, logged_on, created_at, rating, bean:beans(name)')
+        .not('shop_id', 'is', null);
+      if (error) throw error;
+      return lastLogByShop(data);
     },
   });
 }

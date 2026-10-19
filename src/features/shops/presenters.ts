@@ -1,4 +1,5 @@
-import type { RatingStat } from '@/features/logs/aggregate';
+import type { LastLog, RatingStat } from '@/features/logs/aggregate';
+import { formatLastVisit } from '@/features/shops/last-visit';
 import { distanceM } from '@/lib/geo';
 import { SHOP_KIND_LABELS, type ShopKind } from '@/lib/schemas/shop';
 import type { Shop } from './queries';
@@ -23,9 +24,11 @@ export type ShopRow = {
   /** 店の出どころと地図サービス側の ID（Google の店は place_id でリンクする） */
   placeProvider?: string | null;
   externalPlaceId?: string | null;
+  /** 前回の記録（F-SHOP-8）。記録が無い・まだ読み込めていなければ null */
+  last?: LastLog | null;
 };
 
-export type ShopSort = 'name' | 'rating' | 'distance';
+export type ShopSort = 'name' | 'rating' | 'distance' | 'frequency' | 'recent';
 
 export type ShopRowFilter = {
   kind?: ShopKind;
@@ -47,7 +50,7 @@ export function shortArea(address: string | null): string | null {
   return core.length > 14 ? `${core.slice(0, 12)}…` : core;
 }
 
-export function toShopRow(shop: Shop, stat: RatingStat | undefined): ShopRow {
+export function toShopRow(shop: Shop, stat: RatingStat | undefined, last?: LastLog): ShopRow {
   return {
     id: shop.id,
     name: shop.name,
@@ -63,6 +66,7 @@ export function toShopRow(shop: Shop, stat: RatingStat | undefined): ShopRow {
     distanceM: null,
     placeProvider: shop.place_provider,
     externalPlaceId: shop.external_place_id,
+    last: last ?? null,
   };
 }
 
@@ -97,6 +101,20 @@ export function sortShopRows(rows: readonly ShopRow[], sort: ShopSort): ShopRow[
       (a, b) =>
         (b.avgRating ?? -1) - (a.avgRating ?? -1) || b.count - a.count || a.name.localeCompare(b.name, 'ja'),
     );
+  } else if (sort === 'frequency') {
+    // よく行く順: 回数の多い順 → 最近行った順 → 名前
+    copy.sort(
+      (a, b) =>
+        b.count - a.count ||
+        (b.last?.loggedOn ?? '').localeCompare(a.last?.loggedOn ?? '') ||
+        a.name.localeCompare(b.name, 'ja'),
+    );
+  } else if (sort === 'recent') {
+    // 最近行った順: 前回の日付が新しい順。記録の無い店は最後に名前順
+    copy.sort(
+      (a, b) =>
+        (b.last?.loggedOn ?? '').localeCompare(a.last?.loggedOn ?? '') || a.name.localeCompare(b.name, 'ja'),
+    );
   } else if (sort === 'distance') {
     // 距離が分からない店（座標なし・現在地なし）は最後に名前順
     copy.sort(
@@ -130,6 +148,19 @@ export function googleMapsUrl(shop: {
   if (shop.lat != null && shop.lng != null) return `${base}${shop.lat},${shop.lng}`;
   const q = [shop.name, shop.address].filter((v): v is string => !!v && v.trim() !== '').join(' ');
   return q ? `${base}${encodeURIComponent(q)}` : null;
+}
+
+/**
+ * 店の一覧の 2 行目（F-SHOP-8）。記録のある店は「3 回 · 前回 10/19 豆名」（狭いので種別と区は省く）、
+ * 記録の無い店は従来どおり「種別 · 距離か市区」。現在地が分かっていれば距離を先頭に足す
+ */
+export function shopRowSubtitle(row: ShopRow, now: Date = new Date()): string {
+  const distance = formatDistance(row.distanceM);
+  if (row.count > 0) {
+    const last = row.last ? formatLastVisit(row.last, now)?.replace(/ ★[\d.]+$/, '') : null;
+    return [distance, `${row.count} 回`, last].filter(Boolean).join(' · ');
+  }
+  return [row.kindLabel, distance ?? row.area].filter(Boolean).join(' · ');
 }
 
 /** 一覧の距離表示。「120 m」「1.4 km」 */

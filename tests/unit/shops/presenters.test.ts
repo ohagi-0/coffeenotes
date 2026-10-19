@@ -52,6 +52,7 @@ describe('shops presenters', () => {
       distanceM: null,
       placeProvider: null,
       externalPlaceId: null,
+      last: null,
     });
     const r = toShopRow(shop({ kind: null, lat: null, lng: null, address: null }), undefined);
     expect(r).toMatchObject({

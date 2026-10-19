@@ -17,7 +17,8 @@ import { ShopList } from '@/components/shops/shop-list';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ShopMapSwitch } from '@/components/map/shop-map-switch';
 import { geocodePlace, searchNearbyPlaces, shopCandidateSources } from '@/features/geo/search';
-import { useLogsByShop, useRatingStats } from '@/features/logs/queries';
+import { useLastLogByShop, useLogsByShop, useRatingStats } from '@/features/logs/queries';
+import { formatLastVisit } from '@/features/shops/last-visit';
 import { initialCenter, toMapShops } from '@/features/shops/map-pins';
 import { useCreateShop } from '@/features/shops/mutations';
 import {
@@ -39,13 +40,15 @@ import type { ShopKind } from '@/lib/schemas/shop';
 // 上に検索欄と絞り込みチップ、その下に 300px の地図（座標のある店のピン）、選んだ店のカード、店の一覧。
 // 選択中の店は ?shop= に持つ（ADR 0008）。?new=1 で登録フォームをページ内に出す（動的セグメントは使わない）。
 // 旧 /map はここへリダイレクトする。
-// チップの値: all / cafe / roaster / green_bean_shop / rating（評価順）/ near（近い順。現在地を取る）
+// チップの値: all / cafe / roaster / green_bean_shop / often（よく行く順）/ recent（最近行った順）/ rating（評価順）/ near（近い順。現在地を取る）
 
 const CHIPS: FilterChip[] = [
   { value: 'all', label: 'すべて' },
   { value: 'cafe', label: 'カフェ' },
   { value: 'roaster', label: 'ロースター' },
   { value: 'green_bean_shop', label: '生豆' },
+  { value: 'often', label: 'よく行く順' },
+  { value: 'recent', label: '最近行った順' },
   { value: 'rating', label: '評価順' },
   { value: 'near', label: '近い順' },
 ];
@@ -74,20 +77,31 @@ function ShopsInner() {
   const [focusMiss, setFocusMiss] = useState<string | null>(null);
 
   const kind = KINDS.includes(chip as ShopKind) ? (chip as ShopKind) : undefined;
-  const sort: ShopSort = chip === 'rating' ? 'rating' : chip === 'near' ? 'distance' : 'name';
+  const sort: ShopSort =
+    chip === 'rating'
+      ? 'rating'
+      : chip === 'near'
+        ? 'distance'
+        : chip === 'often'
+          ? 'frequency'
+          : chip === 'recent'
+            ? 'recent'
+            : 'name';
   // 店は全件を 1 回取り、絞り込みは手元で行う（入力のたびに往復しない。地図のピンも同じ集合から）
   const shops = useShops();
   const stats = useRatingStats();
+  // 前回の記録（F-SHOP-8）。取れなくても一覧は出す（「前回」を出さないだけ）
+  const lastLogs = useLastLogByShop();
   const online = useOnline();
   const createShop = useCreateShop();
 
   const allRows = useMemo(
     () =>
       withDistance(
-        (shops.data ?? []).map((s) => toShopRow(s, stats.data?.byShop.get(s.id))),
+        (shops.data ?? []).map((s) => toShopRow(s, stats.data?.byShop.get(s.id), lastLogs.data?.get(s.id))),
         userPos,
       ),
-    [shops.data, stats.data, userPos],
+    [shops.data, stats.data, lastLogs.data, userPos],
   );
   const rows = useMemo(
     () => sortShopRows(filterShopRows(allRows, { kind, query: search }), sort),
@@ -357,7 +371,15 @@ function ShopsInner() {
 
           <section className="mt-5" aria-label={sort === 'distance' ? '近い順の店' : '店の一覧'}>
             <h2 className="mb-1 text-[13px] font-bold">
-              {sort === 'distance' ? '近い順' : sort === 'rating' ? '評価順' : '店の一覧'}
+              {sort === 'distance'
+                ? '近い順'
+                : sort === 'rating'
+                  ? '評価順'
+                  : sort === 'frequency'
+                    ? 'よく行く順'
+                    : sort === 'recent'
+                      ? '最近行った順'
+                      : '店の一覧'}
               <span className="text-muted-foreground font-num ml-2 text-[11px] font-normal">
                 {rows.length} 店
               </span>
@@ -402,6 +424,9 @@ function SelectedShopCard({
           </span>
         )}
       </p>
+      {formatLastVisit(shop.last) && (
+        <p className="text-foreground mt-1 text-[12px]">{formatLastVisit(shop.last)}</p>
+      )}
       <div className="mt-2 flex items-center justify-between gap-2">
         <RatingStars value={shop.avgRating} size="md" aria-label="平均星" />
         {googleMapsUrl(shop) && (
