@@ -201,7 +201,10 @@ export function overpassNearbyQuery(lat: number, lng: number, radiusM: number, l
   return `[out:json][timeout:8];(${parts});out center ${Math.min(limit * 2, 800)};`;
 }
 
-export function createNominatimProvider(fetchImpl: Fetch = fetch, now: () => number = Date.now): GeoProvider {
+export function createNominatimProvider(
+  fetchImpl: Fetch = fetch,
+  now: () => number = Date.now,
+): GeoProvider & Required<Pick<GeoProvider, 'searchPlaces'>> {
   const nearbyCache = new Map<string, { at: number; list: PlaceCandidate[] }>();
 
   async function overpass(query: string): Promise<{ elements?: OverpassElement[] }> {

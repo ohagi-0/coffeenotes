@@ -1,0 +1,187 @@
+{
+  "suggestions": [
+    {
+      "placePrediction": {
+        "place": "places/ChIJrWB6lbKMGGARp0QB0mMSNe4",
+        "placeId": "ChIJrWB6lbKMGGARp0QB0mMSNe4",
+        "text": {
+          "text": "東京都渋谷区富ケ谷１丁目１６−１１ フグレントウキョウ",
+          "matches": [
+            {
+              "startOffset": 12,
+              "endOffset": 17
+            },
+            {
+              "startOffset": 18,
+              "endOffset": 22
+            }
+          ]
+        },
+        "structuredFormat": {
+          "mainText": {
+            "text": "フグレントウキョウ",
+            "matches": [
+              {
+                "endOffset": 4
+              }
+            ]
+          },
+          "secondaryText": {
+            "text": "東京都渋谷区富ケ谷１丁目１６−１１",
+            "matches": [
+              {
+                "startOffset": 12,
+                "endOffset": 17
+              }
+            ]
+          }
+        },
+        "types": [
+          "bar",
+          "cafe",
+          "food",
+          "cocktail_bar",
+          "point_of_interest",
+          "establishment",
+          "food_store",
+          "coffee_stand",
+          "store",
+          "coffee_shop"
+        ],
+        "distanceMeters": 1269
+      }
+    },
+    {
+      "placePrediction": {
+        "place": "places/ChIJDTZj8-PzGGAR7WrdpJqrp3Y",
+        "placeId": "ChIJDTZj8-PzGGAR7WrdpJqrp3Y",
+        "text": {
+          "text": "東京都世田谷区代田４丁目３６−１４ フグレン 羽根木公園",
+          "matches": [
+            {
+              "startOffset": 12,
+              "endOffset": 17
+            },
+            {
+              "startOffset": 18,
+              "endOffset": 22
+            }
+          ]
+        },
+        "structuredFormat": {
+          "mainText": {
+            "text": "フグレン 羽根木公園",
+            "matches": [
+              {
+                "endOffset": 4
+              }
+            ]
+          },
+          "secondaryText": {
+            "text": "東京都世田谷区代田４丁目３６−１４",
+            "matches": [
+              {
+                "startOffset": 12,
+                "endOffset": 17
+              }
+            ]
+          }
+        },
+        "types": ["food_store", "establishment", "point_of_interest", "food", "store", "cafe", "coffee_shop"],
+        "distanceMeters": 4229
+      }
+    },
+    {
+      "placePrediction": {
+        "place": "places/ChIJ_eWeja-NGGAR6hsjc6Hf43k",
+        "placeId": "ChIJ_eWeja-NGGAR6hsjc6Hf43k",
+        "text": {
+          "text": "東京都渋谷区代々木４丁目２０−１０ フグレン参宮橋",
+          "matches": [
+            {
+              "startOffset": 12,
+              "endOffset": 17
+            },
+            {
+              "startOffset": 18,
+              "endOffset": 22
+            }
+          ]
+        },
+        "structuredFormat": {
+          "mainText": {
+            "text": "フグレン参宮橋",
+            "matches": [
+              {
+                "endOffset": 4
+              }
+            ]
+          },
+          "secondaryText": {
+            "text": "東京都渋谷区代々木４丁目２０−１０",
+            "matches": [
+              {
+                "startOffset": 12,
+                "endOffset": 17
+              }
+            ]
+          }
+        },
+        "types": ["food_store", "coffee_shop", "establishment", "point_of_interest", "cafe", "store", "food"],
+        "distanceMeters": 2598
+      }
+    },
+    {
+      "placePrediction": {
+        "place": "places/ChIJzVXOw5SPGGAR7yVtRAihT7o",
+        "placeId": "ChIJzVXOw5SPGGAR7yVtRAihT7o",
+        "text": {
+          "text": "東京都台東区浅草２丁目６−１５ フグレン 浅草",
+          "matches": [
+            {
+              "startOffset": 11,
+              "endOffset": 15
+            },
+            {
+              "startOffset": 16,
+              "endOffset": 20
+            }
+          ]
+        },
+        "structuredFormat": {
+          "mainText": {
+            "text": "フグレン 浅草",
+            "matches": [
+              {
+                "endOffset": 4
+              }
+            ]
+          },
+          "secondaryText": {
+            "text": "東京都台東区浅草２丁目６−１５",
+            "matches": [
+              {
+                "startOffset": 11,
+                "endOffset": 15
+              }
+            ]
+          }
+        },
+        "types": [
+          "point_of_interest",
+          "coffee_shop",
+          "food",
+          "restaurant",
+          "establishment",
+          "breakfast_restaurant",
+          "cafe",
+          "bar",
+          "food_store",
+          "store",
+          "cocktail_bar"
+        ],
+        "distanceMeters": 10441
+      }
+    }
+  ]
+}

@@ -4,10 +4,13 @@
 import { apiUrl } from '@/lib/env';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import {
+  geoDetailsResponseSchema,
   geoErrorResponseSchema,
   geoResponseSchema,
   type GeoApiErrorCode,
+  type GeoResponse,
   type PlaceCandidateDto,
+  type PlaceSuggestionDto,
 } from '@/lib/schemas/geo-response';
 
 export type GeoRequestErrorCode = GeoApiErrorCode | 'network' | 'aborted' | 'unknown';
@@ -23,7 +26,7 @@ export class GeoRequestError extends Error {
   }
 }
 
-async function callGeo(params: Record<string, string>, signal?: AbortSignal): Promise<PlaceCandidateDto[]> {
+async function callGeoJson(params: Record<string, string>, signal?: AbortSignal): Promise<unknown> {
   const {
     data: { session },
   } = await getSupabaseBrowserClient().auth.getSession();
@@ -47,10 +50,17 @@ async function callGeo(params: Record<string, string>, signal?: AbortSignal): Pr
       res.status,
     );
   }
-  const parsed = geoResponseSchema.safeParse(json);
-  if (!parsed.success)
-    throw new GeoRequestError('店候補の形式が想定と違います', 'invalid_output', res.status);
-  return parsed.data.candidates;
+  return json;
+}
+
+async function callGeoResponse(params: Record<string, string>, signal?: AbortSignal): Promise<GeoResponse> {
+  const parsed = geoResponseSchema.safeParse(await callGeoJson(params, signal));
+  if (!parsed.success) throw new GeoRequestError('店候補の形式が想定と違います', 'invalid_output', null);
+  return parsed.data;
+}
+
+async function callGeo(params: Record<string, string>, signal?: AbortSignal): Promise<PlaceCandidateDto[]> {
+  return (await callGeoResponse(params, signal)).candidates;
 }
 
 /** 現在地周辺のカフェ・ロースター（F-SHOP-3） */
@@ -81,6 +91,35 @@ export function searchPlacesByName(
   );
 }
 
+/** 店名の予測（Google。座標なし）。session は入力 → 選択を 1 課金にまとめる UUID。candidates が返るのは OSM 系のとき */
+export async function suggestPlacesByName(
+  p: { query: string; near?: { lat: number; lng: number }; session?: string },
+  signal?: AbortSignal,
+): Promise<{ suggestions: PlaceSuggestionDto[]; candidates: PlaceCandidateDto[] }> {
+  const r = await callGeoResponse(
+    {
+      op: 'search',
+      q: p.query,
+      ...(p.near ? { lat: String(p.near.lat), lng: String(p.near.lng) } : {}),
+      ...(p.session ? { session: p.session } : {}),
+    },
+    signal,
+  );
+  return { suggestions: r.suggestions ?? [], candidates: r.candidates };
+}
+
+/** 予測で選んだ店の名前・住所・座標（Google の Place Details）。session を渡すと Autocomplete のセッションが閉じる */
+export async function getPlaceDetails(
+  p: { placeId: string; session?: string },
+  signal?: AbortSignal,
+): Promise<PlaceCandidateDto | null> {
+  const parsed = geoDetailsResponseSchema.safeParse(
+    await callGeoJson({ op: 'details', id: p.placeId, ...(p.session ? { session: p.session } : {}) }, signal),
+  );
+  if (!parsed.success) throw new GeoRequestError('店情報の形式が想定と違います', 'invalid_output', null);
+  return parsed.data.candidate;
+}
+
 /** 住所・地名から座標（F-SHOP-4/6）。near を渡すと近い順 */
 export function geocodePlace(
   p: { query: string; near?: { lat: number; lng: number } },
@@ -101,6 +140,8 @@ export type ShopCandidateSources = {
   nearby: (pos: { lat: number; lng: number }) => Promise<PlaceCandidateDto[]>;
   search: (query: string, near?: { lat: number; lng: number }) => Promise<PlaceCandidateDto[]>;
   geocode: (query: string, near?: { lat: number; lng: number }) => Promise<PlaceCandidateDto[]>;
+  /** 予測で選んだ店の座標を取る（Google のみ。#36 で検索シートが使う） */
+  details?: (placeId: string, session?: string) => Promise<PlaceCandidateDto | null>;
 };
 
 export const shopCandidateSources: ShopCandidateSources = {
@@ -108,4 +149,5 @@ export const shopCandidateSources: ShopCandidateSources = {
     searchNearbyPlaces({ ...pos, radiusM: PICKER_NEARBY_RADIUS_M, limit: PICKER_NEARBY_LIMIT }),
   search: (query, near) => searchPlacesByName({ query, near }),
   geocode: (query, near) => geocodePlace({ query, near }),
+  details: (placeId, session) => getPlaceDetails({ placeId, session }),
 };

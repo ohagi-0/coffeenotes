@@ -1,0 +1,43 @@
+{
+  "places": [
+    {
+      "id": "ChIJyW-BGzaLGGARYZlDAwIZ6KY",
+      "formattedAddress": "〒150-0002 東京都渋谷区渋谷２丁目２４−１２ スクランブルスクエア 7F",
+      "location": {
+        "latitude": 35.6579787,
+        "longitude": 139.701249
+      },
+      "displayName": {
+        "text": "BETWEEN by THE YOMOGI STAND",
+        "languageCode": "ja"
+      },
+      "shortFormattedAddress": "渋谷区渋谷２丁目２４−１２ スクランブルスクエア 7F"
+    },
+    {
+      "id": "ChIJTVuMpsWLGGARhz_vRyvw3e4",
+      "formattedAddress": "〒150-0002 Tokyo, Shibuya, 2 Chome−24−12 スクランブルスクエア 東急フードショーエッジ 地下２階",
+      "location": {
+        "latitude": 35.6582601,
+        "longitude": 139.70192129999998
+      },
+      "displayName": {
+        "text": "PARIYA 渋谷スクランブルスクエア店",
+        "languageCode": "ja"
+      },
+      "shortFormattedAddress": "渋谷区渋谷２丁目２４−１２ スクランブルスクエア 東急フードショーエッジ 地下２階"
+    },
+    {
+      "id": "ChIJM6irTCqLGGARJndJlUF-Pro",
+      "formattedAddress": "〒150-0002 東京都渋谷区渋谷２丁目２４−２４ スクランブルスクエア 39F 渋谷駅",
+      "location": {
+        "latitude": 35.6582848,
+        "longitude": 139.70215009999998
+      },
+      "displayName": {
+        "text": "forucafe渋谷店",
+        "languageCode": "ja"
+      },
+      "shortFormattedAddress": "渋谷区渋谷２丁目２４−２４ スクランブルスクエア 39F 渋谷駅"
+    }
+  ]
+}

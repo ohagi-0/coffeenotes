@@ -12,6 +12,14 @@ const provider: GeoProvider = {
   searchPlaces: vi.fn(async ({ query }) => [
     { name: `店:${query}`, address: '住所', lat: 5, lng: 6, externalPlaceId: 'node/2' },
   ]),
+  suggestPlaces: undefined,
+  placeDetails: vi.fn(async ({ placeId }) => ({
+    name: `詳細:${placeId}`,
+    address: null,
+    lat: 7,
+    lng: 8,
+    externalPlaceId: placeId,
+  })),
   geocode: vi.fn(async ({ query }) => [
     { name: query, address: '住所', lat: 3, lng: 4, externalPlaceId: 'node/1' },
   ]),
@@ -47,5 +55,26 @@ describe('GET /api/geo', () => {
     expect(provider.searchPlaces).toHaveBeenCalledWith({ query: 'フグレン', near: { lat: 1, lng: 2 } });
     expect((await GET(req('op=nearby&lat=1&lng=2&radiusM=2000&limit=300'))).status).toBe(200);
     expect((await GET(req('op=nearby&lat=1&lng=2&limit=401'))).status).toBe(400);
+  });
+  it('details は座標つきの候補を返し、session は UUID だけ受け付ける', async () => {
+    const sid = '123e4567-e89b-42d3-a456-426614174000';
+    const d = await (await GET(req(`op=details&id=abc&session=${sid}`))).json();
+    expect(d.candidate.name).toBe('詳細:abc');
+    expect(provider.placeDetails).toHaveBeenCalledWith({ placeId: 'abc', sessionToken: sid });
+    expect((await GET(req('op=details&id=abc&session=nope'))).status).toBe(400);
+    expect((await GET(req('op=details'))).status).toBe(400);
+  });
+  it('suggestPlaces があれば search は予測を返す', async () => {
+    const suggestPlaces = vi.fn(async () => [{ externalPlaceId: 'p1', name: 'F', address: null }]);
+    (provider as { suggestPlaces?: unknown }).suggestPlaces = suggestPlaces;
+    const r = await (await GET(req('op=search&q=f&lat=1&lng=2'))).json();
+    expect(r.suggestions[0].externalPlaceId).toBe('p1');
+    expect(r.candidates).toEqual([]);
+    expect(suggestPlaces).toHaveBeenCalledWith({
+      query: 'f',
+      near: { lat: 1, lng: 2 },
+      sessionToken: undefined,
+    });
+    (provider as { suggestPlaces?: unknown }).suggestPlaces = undefined;
   });
 });

@@ -14,6 +14,14 @@ export interface PlaceCandidate {
   aliases?: string[];
 }
 
+/** 入力途中の予測（Google の Autocomplete）。座標は無いので、選んだら placeDetails で取る */
+export interface PlaceSuggestion {
+  externalPlaceId: string;
+  name: string;
+  address: string | null;
+  distanceM?: number;
+}
+
 export interface GeoProvider {
   readonly name: string;
   /** 現在地周辺のカフェ・ロースター候補（F-SHOP-3） */
@@ -23,12 +31,21 @@ export interface GeoProvider {
     radiusM?: number;
     limit?: number;
   }): Promise<PlaceCandidate[]>;
-  /** 店名からカフェ・コーヒー店の候補（F-SHOP-2/4）。near を渡すと近い店を優先する。部分一致に強い */
-  searchPlaces(params: {
+  /** 店名からカフェ・コーヒー店の候補（F-SHOP-2/4）。near を渡すと近い店を優先する。部分一致に強い（OSM 系） */
+  searchPlaces?(params: {
     query: string;
     near?: { lat: number; lng: number };
     limit?: number;
   }): Promise<PlaceCandidate[]>;
+  /** 店名の予測（Google 系。座標なし）。あれば searchPlaces より優先して使う（ADR 0011） */
+  suggestPlaces?(params: {
+    query: string;
+    near?: { lat: number; lng: number };
+    limit?: number;
+    sessionToken?: string;
+  }): Promise<PlaceSuggestion[]>;
+  /** 予測で選んだ店の名前・住所・座標。sessionToken を渡すとここで Autocomplete のセッションが閉じる */
+  placeDetails?(params: { placeId: string; sessionToken?: string }): Promise<PlaceCandidate | null>;
   /** 住所・地名から座標（F-SHOP-4 / F-SHOP-6 の「住所から位置を付ける」） */
   geocode(params: {
     query: string;
