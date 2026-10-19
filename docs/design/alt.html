@@ -1,0 +1,966 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Coffeenotes UI 別案の比較</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Manrope:wght@400..800&family=Shippori+Mincho+B1:wght@400;600;700&family=Courier+Prime:wght@400;700&display=swap">
+<link rel="stylesheet" href="design.css">
+<style>
+/* 比較ページだけの追加（別案はこのページで完結させる。design.css は触らない） */
+.cmp-row{margin-top:56px;padding-top:32px;border-top:1px solid var(--line)}
+.cmp-head .id{font:800 12px/1 var(--f-num),sans-serif;letter-spacing:.12em;color:var(--copper)}
+.cmp-head h3{margin:6px 0 6px;font-size:20px}
+.cmp-head p{margin:0;font-size:13px;color:var(--ink2);max-width:60em}
+.cmp-cols{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(375px,100%),1fr));gap:40px 32px;justify-items:center;margin-top:24px}
+#compare .wrap{max-width:1400px}
+@media (min-width:1180px){.cmp[data-show="all"] .cmp-cols{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.cmp-col{width:100%;max-width:375px}
+.cmp-lab{font:600 12px/1 var(--f-num),sans-serif;letter-spacing:.1em;color:var(--ink2);text-align:center}
+.switch{position:sticky;top:56px;z-index:19;display:flex;gap:6px;flex-wrap:wrap;padding:12px 0;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(10px)}
+.switch button{font:600 13px var(--f-num),sans-serif;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink2);cursor:pointer}
+.switch button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.cmp[data-show="cur"] .col-a,.cmp[data-show="cur"] .col-b,
+.cmp[data-show="a"] .col-cur,.cmp[data-show="a"] .col-b,
+.cmp[data-show="b"] .col-cur,.cmp[data-show="b"] .col-a{display:none}
+.cmp[data-show="cur"] .cmp-cols,.cmp[data-show="a"] .cmp-cols,.cmp[data-show="b"] .cmp-cols{grid-template-columns:minmax(0,375px);justify-content:center}
+.missing{height:812px;margin-top:10px;border:1.5px dashed var(--line);border-radius:46px;display:grid;place-items:center;color:var(--ink2);font-size:13px}
+/* 案 A / 案 B の枠の中身（.ph の暗い色を上書き） */
+.ph.alt-a{background:#F4EEE2;color:#2A2420;font-family:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif}
+.ph.alt-a .a-status{color:#2A2420}
+.ph.alt-a .a-url{background:#EAE2D3;color:#7A6E64}
+.ph.alt-b{background:#D9D5CC;color:#111;font-family:"Courier Prime","Osaka-Mono","MS Gothic","Hiragino Sans",monospace}
+.ph.alt-b .a-status{color:#111}
+.ph.alt-b .a-url{background:#EFECE5;color:#555}
+.alt-body{flex:1;position:relative;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;display:flex;flex-direction:column;font-size:14px;line-height:1.5}
+.alt-body::-webkit-scrollbar{display:none}
+.ph.alt-b .alt-body{align-items:center}
+.alt-body a{color:inherit} .alt-body button,.alt-body input,.alt-body textarea{font-family:inherit}
+</style>
+</head>
+<body>
+<nav class="nav"><div class="wrap">
+  <a class="wm" href="index.html">Coffeenotes</a>
+  <ul>
+    <li><a href="index.html#direction">方向性</a></li>
+    <li><a href="index.html#tokens">色と書体</a></li>
+    <li><a href="index.html#components">部品</a></li>
+    <li class="sep"></li>
+    <li><a href="mobile.html">Web スマホ</a></li>
+    <li><a href="desktop.html">Web PC</a></li>
+    <li><a href="ios.html">iOS アプリ</a></li>
+    <li><a href="alt.html" class="on">別案の比較</a></li>
+  </ul>
+</div></nav>
+<header class="phead wrap">
+  <div class="secno">ALTERNATIVES · 2026-10-19</div>
+  <h1>UI 別案の比較</h1>
+  <p class="lead">「AI が作ったように見える」という指摘を受けて、画面ではなく紙のものを真似た 2 案を、現行（Espresso &amp; Copper）と同じ画面で並べた。角丸のカード・影・グラデーション・ピル型のチップを使わない。どちらも明るい地なので、採るなら「ダーク専用」（ADR 0006）を改める。決定ではなく比較用。</p>
+  <dl class="facts">
+    <div><dt>現行</dt><dd>黒地 · 銅 · Bodoni Moda</dd></div>
+    <div><dt>案 A 喫茶手帖</dt><dd>クリームの紙 · 明朝（Shippori Mincho）· 数字は Courier · 操作は朱</dd></div>
+    <div><dt>案 B 伝票</dt><dd>白い紙 · 黒 1 色 · 等幅 · ミシン目</dd></div>
+  </dl>
+</header>
+
+<section id="compare"><div class="wrap cmp" data-show="all">
+  <div class="secno">COMPARE</div>
+  <h2>画面ごとの比較</h2>
+  <p class="lead">同じ画面を 3 列に並べる。狭い画面では 1 列に落ちるので、上のボタンで 1 案だけに絞れる。表示はサンプルデータ。</p>
+  <div class="switch" role="group" aria-label="表示する案">
+    <button type="button" data-show="all" aria-pressed="true">並べて見る</button>
+    <button type="button" data-show="cur" aria-pressed="false">現行だけ</button>
+    <button type="button" data-show="a" aria-pressed="false">案 A だけ</button>
+    <button type="button" data-show="b" aria-pressed="false">案 B だけ</button>
+  </div>
+  
+  <div class="cmp-row" id="cmp-home">
+    <div class="cmp-head"><div class="id">S10</div><h3>ホーム（豆のコレクション）</h3><p>現行は棚と袋。案 A は国ごとの判子を押していくスタンプ帳、案 B は産地ごとの棒グラフ付きの伝票。</p></div>
+    <div class="cmp-cols">
+      <div class="cmp-col col-cur"><div class="cmp-lab">現行 · Espresso &amp; Copper</div><div class="ph">
+      <div class="a-status"></div>
+      <div class="a-url"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>coffeenotes.app</div>
+      <div class="a-body">
+        <header class="site"><a class="wm" href="#compare">Coffeenotes</a><div class="r"><a class="cta" href="#compare"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>記録する</a><span class="menu" aria-label="メニュー"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></span></div></header>
+        <div class="a-h"><h1>豆のコレクション</h1></div>
+        <div style="display:flex;align-items:baseline;gap:8px;margin-top:4px"><span class="rv" style="font-size:44px;line-height:1">38</span><span style="font-size:14px">杯</span><span style="font-size:12px;color:var(--a-mute);margin-left:4px">これまでに記録したコーヒー</span></div>
+        <div style="font-size:12px;color:var(--a-mute);margin:8px 0 16px">6 種類の豆 · 12 の産地のうち 4 を制覇</div>
+        <div class="chips"><span class="chip on">生産国の棚</span><span class="chip">品種の棚</span><span class="chip">すべての豆</span></div>
+        <div style="margin-top:16px;display:flex;align-items:baseline;gap:8px;padding-bottom:8px"><span class="disp" style="font-size:17px">エチオピア</span><span style="font:600 10px var(--f-num),sans-serif;letter-spacing:.12em;color:var(--a-mute)">ETHIOPIA</span></div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;padding:0 6px 14px;border-bottom:6px solid #2C231C;box-shadow:0 8px 10px -8px #000">
+          <div style="position:relative;background:linear-gradient(180deg,#C9A880 0%,#B08A5F 100%);border-radius:8px 8px 10px 10px;padding:14px 10px 10px;box-shadow:0 10px 18px -10px rgba(0,0,0,.8)">
+  <div style="position:absolute;left:8px;right:8px;top:6px;border-top:1px dashed rgba(0,0,0,.35)"></div>
+  <span style="position:absolute;right:-6px;top:-6px;width:30px;height:30px;border-radius:50%;background:var(--a-cu);color:var(--a-oncu);display:grid;place-items:center;font:800 11px var(--f-num),sans-serif">4.0</span>
+  <div style="background:#EDE3D2;color:#2A2118;border-radius:3px;padding:9px 8px 8px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08),inset 0 0 0 3px #EDE3D2,inset 0 0 0 4px rgba(0,0,0,.18);display:flex;flex-direction:column;gap:4px;min-height:132px">
+    <div style="font:700 8px/1 'Helvetica Neue',Helvetica,Arial,sans-serif;letter-spacing:.22em;text-transform:uppercase">Nagare Roastery</div>
+    <div style="width:22px;border-top:1px solid #2A2118"></div>
+    <div class="disp" style="font-size:17px;line-height:1.02">Ethiopia Guji Anaerobic</div>
+    <div style="font:500 8.5px/1.3 'Helvetica Neue',Helvetica,Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#6B5E4F">Ethiopia · Natural</div>
+    <div style="margin-top:auto;border-top:1px solid rgba(0,0,0,.15);padding-top:5px;display:flex;justify-content:space-between;font:600 8px var(--f-num),sans-serif;color:#6B5E4F"><span>2026.10.17 · 自宅</span><span>4 cups</span></div>
+  </div>
+</div>
+          <div style="position:relative;background:linear-gradient(180deg,#C9A880 0%,#B08A5F 100%);border-radius:8px 8px 10px 10px;padding:14px 10px 10px;box-shadow:0 10px 18px -10px rgba(0,0,0,.8)">
+  <div style="position:absolute;left:8px;right:8px;top:6px;border-top:1px dashed rgba(0,0,0,.35)"></div>
+  <span style="position:absolute;right:-6px;top:-6px;width:30px;height:30px;border-radius:50%;background:var(--a-cu);color:var(--a-oncu);display:grid;place-items:center;font:800 11px var(--f-num),sans-serif">4.5</span>
+  <div style="background:#F6F1E8;color:#2A2118;border-radius:3px;padding:9px 8px 8px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08),inset 0 0 0 3px #F6F1E8,inset 0 0 0 4px rgba(0,0,0,.18);display:flex;flex-direction:column;gap:4px;min-height:132px">
+    <div style="font:700 8px/1 'Helvetica Neue',Helvetica,Arial,sans-serif;letter-spacing:.22em;text-transform:uppercase">KIELO</div>
+    <div style="width:22px;border-top:1px solid #2A2118"></div>
+    <div class="disp" style="font-size:17px;line-height:1.02">Yirgacheffe Kochere</div>
+    <div style="font:500 8.5px/1.3 'Helvetica Neue',Helvetica,Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#6B5E4F">Ethiopia · Washed</div>
+    <div style="margin-top:auto;border-top:1px solid rgba(0,0,0,.15);padding-top:5px;display:flex;justify-content:space-between;font:600 8px var(--f-num),sans-serif;color:#6B5E4F"><span>2026.09.02 · KIELO</span><span>2 cups</span></div>
+  </div>
+</div>
+        </div>
+        <div style="margin-top:18px;display:flex;align-items:baseline;gap:8px;padding-bottom:8px"><span class="disp" style="font-size:17px">コロンビア</span><span style="font:600 10px var(--f-num),sans-serif;letter-spacing:.12em;color:var(--a-mute)">COLOMBIA</span></div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;padding:0 6px 14px;border-bottom:6px solid #2C231C;box-shadow:0 8px 10px -8px #000">
+          <div style="position:relative;background:linear-gradient(180deg,#C9A880 0%,#B08A5F 100%);border-radius:8px 8px 10px 10px;padding:14px 10px 10px;box-shadow:0 10px 18px -10px rgba(0,0,0,.8)">
+  <div style="position:absolute;left:8px;right:8px;top:6px;border-top:1px dashed rgba(0,0,0,.35)"></div>
+  <span style="position:absolute;right:-6px;top:-6px;width:30px;height:30px;border-radius:50%;background:var(--a-cu);color:var(--a-oncu);display:grid;place-items:center;font:800 11px var(--f-num),sans-serif">4.5</span>
+  <div style="background:#F6F1E8;color:#2A2118;border-radius:3px;padding:9px 8px 8px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08),inset 0 0 0 3px #F6F1E8,inset 0 0 0 4px rgba(0,0,0,.18);display:flex;flex-direction:column;gap:4px;min-height:132px">
+    <div style="font:700 8px/1 'Helvetica Neue',Helvetica,Arial,sans-serif;letter-spacing:.22em;text-transform:uppercase">KIELO COFFEE</div>
+    <div style="width:22px;border-top:1px solid #2A2118"></div>
+    <div class="disp" style="font-size:17px;line-height:1.02">Lusitania Lime Geisha</div>
+    <div style="font:500 8.5px/1.3 'Helvetica Neue',Helvetica,Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#6B5E4F">Colombia · Lime infused</div>
+    <div style="margin-top:auto;border-top:1px solid rgba(0,0,0,.15);padding-top:5px;display:flex;justify-content:space-between;font:600 8px var(--f-num),sans-serif;color:#6B5E4F"><span>2026.10.19 · KIELO</span><span>2 cups</span></div>
+  </div>
+</div>
+          <div style="position:relative;background:linear-gradient(180deg,#C9A880 0%,#B08A5F 100%);border-radius:8px 8px 10px 10px;padding:14px 10px 10px;box-shadow:0 10px 18px -10px rgba(0,0,0,.8)">
+  <div style="position:absolute;left:8px;right:8px;top:6px;border-top:1px dashed rgba(0,0,0,.35)"></div>
+  <span style="position:absolute;right:-6px;top:-6px;width:30px;height:30px;border-radius:50%;background:var(--a-cu);color:var(--a-oncu);display:grid;place-items:center;font:800 11px var(--f-num),sans-serif">5.0</span>
+  <div style="background:#F1E4E4;color:#2A2118;border-radius:3px;padding:9px 8px 8px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08),inset 0 0 0 3px #F1E4E4,inset 0 0 0 4px rgba(0,0,0,.18);display:flex;flex-direction:column;gap:4px;min-height:132px">
+    <div style="font:700 8px/1 'Helvetica Neue',Helvetica,Arial,sans-serif;letter-spacing:.22em;text-transform:uppercase">Glint Coffee</div>
+    <div style="width:22px;border-top:1px solid #2A2118"></div>
+    <div class="disp" style="font-size:17px;line-height:1.02">El Paraiso Lychee</div>
+    <div style="font:500 8.5px/1.3 'Helvetica Neue',Helvetica,Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#6B5E4F">Colombia · Thermal shock</div>
+    <div style="margin-top:auto;border-top:1px solid rgba(0,0,0,.15);padding-top:5px;display:flex;justify-content:space-between;font:600 8px var(--f-num),sans-serif;color:#6B5E4F"><span>2026.10.05 · Glint</span><span>1 cup</span></div>
+  </div>
+</div>
+        </div>
+        <div style="margin-top:18px;display:flex;align-items:baseline;gap:8px;padding-bottom:8px"><span class="disp" style="font-size:17px">ベトナム</span><span style="font:600 10px var(--f-num),sans-serif;letter-spacing:.12em;color:var(--a-mute)">VIETNAM</span></div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;padding:0 6px 14px;border-bottom:6px solid #2C231C;box-shadow:0 8px 10px -8px #000">
+          <div style="border:1.5px dashed var(--a-line);border-radius:8px;min-height:150px;display:grid;place-items:center;font-size:12px;color:var(--a-mute)">まだ飲んでいません</div>
+        </div>
+        <footer class="sfoot"><div class="wm">Coffeenotes</div><div class="links"><a href="#compare">入力記録一覧</a><a href="#compare">記録したお店</a><a href="#compare">好みの分析</a><a href="#compare">設定</a></div><div>© 2026 Coffeenotes · <a href="#compare">プライバシー</a> · <a href="#compare">お問い合わせ</a></div></footer>
+      </div>
+    </div></div>
+      <div class="cmp-col col-a"><div class="cmp-lab">案 A · 喫茶手帖</div><div class="ph alt-a">
+      <div class="a-status"></div>
+      <div class="a-url"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>coffeenotes.app</div>
+      <div class="alt-body">
+
+  <div style="display: flex; align-items: flex-end; justify-content: space-between; padding: 8px 20px 10px 20px; border-bottom: 1px solid #2A2420">
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <div style="font-family: 'Courier Prime', monospace; font-size: 11px; letter-spacing: .22em; color: #7A6E64">COFFEE NOTES · 手帖</div>
+      <div style="font-size: 26px; font-weight: 700; letter-spacing: .02em; line-height: 1.1">豆のスタンプ帳</div>
+    </div>
+    <button type="button" aria-label="メニュー" style="width: 44px; height: 44px; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; padding: 0">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2A2420" stroke-width="1.6" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18"/></svg>
+    </button>
+  </div>
+
+  <div style="display: flex; align-items: baseline; gap: 10px; padding: 16px 20px 6px 20px">
+    <div style="font-family: 'Courier Prime', monospace; font-size: 54px; font-weight: 700; line-height: 1; letter-spacing: -.02em">38</div>
+    <div style="font-size: 15px; font-weight: 600">杯</div>
+    <div style="font-size: 12px; color: #7A6E64; margin-left: auto; text-align: right; line-height: 1.5">6 種類の豆<br>12 の産地のうち 4 を制覇</div>
+  </div>
+
+  <div style="display: flex; gap: 18px; padding: 6px 20px 0 20px; border-bottom: 1px dashed #B9AE9C; margin: 0 0 14px 0">
+    <a href="#compare" style="padding: 8px 0 10px 0; font-size: 13px; font-weight: 700; text-decoration: none; border-bottom: 2px solid #B8412E; color: #B8412E">生産国</a>
+    <a href="#compare" style="padding: 8px 0 10px 0; font-size: 13px; text-decoration: none; color: #7A6E64">品種</a>
+    <a href="#compare" style="padding: 8px 0 10px 0; font-size: 13px; text-decoration: none; color: #7A6E64">すべての豆</a>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 10px; padding: 0 20px">
+
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 6px">
+      <div style="width: 92px; height: 92px; border-radius: 50%; border: 2px solid #B8412E; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #B8412E; transform: rotate(-6deg); box-sizing: border-box; outline: 1px solid #B8412E; outline-offset: -6px">
+        <div style="font-size: 10px; letter-spacing: .18em; line-height: 1">BRAZIL</div>
+        <div style="font-size: 17px; font-weight: 700; line-height: 1.2; margin-top: 4px">ブラジル</div>
+        <div style="font-family: 'Courier Prime', monospace; font-size: 11px; margin-top: 3px">×3</div>
+      </div>
+      <div style="font-size: 11px; color: #7A6E64">最後 10.02</div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 6px">
+      <div style="width: 92px; height: 92px; border-radius: 50%; border: 1.5px dashed #B9AE9C; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #7A6E64; box-sizing: border-box">
+        <div style="font-size: 10px; letter-spacing: .18em; line-height: 1">VIETNAM</div>
+        <div style="font-size: 15px; line-height: 1.2; margin-top: 4px">ベトナム</div>
+      </div>
+      <div style="font-size: 11px; color: #7A6E64">まだ</div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 6px">
+      <div style="width: 92px; height: 92px; border-radius: 50%; border: 2px solid #B8412E; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #B8412E; transform: rotate(4deg); box-sizing: border-box; outline: 1px solid #B8412E; outline-offset: -6px">
+        <div style="font-size: 10px; letter-spacing: .18em; line-height: 1">COLOMBIA</div>
+        <div style="font-size: 17px; font-weight: 700; line-height: 1.2; margin-top: 4px">コロンビア</div>
+        <div style="font-family: 'Courier Prime', monospace; font-size: 11px; margin-top: 3px">×9</div>
+      </div>
+      <div style="font-size: 11px; color: #7A6E64">最後 10.19</div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 6px">
+      <div style="width: 92px; height: 92px; border-radius: 50%; border: 1.5px dashed #B9AE9C; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #7A6E64; box-sizing: border-box">
+        <div style="font-size: 10px; letter-spacing: .18em; line-height: 1">INDONESIA</div>
+        <div style="font-size: 14px; line-height: 1.2; margin-top: 4px">インドネシア</div>
+      </div>
+      <div style="font-size: 11px; color: #7A6E64">まだ</div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 6px">
+      <div style="width: 92px; height: 92px; border-radius: 50%; border: 2px solid #B8412E; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #B8412E; transform: rotate(-3deg); box-sizing: border-box; outline: 1px solid #B8412E; outline-offset: -6px">
+        <div style="font-size: 10px; letter-spacing: .18em; line-height: 1">ETHIOPIA</div>
+        <div style="font-size: 17px; font-weight: 700; line-height: 1.2; margin-top: 4px">エチオピア</div>
+        <div style="font-family: 'Courier Prime', monospace; font-size: 11px; margin-top: 3px">×12</div>
+      </div>
+      <div style="font-size: 11px; color: #7A6E64">最後 09.19</div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 6px">
+      <div style="width: 92px; height: 92px; border-radius: 50%; border: 1.5px dashed #B9AE9C; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #7A6E64; box-sizing: border-box">
+        <div style="font-size: 10px; letter-spacing: .18em; line-height: 1">HONDURAS</div>
+        <div style="font-size: 15px; line-height: 1.2; margin-top: 4px">ホンジュラス</div>
+      </div>
+      <div style="font-size: 11px; color: #7A6E64">まだ</div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 6px">
+      <div style="width: 92px; height: 92px; border-radius: 50%; border: 1.5px dashed #B9AE9C; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #7A6E64; box-sizing: border-box">
+        <div style="font-size: 10px; letter-spacing: .18em; line-height: 1">UGANDA</div>
+        <div style="font-size: 15px; line-height: 1.2; margin-top: 4px">ウガンダ</div>
+      </div>
+      <div style="font-size: 11px; color: #7A6E64">まだ</div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 6px">
+      <div style="width: 92px; height: 92px; border-radius: 50%; border: 2px solid #B8412E; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #B8412E; transform: rotate(7deg); box-sizing: border-box; outline: 1px solid #B8412E; outline-offset: -6px">
+        <div style="font-size: 10px; letter-spacing: .18em; line-height: 1">KENYA</div>
+        <div style="font-size: 17px; font-weight: 700; line-height: 1.2; margin-top: 4px">ケニア</div>
+        <div style="font-family: 'Courier Prime', monospace; font-size: 11px; margin-top: 3px">×2</div>
+      </div>
+      <div style="font-size: 11px; color: #7A6E64">最後 09.14</div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 6px">
+      <div style="width: 92px; height: 92px; border-radius: 50%; border: 1.5px dashed #B9AE9C; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #7A6E64; box-sizing: border-box">
+        <div style="font-size: 10px; letter-spacing: .18em; line-height: 1">GUATEMALA</div>
+        <div style="font-size: 15px; line-height: 1.2; margin-top: 4px">グアテマラ</div>
+      </div>
+      <div style="font-size: 11px; color: #7A6E64">まだ</div>
+    </div>
+
+  </div>
+
+  <div style="margin: 18px 20px 0 20px; padding: 12px 0 0 0; border-top: 1px solid #2A2420; display: flex; align-items: baseline; justify-content: space-between">
+    <div style="font-size: 13px; font-weight: 700">最近の一杯</div>
+    <a href="#compare" style="font-size: 12px; color: #B8412E; text-decoration: none">一覧へ →</a>
+  </div>
+  <a href="#compare" style="margin: 8px 20px 0 20px; display: flex; align-items: baseline; gap: 10px; text-decoration: none; color: inherit">
+    <div style="font-family: 'Courier Prime', monospace; font-size: 12px; color: #7A6E64; width: 46px">10.19</div>
+    <div style="flex: 1; min-width: 0; font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Lusitania Lime Geisha</div>
+    <div style="font-family: 'Courier Prime', monospace; font-size: 13px; color: #B8412E">★4.5</div>
+  </a>
+
+  <div style="position: sticky; bottom: 0; flex: none; margin-top: auto; padding: 22px 20px 22px; background: linear-gradient(to bottom, rgba(244,238,226,0), #F4EEE2 40%)">
+    <a href="#compare" style="display: flex; align-items: center; justify-content: center; gap: 10px; height: 54px; background: #B8412E; color: #F4EEE2; text-decoration: none; font-size: 16px; font-weight: 700; letter-spacing: .08em">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      一杯を記す
+    </a>
+  </div>
+</div>
+    </div></div>
+      <div class="cmp-col col-b"><div class="cmp-lab">案 B · 伝票</div><div class="ph alt-b">
+      <div class="a-status"></div>
+      <div class="a-url"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>coffeenotes.app</div>
+      <div class="alt-body">
+
+  <div style="width: 318px; background: #FBFAF6; box-sizing: border-box; padding: 22px 18px 18px 18px; display: flex; flex-direction: column; gap: 0; border-top: 2px dashed #B5B0A6; border-bottom: 2px dashed #B5B0A6; min-height: 760px">
+
+    <div style="display: flex; justify-content: space-between; align-items: flex-start">
+      <div style="display: flex; flex-direction: column; gap: 2px">
+        <div style="font-size: 20px; font-weight: 700; letter-spacing: .12em">COFFEE NOTES</div>
+        <div style="font-size: 11px; letter-spacing: .1em">豆の記録帳 / KOTA</div>
+      </div>
+      <button type="button" aria-label="メニュー" style="width: 44px; height: 44px; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; padding: 0; margin: -10px -10px 0 0">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="1.8" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18"/></svg>
+      </button>
+    </div>
+
+    <div style="margin-top: 12px; font-size: 11px; letter-spacing: .04em; border-top: 1px solid #111111; border-bottom: 1px solid #111111; padding: 6px 0; display: flex; justify-content: space-between">
+      <span>2026/10/19 16:52</span>
+      <span>NO. 000038</span>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 16px; font-size: 13px">
+      <span style="letter-spacing: .06em">これまでの杯数</span>
+      <span style="font-size: 34px; font-weight: 700; letter-spacing: -.02em">38</span>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 12px; margin-top: 4px">
+      <span>豆の種類</span><span>6</span>
+    </div>
+    <div style="display: flex; justify-content: space-between; font-size: 12px; margin-top: 2px">
+      <span>制覇した産地</span><span>4 / 12</span>
+    </div>
+
+    <div style="margin-top: 16px; font-size: 11px; letter-spacing: .14em; border-bottom: 1px dashed #B5B0A6; padding-bottom: 4px; display: flex; justify-content: space-between">
+      <span>■ 生産国</span>
+      <span>品種 ／ すべて</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; font-size: 13px; margin-top: 6px">
+      <div style="display: grid; grid-template-columns: 110px minmax(0, 1fr) 40px; padding: 7px 0; border-bottom: 1px dotted #B5B0A6"><span style="font-weight: 700">エチオピア</span><span style="letter-spacing: .1em; overflow: hidden; white-space: nowrap">||||||||||||</span><span style="text-align: right">12</span></div>
+      <div style="display: grid; grid-template-columns: 110px minmax(0, 1fr) 40px; padding: 7px 0; border-bottom: 1px dotted #B5B0A6"><span style="font-weight: 700">コロンビア</span><span style="letter-spacing: .1em; overflow: hidden; white-space: nowrap">|||||||||</span><span style="text-align: right">9</span></div>
+      <div style="display: grid; grid-template-columns: 110px minmax(0, 1fr) 40px; padding: 7px 0; border-bottom: 1px dotted #B5B0A6"><span style="font-weight: 700">ブラジル</span><span style="letter-spacing: .1em; overflow: hidden; white-space: nowrap">|||</span><span style="text-align: right">3</span></div>
+      <div style="display: grid; grid-template-columns: 110px minmax(0, 1fr) 40px; padding: 7px 0; border-bottom: 1px dotted #B5B0A6"><span style="font-weight: 700">ケニア</span><span style="letter-spacing: .1em; overflow: hidden; white-space: nowrap">||</span><span style="text-align: right">2</span></div>
+      <div style="display: grid; grid-template-columns: 110px minmax(0, 1fr) 40px; padding: 7px 0; border-bottom: 1px dotted #B5B0A6; color: #6B665E"><span>ベトナム</span><span>-</span><span style="text-align: right">0</span></div>
+      <div style="display: grid; grid-template-columns: 110px minmax(0, 1fr) 40px; padding: 7px 0; border-bottom: 1px dotted #B5B0A6; color: #6B665E"><span>インドネシア</span><span>-</span><span style="text-align: right">0</span></div>
+      <div style="display: grid; grid-template-columns: 110px minmax(0, 1fr) 40px; padding: 7px 0; border-bottom: 1px dotted #B5B0A6; color: #6B665E"><span>ホンジュラス</span><span>-</span><span style="text-align: right">0</span></div>
+      <div style="display: grid; grid-template-columns: 110px minmax(0, 1fr) 40px; padding: 7px 0; border-bottom: 1px dotted #B5B0A6; color: #6B665E"><span>グアテマラ</span><span>-</span><span style="text-align: right">0</span></div>
+    </div>
+
+    <div style="margin-top: 16px; font-size: 11px; letter-spacing: .14em; border-bottom: 1px dashed #B5B0A6; padding-bottom: 4px">■ 最近の一杯</div>
+    <a href="#compare" style="display: grid; grid-template-columns: 48px minmax(0, 1fr) 44px; gap: 0 6px; font-size: 13px; padding: 8px 0; text-decoration: none; color: inherit">
+      <span>10/19</span>
+      <span style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis">LUSITANIA LIME GEISHA</span>
+      <span style="text-align: right">4.5*</span>
+    </a>
+
+    <div style="margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: 10px; padding-top: 16px">
+      <div style="width: 120px; height: 44px; border: 2px solid #111111; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; letter-spacing: .2em; transform: rotate(-4deg)">記録中</div>
+      <div style="font-size: 10px; letter-spacing: .06em; color: #6B665E">THANK YOU / またどうぞ</div>
+      <div style="height: 26px; width: 240px; background: repeating-linear-gradient(90deg, #111111 0 2px, transparent 2px 4px, #111111 4px 5px, transparent 5px 9px, #111111 9px 12px, transparent 12px 14px)" aria-hidden="true"></div>
+    </div>
+  </div>
+
+  <div style="position: sticky; bottom: 0; flex: none; margin-top: auto; width: 318px; padding: 14px 0 20px; background: linear-gradient(to bottom, rgba(217,213,204,0), #D9D5CC 40%)">
+    <a href="#compare" style="display: flex; align-items: center; justify-content: center; height: 52px; background: #111111; color: #FBFAF6; text-decoration: none; font-size: 15px; font-weight: 700; letter-spacing: .2em">＋ 一杯を記す</a>
+  </div>
+</div>
+    </div></div>
+    </div>
+  </div>
+  <div class="cmp-row" id="cmp-logs">
+    <div class="cmp-head"><div class="id">S2</div><h3>入力記録一覧</h3><p>現行はカード画像付きの行。案 A は日付を左に置いた帳簿の罫線、案 B は品名・店・評価の 3 列の伝票。</p></div>
+    <div class="cmp-cols">
+      <div class="cmp-col col-cur"><div class="cmp-lab">現行 · Espresso &amp; Copper</div><div class="ph">
+      <div class="a-status"></div>
+      <div class="a-url"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>coffeenotes.app</div>
+      <div class="a-body">
+        <header class="site"><a class="wm" href="#compare">Coffeenotes</a><div class="r"><a class="cta" href="#compare"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>記録する</a><span class="menu" aria-label="メニュー"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></span></div></header>
+        <div class="a-h"><h1>入力記録一覧<small>9 月 · 12 杯</small></h1></div>
+        <div class="inp" id="m-search" style="margin-bottom:10px"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>豆名・フレーバー・メモで探す</div>
+        <div class="chips"><span class="chip cu"><svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg>絞り込み</span><span class="chip on">すべて</span><span class="chip">星 4 以上</span><span class="chip">自宅</span><span class="chip">Colombia</span><span class="chip">Natural</span><span class="chip">#ゲイシャ</span></div>
+        <div class="dg">今日 · 9月21日（日）</div>
+        <div class="lg"><div class="cardimg" style="font-size:11px"><small>KIELO</small><b>Lusitania Lime Geisha</b><em>Colombia</em></div><div><div class="nm">Lusitania Lime Geisha</div><div class="ro">KIELO COFFEE</div><div class="mt"><span class="st" data-v="4.5"></span><b>4.5</b><span>KIELO COFFEE 蔵前</span></div><div class="fl"><i>Lime</i><i>Bergamot</i><i>Laurier</i></div></div></div>
+        <div class="dg">9月19日（金）</div>
+        <div class="lg"><div class="cardimg" style="font-size:11px;background:#EDE3D2"><small>NAGARE</small><b>Guji Anaerobic</b><em>Ethiopia</em></div><div><div class="nm">Ethiopia Guji Anaerobic</div><div class="ro">Nagare Roastery</div><div class="mt"><span class="st" data-v="4"></span><b>4.0</b><span class="pill home">自宅</span><span>V60 · 1:15 · 92 ℃</span></div><div class="fl"><i>Blueberry</i><i>Cacao</i><i>Winey</i></div></div></div>
+        <div class="dg">9月14日（日）</div>
+        <div class="lg"><div class="cardimg" style="font-size:11px;background:#E4E9E3"><small>SONAR</small><b>Kiambu AA</b><em>Kenya</em></div><div><div class="nm">Kenya Kiambu AA</div><div class="ro">Sonar Coffee Stand</div><div class="mt"><span class="st" data-v="3.5"></span><b>3.5</b><span>Sonar Coffee Stand 神保町</span></div><div class="fl"><i>Blackcurrant</i><i>Tomato</i></div></div></div>
+        <div class="dg">9月7日（日）</div>
+        <div class="lg"><div class="cardimg" style="font-size:11px;background:#F1E4E4"><small>GLINT</small><b>El Paraiso Lychee</b><em>Colombia</em></div><div><div class="nm">El Paraiso Lychee</div><div class="ro">Glint Coffee</div><div class="mt"><span class="st" data-v="5"></span><b>5.0</b><span>Glint Coffee 表参道</span></div><div class="fl"><i>Lychee</i><i>Rose</i><i>Jasmine</i></div></div></div>
+        <div class="dg">8月30日（土）</div>
+        <div class="lg"><div class="cardimg" style="font-size:11px;background:#2C231C;color:#F1E8DA"><small style="color:#D48C4E">HOME ROAST</small><b>Cerrado #2</b><em style="color:#A39181">Brazil</em></div><div><div class="nm">Brazil Cerrado</div><div class="ro">自家焙煎 · バッチ #2 · 中煎り</div><div class="mt"><span class="st" data-v="3.5"></span><b>3.5</b><span class="pill home">自宅</span><span>フレンチプレス</span></div><div class="fl"><i>Nutty</i><i>Chocolate</i></div></div></div>
+        <footer class="sfoot"><div class="wm">Coffeenotes</div><div class="links"><a href="#compare">入力記録一覧</a><a href="#compare">記録したお店</a><a href="#compare">好みの分析</a><a href="#compare">設定</a><a href="#compare">エクスポート</a></div><div>© 2026 Coffeenotes · <a href="#compare">プライバシー</a> · <a href="#compare">お問い合わせ</a></div></footer>
+      </div>
+    </div></div>
+      <div class="cmp-col col-a"><div class="cmp-lab">案 A · 喫茶手帖</div><div class="ph alt-a">
+      <div class="a-status"></div>
+      <div class="a-url"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>coffeenotes.app</div>
+      <div class="alt-body">
+
+  <div style="display: flex; align-items: flex-end; justify-content: space-between; padding: 8px 20px 10px 20px; border-bottom: 1px solid #2A2420">
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <div style="font-family: 'Courier Prime', monospace; font-size: 11px; letter-spacing: .22em; color: #7A6E64">OCTOBER 2026 · 12 杯</div>
+      <div style="font-size: 26px; font-weight: 700; letter-spacing: .02em; line-height: 1.1">入力記録一覧</div>
+    </div>
+    <button type="button" aria-label="メニュー" style="width: 44px; height: 44px; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; padding: 0">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2A2420" stroke-width="1.6" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18"/></svg>
+    </button>
+  </div>
+
+  <div style="padding: 12px 20px 0 20px; display: flex; flex-direction: column; gap: 8px">
+    <label style="display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #2A2420; padding: 6px 0">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7A6E64" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+      <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">豆名・フレーバー・メモで探す</span>
+      <input type="search" placeholder="豆名・フレーバー・メモで探す" style="flex: 1; border: 0; background: transparent; font-size: 14px; outline: none; color: #2A2420; padding: 4px 0">
+    </label>
+    <div style="display: flex; gap: 14px; font-size: 12px; padding: 2px 0 6px 0; border-bottom: 1px dashed #B9AE9C">
+      <a href="#compare" style="text-decoration: none; color: #B8412E; font-weight: 700">すべて</a>
+      <a href="#compare" style="text-decoration: none; color: #7A6E64">星 4 以上</a>
+      <a href="#compare" style="text-decoration: none; color: #7A6E64">自宅</a>
+      <a href="#compare" style="text-decoration: none; color: #7A6E64">コロンビア</a>
+      <a href="#compare" style="text-decoration: none; color: #7A6E64">#ゲイシャ</a>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; padding: 4px 20px 0 20px">
+
+    <div style="font-family: 'Courier Prime', monospace; font-size: 11px; letter-spacing: .14em; color: #7A6E64; padding: 12px 0 2px 0">今日 · 10月19日（月）</div>
+    <a href="#compare" style="display: grid; grid-template-columns: 46px minmax(0, 1fr) 52px; gap: 0 8px; align-items: start; padding: 10px 0 12px 0; border-bottom: 1px solid #D8CFC0; text-decoration: none; color: inherit">
+      <div style="font-family: 'Courier Prime', monospace; font-size: 12px; color: #7A6E64; padding-top: 4px">19<br>月</div>
+      <div style="display: flex; flex-direction: column; gap: 3px; min-width: 0">
+        <div style="font-size: 11px; letter-spacing: .14em; color: #7A6E64">KIELO COFFEE</div>
+        <div style="font-size: 19px; font-weight: 600; line-height: 1.2">Lusitania Lime Geisha</div>
+        <div style="font-size: 12px; color: #7A6E64">コロンビア · 蔵前 KIELO COFFEE</div>
+        <div style="font-size: 12px; font-style: italic; color: #2A2420">Lime, Bergamot, Laurier</div>
+      </div>
+      <div style="font-family: 'Courier Prime', monospace; font-size: 15px; font-weight: 700; color: #B8412E; text-align: right; padding-top: 2px">★4.5</div>
+    </a>
+
+    <div style="font-family: 'Courier Prime', monospace; font-size: 11px; letter-spacing: .14em; color: #7A6E64; padding: 12px 0 2px 0">10月</div>
+    <a href="#compare" style="display: grid; grid-template-columns: 46px minmax(0, 1fr) 52px; gap: 0 8px; align-items: start; padding: 10px 0 12px 0; border-bottom: 1px solid #D8CFC0; text-decoration: none; color: inherit">
+      <div style="font-family: 'Courier Prime', monospace; font-size: 12px; color: #7A6E64; padding-top: 4px">17<br>土</div>
+      <div style="display: flex; flex-direction: column; gap: 3px; min-width: 0">
+        <div style="font-size: 11px; letter-spacing: .14em; color: #7A6E64">NAGARE ROASTERY</div>
+        <div style="font-size: 19px; font-weight: 600; line-height: 1.2">Ethiopia Guji Anaerobic</div>
+        <div style="font-size: 12px; color: #7A6E64">エチオピア · 自宅 · V60 1:15 92℃</div>
+        <div style="font-size: 12px; font-style: italic">Blueberry, Cacao, Winey</div>
+      </div>
+      <div style="font-family: 'Courier Prime', monospace; font-size: 15px; font-weight: 700; color: #B8412E; text-align: right; padding-top: 2px">★4.0</div>
+    </a>
+
+    <a href="#compare" style="display: grid; grid-template-columns: 46px minmax(0, 1fr) 52px; gap: 0 8px; align-items: start; padding: 10px 0 12px 0; border-bottom: 1px solid #D8CFC0; text-decoration: none; color: inherit">
+      <div style="font-family: 'Courier Prime', monospace; font-size: 12px; color: #7A6E64; padding-top: 4px">12<br>日</div>
+      <div style="display: flex; flex-direction: column; gap: 3px; min-width: 0">
+        <div style="font-size: 11px; letter-spacing: .14em; color: #7A6E64">SONAR COFFEE STAND</div>
+        <div style="font-size: 19px; font-weight: 600; line-height: 1.2">Kenya Kiambu AA</div>
+        <div style="font-size: 12px; color: #7A6E64">ケニア · 神保町 Sonar Coffee Stand</div>
+        <div style="font-size: 12px; font-style: italic">Blackcurrant, Tomato</div>
+      </div>
+      <div style="font-family: 'Courier Prime', monospace; font-size: 15px; font-weight: 700; color: #B8412E; text-align: right; padding-top: 2px">★3.5</div>
+    </a>
+
+    <a href="#compare" style="display: grid; grid-template-columns: 46px minmax(0, 1fr) 52px; gap: 0 8px; align-items: start; padding: 10px 0 12px 0; border-bottom: 1px solid #D8CFC0; text-decoration: none; color: inherit">
+      <div style="font-family: 'Courier Prime', monospace; font-size: 12px; color: #7A6E64; padding-top: 4px">05<br>日</div>
+      <div style="display: flex; flex-direction: column; gap: 3px; min-width: 0">
+        <div style="font-size: 11px; letter-spacing: .14em; color: #7A6E64">GLINT COFFEE</div>
+        <div style="font-size: 19px; font-weight: 600; line-height: 1.2">El Paraiso Lychee</div>
+        <div style="font-size: 12px; color: #7A6E64">コロンビア · 表参道 Glint Coffee</div>
+        <div style="font-size: 12px; font-style: italic">Lychee, Rose, Jasmine</div>
+      </div>
+      <div style="font-family: 'Courier Prime', monospace; font-size: 15px; font-weight: 700; color: #B8412E; text-align: right; padding-top: 2px">★5.0</div>
+    </a>
+
+    <div style="font-family: 'Courier Prime', monospace; font-size: 11px; letter-spacing: .14em; color: #7A6E64; padding: 12px 0 2px 0">9月</div>
+    <a href="#compare" style="display: grid; grid-template-columns: 46px minmax(0, 1fr) 52px; gap: 0 8px; align-items: start; padding: 10px 0 12px 0; border-bottom: 1px solid #D8CFC0; text-decoration: none; color: inherit">
+      <div style="font-family: 'Courier Prime', monospace; font-size: 12px; color: #7A6E64; padding-top: 4px">30<br>火</div>
+      <div style="display: flex; flex-direction: column; gap: 3px; min-width: 0">
+        <div style="font-size: 11px; letter-spacing: .14em; color: #7A6E64">自家焙煎 · バッチ #2</div>
+        <div style="font-size: 19px; font-weight: 600; line-height: 1.2">Brazil Cerrado</div>
+        <div style="font-size: 12px; color: #7A6E64">ブラジル · 自宅 · フレンチプレス · 中煎り</div>
+        <div style="font-size: 12px; font-style: italic">Nutty, Chocolate</div>
+      </div>
+      <div style="font-family: 'Courier Prime', monospace; font-size: 15px; font-weight: 700; color: #B8412E; text-align: right; padding-top: 2px">★3.5</div>
+    </a>
+  </div>
+
+  <div style="position: sticky; bottom: 0; flex: none; margin-top: auto; padding: 22px 20px 22px; background: linear-gradient(to bottom, rgba(244,238,226,0), #F4EEE2 40%)">
+    <a href="#compare" style="display: flex; align-items: center; justify-content: center; gap: 10px; height: 54px; background: #B8412E; color: #F4EEE2; text-decoration: none; font-size: 16px; font-weight: 700; letter-spacing: .08em">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      一杯を記す
+    </a>
+  </div>
+</div>
+    </div></div>
+      <div class="cmp-col col-b"><div class="cmp-lab">案 B · 伝票</div><div class="ph alt-b">
+      <div class="a-status"></div>
+      <div class="a-url"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>coffeenotes.app</div>
+      <div class="alt-body">
+
+  <div style="width: 318px; background: #FBFAF6; box-sizing: border-box; padding: 22px 18px 18px 18px; display: flex; flex-direction: column; border-top: 2px dashed #B5B0A6; border-bottom: 2px dashed #B5B0A6; min-height: 760px">
+
+    <div style="display: flex; justify-content: space-between; align-items: flex-start">
+      <div style="display: flex; flex-direction: column; gap: 2px">
+        <div style="font-size: 20px; font-weight: 700; letter-spacing: .12em">入力記録一覧</div>
+        <div style="font-size: 11px; letter-spacing: .1em">2026/10 · 12 杯</div>
+      </div>
+      <button type="button" aria-label="メニュー" style="width: 44px; height: 44px; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; padding: 0; margin: -10px -10px 0 0">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="1.8" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18"/></svg>
+      </button>
+    </div>
+
+    <label style="margin-top: 12px; display: flex; align-items: center; gap: 8px; border: 1px solid #111111; padding: 8px 10px">
+      <span style="font-size: 12px; letter-spacing: .1em">検索</span>
+      <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">豆名・フレーバー・メモで探す</span>
+      <input type="search" placeholder="豆名 / フレーバー / メモ" style="flex: 1; border: 0; background: transparent; font-size: 13px; outline: none; color: #111111; font-family: inherit; padding: 2px 0">
+    </label>
+
+    <div style="display: flex; gap: 10px; margin-top: 8px; font-size: 11px; letter-spacing: .06em">
+      <span style="padding: 4px 8px; background: #111111; color: #FBFAF6">すべて</span>
+      <span style="padding: 4px 8px; border: 1px solid #111111">★4+</span>
+      <span style="padding: 4px 8px; border: 1px solid #111111">自宅</span>
+      <span style="padding: 4px 8px; border: 1px solid #111111">コロンビア</span>
+    </div>
+
+    <div style="margin-top: 14px; font-size: 10px; letter-spacing: .1em; display: grid; grid-template-columns: 46px minmax(0, 1fr) 44px; border-bottom: 1px solid #111111; padding-bottom: 4px">
+      <span>日付</span><span>品名 / 店</span><span style="text-align: right">評価</span>
+    </div>
+
+    <a href="#compare" style="display: grid; grid-template-columns: 46px minmax(0, 1fr) 44px; gap: 2px 6px; padding: 9px 0; border-bottom: 1px dotted #B5B0A6; font-size: 13px; text-decoration: none; color: inherit">
+      <span>10/19</span>
+      <span style="font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis">LUSITANIA LIME GEISHA</span>
+      <span style="text-align: right; font-weight: 700">4.5*</span>
+      <span></span>
+      <span style="font-size: 11px; color: #6B665E; overflow: hidden; white-space: nowrap; text-overflow: ellipsis">KIELO COFFEE 蔵前 / コロンビア</span>
+      <span></span>
+      <span></span>
+      <span style="font-size: 11px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis">LIME BERGAMOT LAURIER</span>
+      <span></span>
+    </a>
+
+    <a href="#compare" style="display: grid; grid-template-columns: 46px minmax(0, 1fr) 44px; gap: 2px 6px; padding: 9px 0; border-bottom: 1px dotted #B5B0A6; font-size: 13px; text-decoration: none; color: inherit">
+      <span>10/17</span>
+      <span style="font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis">ETHIOPIA GUJI ANAEROBIC</span>
+      <span style="text-align: right; font-weight: 700">4.0*</span>
+      <span></span>
+      <span style="font-size: 11px; color: #6B665E; overflow: hidden; white-space: nowrap; text-overflow: ellipsis">自宅 / V60 1:15 92C / エチオピア</span>
+      <span></span>
+      <span></span>
+      <span style="font-size: 11px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis">BLUEBERRY CACAO WINEY</span>
+      <span></span>
+    </a>
+
+    <a href="#compare" style="display: grid; grid-template-columns: 46px minmax(0, 1fr) 44px; gap: 2px 6px; padding: 9px 0; border-bottom: 1px dotted #B5B0A6; font-size: 13px; text-decoration: none; color: inherit">
+      <span>10/12</span>
+      <span style="font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis">KENYA KIAMBU AA</span>
+      <span style="text-align: right; font-weight: 700">3.5*</span>
+      <span></span>
+      <span style="font-size: 11px; color: #6B665E; overflow: hidden; white-space: nowrap; text-overflow: ellipsis">SONAR COFFEE STAND 神保町 / ケニア</span>
+      <span></span>
+      <span></span>
+      <span style="font-size: 11px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis">BLACKCURRANT TOMATO</span>
+      <span></span>
+    </a>
+
+    <a href="#compare" style="display: grid; grid-template-columns: 46px minmax(0, 1fr) 44px; gap: 2px 6px; padding: 9px 0; border-bottom: 1px dotted #B5B0A6; font-size: 13px; text-decoration: none; color: inherit">
+      <span>10/05</span>
+      <span style="font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis">EL PARAISO LYCHEE</span>
+      <span style="text-align: right; font-weight: 700">5.0*</span>
+      <span></span>
+      <span style="font-size: 11px; color: #6B665E; overflow: hidden; white-space: nowrap; text-overflow: ellipsis">GLINT COFFEE 表参道 / コロンビア</span>
+      <span></span>
+      <span></span>
+      <span style="font-size: 11px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis">LYCHEE ROSE JASMINE</span>
+      <span></span>
+    </a>
+
+    <a href="#compare" style="display: grid; grid-template-columns: 46px minmax(0, 1fr) 44px; gap: 2px 6px; padding: 9px 0; border-bottom: 1px dotted #B5B0A6; font-size: 13px; text-decoration: none; color: inherit">
+      <span>09/30</span>
+      <span style="font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis">BRAZIL CERRADO #2</span>
+      <span style="text-align: right; font-weight: 700">3.5*</span>
+      <span></span>
+      <span style="font-size: 11px; color: #6B665E; overflow: hidden; white-space: nowrap; text-overflow: ellipsis">自宅 / 自家焙煎 中煎り / フレンチプレス</span>
+      <span></span>
+      <span></span>
+      <span style="font-size: 11px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis">NUTTY CHOCOLATE</span>
+      <span></span>
+    </a>
+
+    <div style="margin-top: 12px; font-size: 12px; display: flex; justify-content: space-between; border-top: 1px solid #111111; padding-top: 8px">
+      <span style="letter-spacing: .1em">小計 10月</span><span style="font-weight: 700">12 杯</span>
+    </div>
+    <div style="font-size: 12px; display: flex; justify-content: space-between; margin-top: 2px">
+      <span style="letter-spacing: .1em">平均</span><span style="font-weight: 700">4.1*</span>
+    </div>
+
+    <div style="margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: 8px; padding-top: 14px">
+      <div style="font-size: 10px; letter-spacing: .06em; color: #6B665E">* は 5 点満点の星</div>
+      <div style="height: 26px; width: 240px; background: repeating-linear-gradient(90deg, #111111 0 2px, transparent 2px 4px, #111111 4px 5px, transparent 5px 9px, #111111 9px 12px, transparent 12px 14px)" aria-hidden="true"></div>
+    </div>
+  </div>
+
+  <div style="position: sticky; bottom: 0; flex: none; margin-top: auto; width: 318px; padding: 14px 0 20px; background: linear-gradient(to bottom, rgba(217,213,204,0), #D9D5CC 40%)">
+    <a href="#compare" style="display: flex; align-items: center; justify-content: center; height: 52px; background: #111111; color: #FBFAF6; text-decoration: none; font-size: 15px; font-weight: 700; letter-spacing: .2em">＋ 一杯を記す</a>
+  </div>
+</div>
+    </div></div>
+    </div>
+  </div>
+  <div class="cmp-row" id="cmp-new">
+    <div class="cmp-head"><div class="id">S3 ③</div><h3>記録する — 店と評価</h3><p>現行はセグメントとチップ。案 A は墨 1 本の罫線の上に書き込む形、評価は朱の数字。案 B は未作成。</p></div>
+    <div class="cmp-cols">
+      <div class="cmp-col col-cur"><div class="cmp-lab">現行 · Espresso &amp; Copper</div><div class="ph">
+      <div class="a-status"></div>
+      <div class="a-url"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>coffeenotes.app</div>
+      <div class="a-body">
+        <header class="site"><a class="wm" href="#compare">Coffeenotes</a><div class="r"><a class="lnk" href="#compare" style="padding:0 6px">やめる</a></div></header>
+        <div class="a-h"><h1>どこで、どうだった？</h1></div>
+        <div class="stepper"><span class="done">1 撮影</span><span class="done">2 確認</span><span class="now">3 店と評価</span></div>
+        <div class="seg"><span class="on"><svg viewBox="0 0 24 24"><path d="M3 10h18M5 10v10h14V10M9 20v-6h6v6M12 3l9 7H3z"/></svg>店で</span><span><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9H4z"/></svg>自宅で</span></div>
+        <div class="sel cu"><span class="av">K</span><div class="t"><b>KIELO COFFEE 蔵前</b><span>東京都台東区蔵前 3-1-2 · 3 回目</span></div><svg class="chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div>
+        <div class="chips" style="margin-top:10px"><span class="chip"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>現在地から探す</span><span class="chip">店名で検索</span><span class="chip">地図で指定</span></div>
+        <div class="fd"><label>日付</label><div class="v">2026-09-21<span class="u">今日</span></div></div>
+        <div class="fd" style="border:0"><label>評価</label>
+          <div style="display:flex;align-items:center;gap:14px;margin-top:6px"><span class="st big" data-v="4.5"></span><span class="rv" style="font-size:36px">4.5</span></div>
+          <div style="font-size:11px;color:var(--a-mute);margin-top:4px">星の左半分で .5、右半分で .0</div>
+        </div>
+        <div class="fd" style="border:0;padding-top:4px"><label>メモ</label><div class="inp ta">冷めてからのローリエ感が良い。ライムというよりベルガモット寄り。次はアイスで試す。</div></div>
+        <div class="fd" style="border:0;padding-top:4px"><label>タグ</label><div class="fl" style="margin-top:4px"><i>#ゲイシャ</i><i>#インフューズド</i><i style="background:transparent;border:1px dashed var(--a-line);color:var(--a-mute)">#朝</i><i style="background:transparent;border:1px dashed var(--a-line);color:var(--a-mute)">#蔵前</i></div></div>
+        <div class="fd" style="border:0;padding-top:4px"><label>飲み方</label><div class="chips" style="margin-top:4px"><span class="chip on">ハンドドリップ</span><span class="chip">エスプレッソ</span><span class="chip">アイス</span><span class="chip">その他</span></div></div>
+        <div style="height:12px"></div>
+        <a class="btn" href="#compare">保存する</a>
+      </div>
+    </div></div>
+      <div class="cmp-col col-a"><div class="cmp-lab">案 A · 喫茶手帖</div><div class="ph alt-a">
+      <div class="a-status"></div>
+      <div class="a-url"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>coffeenotes.app</div>
+      <div class="alt-body">
+
+  <div style="display: flex; align-items: flex-end; justify-content: space-between; padding: 8px 20px 10px 20px; border-bottom: 1px solid #2A2420">
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <div style="font-family: 'Courier Prime', monospace; font-size: 11px; letter-spacing: .22em; color: #7A6E64">3 / 3 · 店と評価</div>
+      <div style="font-size: 26px; font-weight: 700; letter-spacing: .02em; line-height: 1.1">どこで、どうだった</div>
+    </div>
+    <a href="#compare" style="font-size: 13px; color: #7A6E64; text-decoration: none; padding: 10px 0">やめる</a>
+  </div>
+
+  <div style="padding: 14px 20px 0 20px; display: flex; flex-direction: column; gap: 16px">
+
+    <div style="display: flex; align-items: baseline; gap: 8px; border-bottom: 1px dashed #B9AE9C; padding-bottom: 8px">
+      <span style="font-size: 12px; color: #7A6E64">豆</span>
+      <span style="font-size: 17px; font-weight: 600">Lusitania Lime Geisha</span>
+      <span style="font-size: 12px; color: #7A6E64">KIELO COFFEE</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <div style="font-size: 12px; color: #7A6E64">場所</div>
+      <div style="display: flex; border: 1px solid #2A2420">
+        <button type="button" style="flex: 1; height: 44px; border: 0; background: #2A2420; color: #F4EEE2; font-size: 14px; font-weight: 700">店で</button>
+        <button type="button" style="flex: 1; height: 44px; border: 0; background: transparent; color: #2A2420; font-size: 14px">自宅で</button>
+      </div>
+      <button type="button" style="display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 10px 0; border: 0; border-bottom: 1px solid #2A2420; background: transparent; color: #2A2420">
+        <span style="width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid #B8412E; color: #B8412E; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; transform: rotate(-8deg); flex: none">K</span>
+        <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1">
+          <span style="font-size: 16px; font-weight: 600">KIELO COFFEE 蔵前</span>
+          <span style="font-size: 12px; color: #7A6E64">東京都台東区蔵前 3-1 · 登録済みの店</span>
+        </span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7A6E64" stroke-width="1.8" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+      </button>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <div style="font-size: 12px; color: #7A6E64">日付</div>
+      <div style="display: flex; align-items: baseline; gap: 10px; border-bottom: 1px solid #2A2420; padding-bottom: 8px">
+        <span style="font-family: 'Courier Prime', monospace; font-size: 20px; font-weight: 700">2026.10.19</span>
+        <span style="font-size: 12px; color: #7A6E64">月曜日 · 今日</span>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <div style="font-size: 12px; color: #7A6E64">評価</div>
+      <div style="display: flex; align-items: center; gap: 14px">
+        <div style="display: flex; gap: 6px" role="img" aria-label="評価 4.5">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="#B8412E" stroke="#B8412E" stroke-width="1.2" aria-hidden="true"><path d="m12 2.5 2.9 6.2 6.6.8-4.9 4.6 1.3 6.6L12 17.4l-5.9 3.3 1.3-6.6L2.5 9.5l6.6-.8z"/></svg>
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="#B8412E" stroke="#B8412E" stroke-width="1.2" aria-hidden="true"><path d="m12 2.5 2.9 6.2 6.6.8-4.9 4.6 1.3 6.6L12 17.4l-5.9 3.3 1.3-6.6L2.5 9.5l6.6-.8z"/></svg>
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="#B8412E" stroke="#B8412E" stroke-width="1.2" aria-hidden="true"><path d="m12 2.5 2.9 6.2 6.6.8-4.9 4.6 1.3 6.6L12 17.4l-5.9 3.3 1.3-6.6L2.5 9.5l6.6-.8z"/></svg>
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="#B8412E" stroke="#B8412E" stroke-width="1.2" aria-hidden="true"><path d="m12 2.5 2.9 6.2 6.6.8-4.9 4.6 1.3 6.6L12 17.4l-5.9 3.3 1.3-6.6L2.5 9.5l6.6-.8z"/></svg>
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#B8412E" stroke-width="1.2" aria-hidden="true"><defs><clipPath id="half"><rect x="0" y="0" width="12" height="24"/></clipPath></defs><path d="m12 2.5 2.9 6.2 6.6.8-4.9 4.6 1.3 6.6L12 17.4l-5.9 3.3 1.3-6.6L2.5 9.5l6.6-.8z"/><path clip-path="url(#half)" fill="#B8412E" d="m12 2.5 2.9 6.2 6.6.8-4.9 4.6 1.3 6.6L12 17.4l-5.9 3.3 1.3-6.6L2.5 9.5l6.6-.8z"/></svg>
+        </div>
+        <div style="font-family: 'Courier Prime', monospace; font-size: 26px; font-weight: 700; color: #B8412E">4.5</div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <label for="memo" style="font-size: 12px; color: #7A6E64">メモ</label>
+      <textarea id="memo" rows="3" placeholder="冷めてからが良い、など" style="width: 100%; box-sizing: border-box; border: 0; border-bottom: 1px solid #2A2420; background: repeating-linear-gradient(transparent 0 27px, #D8CFC0 27px 28px); background-position: 0 -4px; font-size: 15px; line-height: 28px; padding: 0; outline: none; resize: none; color: #2A2420"></textarea>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <div style="font-size: 12px; color: #7A6E64">タグ</div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px">
+        <span style="font-size: 12px; padding: 5px 10px; border: 1px solid #2A2420; background: #2A2420; color: #F4EEE2">#ゲイシャ</span>
+        <span style="font-size: 12px; padding: 5px 10px; border: 1px dashed #B9AE9C; color: #7A6E64">#朝</span>
+        <span style="font-size: 12px; padding: 5px 10px; border: 1px dashed #B9AE9C; color: #7A6E64">#再訪</span>
+        <span style="font-size: 12px; padding: 5px 10px; border: 1px dashed #B9AE9C; color: #7A6E64">+ 追加</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="position: sticky; bottom: 0; flex: none; margin-top: auto; padding: 22px 20px 22px; background: linear-gradient(to bottom, rgba(244,238,226,0), #F4EEE2 40%); display: flex; flex-direction: column; gap: 8px">
+    <a href="#compare" style="display: flex; align-items: center; justify-content: center; height: 54px; background: #B8412E; color: #F4EEE2; text-decoration: none; font-size: 16px; font-weight: 700; letter-spacing: .08em">帖に記す</a>
+    <div style="font-size: 11px; color: #7A6E64; text-align: center">星とメモだけでも記せます</div>
+  </div>
+</div>
+    </div></div>
+      <div class="cmp-col col-b"><div class="cmp-lab">案 B · 伝票</div><div class="missing"><span>案 B は未作成</span></div></div>
+    </div>
+  </div>
+  <div class="cmp-row" id="cmp-bean">
+    <div class="cmp-head"><div class="id">S4</div><h3>豆の詳細</h3><p>現行はカード画像 + レーダー。案 A は見出しの下に点線の表、味わいは横棒。案 B は未作成。</p></div>
+    <div class="cmp-cols">
+      <div class="cmp-col col-cur"><div class="cmp-lab">現行 · Espresso &amp; Copper</div><div class="ph">
+      <div class="a-status"></div>
+      <div class="a-url"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>coffeenotes.app</div>
+      <div class="a-body">
+        <header class="site"><a class="wm" href="#compare">Coffeenotes</a><div class="r"><a class="cta" href="#compare"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>記録する</a><span class="menu" aria-label="メニュー"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></span></div></header>
+        <div class="crumb"><span><a href="#compare">入力記録一覧</a> › 豆</span><a class="lnk" href="#compare">編集</a></div>
+        <div style="display:grid;grid-template-columns:104px 1fr;gap:16px;align-items:end">
+          <div class="cardimg" style="font-size:16px"><small>KIELO COFFEE</small><div class="dots"><i></i><i></i><i></i><i class="o"></i><i class="o"></i></div><b>Lusitania Lime Geisha</b><em>Colombia</em></div>
+          <div><div style="font:600 11px var(--f-num),sans-serif;letter-spacing:.14em;color:var(--a-cu)">KIELO COFFEE</div><div class="disp" style="font-size:34px;margin-top:6px">Lusitania Lime Geisha</div><div style="display:flex;align-items:center;gap:8px;margin-top:10px"><span class="st mid" data-v="4.5"></span><span class="rv" style="font-size:20px">4.5</span><span style="font-size:12px;color:var(--a-mute)">2 回</span></div></div>
+        </div>
+        <div class="dg2">
+          <div><small>生産国</small><b>Colombia</b></div>
+          <div><small>地域</small><b>Caicedonia, Valle del Cauca</b></div>
+          <div><small>品種</small><b>Geisha</b></div>
+          <div><small>精製</small><b>Lime infused</b></div>
+          <div><small>標高</small><b>1,650 m</b></div>
+          <div><small>価格</small><b>¥3,800 / 100 g</b></div>
+        </div>
+        <div class="fl"><i>Lime</i><i>Bergamot</i><i>Laurier</i></div>
+        <p style="font-size:13px;color:var(--a-mute);margin:12px 0 0">ライムを思わせるシトラス系の香りと、ベルガモットの華やかさ。冷めるとローリエのようなハーブ感が出てくる。</p>
+        <div class="sh"><span>味覚チャート</span></div>
+        <svg class="radar" viewBox="0 0 200 190">
+          <g class="g">
+            <polygon points="100,20 176.1,75.3 147,164.7 53,164.7 23.9,75.3"/>
+            <polygon points="100,20 176.1,75.3 147,164.7 53,164.7 23.9,75.3" transform="translate(100 100) scale(.8) translate(-100 -100)"/>
+            <polygon points="100,20 176.1,75.3 147,164.7 53,164.7 23.9,75.3" transform="translate(100 100) scale(.6) translate(-100 -100)"/>
+            <polygon points="100,20 176.1,75.3 147,164.7 53,164.7 23.9,75.3" transform="translate(100 100) scale(.4) translate(-100 -100)"/>
+            <polygon points="100,20 176.1,75.3 147,164.7 53,164.7 23.9,75.3" transform="translate(100 100) scale(.2) translate(-100 -100)"/>
+          </g>
+          <g class="ax"><line x1="100" y1="100" x2="100" y2="20"/><line x1="100" y1="100" x2="176.1" y2="75.3"/><line x1="100" y1="100" x2="147" y2="164.7"/><line x1="100" y1="100" x2="53" y2="164.7"/><line x1="100" y1="100" x2="23.9" y2="75.3"/></g>
+          <polygon class="v" points="100,20 145.6,85.2 147,164.7 71.8,138.8 54.4,85.2"/>
+          <circle cx="100" cy="20" r="3"/><circle cx="145.6" cy="85.2" r="3"/><circle cx="147" cy="164.7" r="3"/><circle cx="71.8" cy="138.8" r="3"/><circle cx="54.4" cy="85.2" r="3"/>
+          <text x="100" y="11" text-anchor="middle">Flavor 5</text><text x="181" y="72" text-anchor="start">Sweet 3</text><text x="150" y="180" text-anchor="middle">Acidity 5</text><text x="50" y="180" text-anchor="middle">After 3</text><text x="19" y="72" text-anchor="end">Body 3</text>
+        </svg>
+        <div class="sh"><span>この豆の記録</span><a href="#compare">すべて</a></div>
+        <div class="row"><div class="t"><b>9月21日 · KIELO COFFEE 蔵前</b><span>ハンドドリップ · 冷めてからのローリエ感が良い</span></div><div class="r"><span class="st" data-v="4.5"></span><b>4.5</b></div></div>
+        <div class="row"><div class="t"><b>9月11日 · 自宅</b><span>V60 · 1:15 · 92 ℃ · 2:45</span></div><div class="r"><span class="st" data-v="4"></span><b>4.0</b></div></div>
+        <div style="height:14px"></div>
+        <a class="btn" href="#compare">この豆をもう一度記録する</a>
+        <footer class="sfoot"><div class="wm">Coffeenotes</div><div class="links"><a href="#compare">入力記録一覧</a><a href="#compare">記録したお店</a><a href="#compare">好みの分析</a><a href="#compare">設定</a><a href="#compare">エクスポート</a></div><div>© 2026 Coffeenotes · <a href="#compare">プライバシー</a> · <a href="#compare">お問い合わせ</a></div></footer>
+      </div>
+    </div></div>
+      <div class="cmp-col col-a"><div class="cmp-lab">案 A · 喫茶手帖</div><div class="ph alt-a">
+      <div class="a-status"></div>
+      <div class="a-url"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>coffeenotes.app</div>
+      <div class="alt-body">
+
+  <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 20px 8px 20px">
+    <a href="#compare" style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #7A6E64; text-decoration: none; padding: 8px 0">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>
+      スタンプ帳
+    </a>
+    <a href="#compare" style="font-size: 13px; color: #B8412E; text-decoration: none; padding: 8px 0">編集</a>
+  </div>
+
+  <div style="padding: 6px 20px 0 20px; display: flex; flex-direction: column; gap: 6px; border-bottom: 1px solid #2A2420; padding-bottom: 14px">
+    <div style="font-size: 11px; letter-spacing: .2em; color: #7A6E64">KIELO COFFEE · 蔵前</div>
+    <div style="font-size: 32px; font-weight: 700; line-height: 1.1; letter-spacing: -.01em">Lusitania Lime Geisha</div>
+    <div style="display: flex; align-items: baseline; gap: 12px; margin-top: 2px">
+      <span style="font-family: 'Courier Prime', monospace; font-size: 20px; font-weight: 700; color: #B8412E">★4.5</span>
+      <span style="font-size: 12px; color: #7A6E64">2 杯 · 最後は 10.19</span>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; padding: 0 20px; border-bottom: 1px dashed #B9AE9C">
+    <div style="display: flex; flex-direction: column; gap: 2px; padding: 12px 0; border-right: 1px dashed #B9AE9C">
+      <span style="font-size: 11px; color: #7A6E64">生産国</span>
+      <span style="font-size: 15px; font-weight: 600">コロンビア</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 2px; padding: 12px 0 12px 14px">
+      <span style="font-size: 11px; color: #7A6E64">地域</span>
+      <span style="font-size: 15px; font-weight: 600">Caicedonia, Valle del Cauca</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 2px; padding: 12px 0; border-right: 1px dashed #B9AE9C; border-top: 1px dashed #B9AE9C">
+      <span style="font-size: 11px; color: #7A6E64">品種 / 精製</span>
+      <span style="font-size: 15px; font-weight: 600">ゲイシャ / ウォッシュド</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 2px; padding: 12px 0 12px 14px; border-top: 1px dashed #B9AE9C">
+      <span style="font-size: 11px; color: #7A6E64">標高 · 価格</span>
+      <span style="font-family: 'Courier Prime', monospace; font-size: 15px; font-weight: 700">1650m · ¥3,800/100g</span>
+    </div>
+  </div>
+
+  <div style="padding: 14px 20px 0 20px; display: flex; flex-direction: column; gap: 10px">
+    <div style="font-size: 12px; color: #7A6E64">香味</div>
+    <div style="font-size: 17px; font-style: italic; line-height: 1.5">Lime, Bergamot, Laurier</div>
+    <p style="margin: 0; font-size: 14px; line-height: 1.8; color: #2A2420">ライムを思わせるシトラス系の香りと、ベルガモットの華やかさ。冷めるとローリエのようなハーブ感。</p>
+  </div>
+
+  <div style="padding: 16px 20px 0 20px; display: flex; flex-direction: column; gap: 8px">
+    <div style="font-size: 12px; color: #7A6E64">味わい</div>
+    <div style="display: grid; grid-template-columns: 64px minmax(0, 1fr) 16px; gap: 6px 10px; align-items: center; font-size: 12px">
+      <span>香り</span><div style="height: 1px; background: #D8CFC0; position: relative"><div style="position: absolute; left: 0; top: -3px; height: 7px; width: 100%; background: #2A2420"></div></div><span style="font-family: 'Courier Prime', monospace; text-align: right">5</span>
+      <span>甘さ</span><div style="height: 1px; background: #D8CFC0; position: relative"><div style="position: absolute; left: 0; top: -3px; height: 7px; width: 60%; background: #2A2420"></div></div><span style="font-family: 'Courier Prime', monospace; text-align: right">3</span>
+      <span>酸</span><div style="height: 1px; background: #D8CFC0; position: relative"><div style="position: absolute; left: 0; top: -3px; height: 7px; width: 100%; background: #2A2420"></div></div><span style="font-family: 'Courier Prime', monospace; text-align: right">5</span>
+      <span>余韻</span><div style="height: 1px; background: #D8CFC0; position: relative"><div style="position: absolute; left: 0; top: -3px; height: 7px; width: 60%; background: #2A2420"></div></div><span style="font-family: 'Courier Prime', monospace; text-align: right">3</span>
+      <span>コク</span><div style="height: 1px; background: #D8CFC0; position: relative"><div style="position: absolute; left: 0; top: -3px; height: 7px; width: 60%; background: #2A2420"></div></div><span style="font-family: 'Courier Prime', monospace; text-align: right">3</span>
+    </div>
+  </div>
+
+  <div style="padding: 18px 20px 0 20px; display: flex; flex-direction: column">
+    <div style="font-size: 12px; color: #7A6E64; padding-bottom: 6px; border-bottom: 1px solid #2A2420">この豆の記録</div>
+    <div style="display: grid; grid-template-columns: 54px minmax(0, 1fr) 46px; gap: 0 8px; padding: 10px 0; border-bottom: 1px solid #D8CFC0; font-size: 13px; align-items: baseline">
+      <span style="font-family: 'Courier Prime', monospace; color: #7A6E64">10.19</span>
+      <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">蔵前 KIELO COFFEE · ハンドドリップ</span>
+      <span style="font-family: 'Courier Prime', monospace; color: #B8412E; text-align: right; font-weight: 700">★4.5</span>
+    </div>
+    <div style="display: grid; grid-template-columns: 54px minmax(0, 1fr) 46px; gap: 0 8px; padding: 10px 0; border-bottom: 1px solid #D8CFC0; font-size: 13px; align-items: baseline">
+      <span style="font-family: 'Courier Prime', monospace; color: #7A6E64">09.21</span>
+      <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">蔵前 KIELO COFFEE · 冷めてからが良い</span>
+      <span style="font-family: 'Courier Prime', monospace; color: #B8412E; text-align: right; font-weight: 700">★4.5</span>
+    </div>
+  </div>
+
+  <div style="position: sticky; bottom: 0; flex: none; margin-top: auto; padding: 22px 20px 22px; background: linear-gradient(to bottom, rgba(244,238,226,0), #F4EEE2 40%); display: flex; gap: 10px">
+    <a href="#compare" style="flex: 1; display: flex; align-items: center; justify-content: center; height: 50px; border: 1px solid #2A2420; color: #2A2420; text-decoration: none; font-size: 14px; font-weight: 600">帳に戻る</a>
+    <a href="#compare" style="flex: 1; display: flex; align-items: center; justify-content: center; height: 50px; background: #B8412E; color: #F4EEE2; text-decoration: none; font-size: 14px; font-weight: 700">もう一杯</a>
+  </div>
+</div>
+    </div></div>
+      <div class="cmp-col col-b"><div class="cmp-lab">案 B · 伝票</div><div class="missing"><span>案 B は未作成</span></div></div>
+    </div>
+  </div>
+  <div class="cmp-row" id="cmp-shops">
+    <div class="cmp-head"><div class="id">S6</div><h3>記録したお店</h3><p>現行は頭文字の丸と一覧。案 A は地図に杯数入りの丸ピン、一覧の頭文字は判子。案 B は未作成。</p></div>
+    <div class="cmp-cols">
+      <div class="cmp-col col-cur"><div class="cmp-lab">現行 · Espresso &amp; Copper</div><div class="ph">
+      <div class="a-status"></div>
+      <div class="a-url"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>coffeenotes.app</div>
+      <div class="a-body">
+        <header class="site"><a class="wm" href="#compare">Coffeenotes</a><div class="r"><a class="cta" href="#compare"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>記録する</a><span class="menu" aria-label="メニュー"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></span></div></header>
+        <div class="a-h"><h1>記録したお店<small>8 店 · 座標なし 1</small></h1><a class="lnk" href="#compare">＋ お店を登録</a></div>
+        <div class="inp" id="shop-search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>店名で探す</div>
+        <div class="chips" style="margin-top:10px"><span class="chip on">すべて</span><span class="chip">カフェ</span><span class="chip">ロースター</span><span class="chip">生豆</span><span class="chip">評価順</span></div>
+        <div class="row"><span class="av">K</span><div class="t"><b>KIELO COFFEE 蔵前</b><span>カフェ · 台東区蔵前 · 3 回</span></div><div class="r"><span class="st" data-v="4.5"></span><b>4.5</b></div></div>
+        <div class="row"><span class="av">G</span><div class="t"><b>Glint Coffee 表参道</b><span>カフェ · 渋谷区神宮前 · 2 回</span></div><div class="r"><span class="st" data-v="5"></span><b>4.8</b></div></div>
+        <div class="row"><span class="av">N</span><div class="t"><b>Nagare Roastery</b><span>ロースター · 江東区白河 · 5 回</span></div><div class="r"><span class="st" data-v="4"></span><b>4.1</b></div></div>
+        <div class="row"><span class="av">S</span><div class="t"><b>Sonar Coffee Stand 神保町</b><span>カフェ · 千代田区神田神保町 · 1 回</span></div><div class="r"><span class="st" data-v="3.5"></span><b>3.5</b></div></div>
+        <div class="row"><span class="av">H</span><div class="t"><b>Hazel &amp; Ash</b><span>カフェ · 目黒区中目黒 · 2 回</span></div><div class="r"><span class="st" data-v="4"></span><b>4.0</b></div></div>
+        <div class="row"><span class="av">W</span><div class="t"><b>生豆本舗ワイルド</b><span>生豆販売店 · 通販 <span class="pill">座標なし</span></span></div><div class="r"><b>—</b></div></div>
+        <div class="row"><span class="av">M</span><div class="t"><b>Mornings 高円寺</b><span>カフェ · 杉並区高円寺北 · 1 回</span></div><div class="r"><span class="st" data-v="3"></span><b>3.0</b></div></div>
+        <footer class="sfoot"><div class="wm">Coffeenotes</div><div class="links"><a href="#compare">入力記録一覧</a><a href="#compare">記録したお店</a><a href="#compare">好みの分析</a><a href="#compare">設定</a><a href="#compare">エクスポート</a></div><div>© 2026 Coffeenotes · <a href="#compare">プライバシー</a> · <a href="#compare">お問い合わせ</a></div></footer>
+      </div>
+    </div></div>
+      <div class="cmp-col col-a"><div class="cmp-lab">案 A · 喫茶手帖</div><div class="ph alt-a">
+      <div class="a-status"></div>
+      <div class="a-url"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>coffeenotes.app</div>
+      <div class="alt-body">
+
+  <div style="display: flex; align-items: flex-end; justify-content: space-between; padding: 8px 20px 10px 20px; border-bottom: 1px solid #2A2420">
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <div style="font-family: 'Courier Prime', monospace; font-size: 11px; letter-spacing: .22em; color: #7A6E64">4 軒 · 東京</div>
+      <div style="font-size: 26px; font-weight: 700; letter-spacing: .02em; line-height: 1.1">記録したお店</div>
+    </div>
+    <button type="button" aria-label="メニュー" style="width: 44px; height: 44px; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; padding: 0">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2A2420" stroke-width="1.6" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18"/></svg>
+    </button>
+  </div>
+
+  <div style="margin: 14px 20px 0 20px; height: 230px; border: 1px solid #2A2420; position: relative; overflow: hidden; background: #EAE2D3">
+    <svg width="346" height="230" viewBox="0 0 346 230" aria-hidden="true" style="position: absolute; inset: 0">
+      <path d="M0 150 C 60 120, 110 160, 170 140 S 290 100, 346 120" fill="none" stroke="#B9AE9C" stroke-width="10" opacity=".6"/>
+      <path d="M40 0 L 60 230 M 120 0 L 110 230 M 200 0 L 230 230 M 300 0 L 280 230" stroke="#D8CFC0" stroke-width="1"/>
+      <path d="M0 60 L 346 80 M 0 190 L 346 170" stroke="#D8CFC0" stroke-width="1"/>
+    </svg>
+    <div style="position: absolute; left: 96px; top: 52px; display: flex; flex-direction: column; align-items: center; gap: 2px">
+      <div style="width: 30px; height: 30px; border-radius: 50%; background: #B8412E; color: #F4EEE2; display: flex; align-items: center; justify-content: center; font-family: 'Courier Prime', monospace; font-size: 12px; font-weight: 700; border: 2px solid #F4EEE2">2</div>
+      <div style="font-size: 10px; background: #F4EEE2; padding: 1px 4px">KIELO 蔵前</div>
+    </div>
+    <div style="position: absolute; left: 226px; top: 118px; display: flex; flex-direction: column; align-items: center; gap: 2px">
+      <div style="width: 30px; height: 30px; border-radius: 50%; background: #2A2420; color: #F4EEE2; display: flex; align-items: center; justify-content: center; font-family: 'Courier Prime', monospace; font-size: 12px; font-weight: 700; border: 2px solid #F4EEE2">1</div>
+      <div style="font-size: 10px; background: #F4EEE2; padding: 1px 4px">Sonar 神保町</div>
+    </div>
+    <div style="position: absolute; left: 40px; top: 150px; display: flex; flex-direction: column; align-items: center; gap: 2px">
+      <div style="width: 30px; height: 30px; border-radius: 50%; background: #B8412E; color: #F4EEE2; display: flex; align-items: center; justify-content: center; font-family: 'Courier Prime', monospace; font-size: 12px; font-weight: 700; border: 2px solid #F4EEE2">1</div>
+      <div style="font-size: 10px; background: #F4EEE2; padding: 1px 4px">Glint 表参道</div>
+    </div>
+    <div style="position: absolute; left: 280px; top: 30px; display: flex; flex-direction: column; align-items: center; gap: 2px">
+      <div style="width: 30px; height: 30px; border-radius: 50%; background: #7A6E64; color: #F4EEE2; display: flex; align-items: center; justify-content: center; font-family: 'Courier Prime', monospace; font-size: 12px; font-weight: 700; border: 2px solid #F4EEE2">3</div>
+      <div style="font-size: 10px; background: #F4EEE2; padding: 1px 4px">Nagare 清澄</div>
+    </div>
+    <button type="button" aria-label="現在地へ" style="position: absolute; right: 8px; bottom: 8px; width: 40px; height: 40px; border: 1px solid #2A2420; background: #F4EEE2; display: flex; align-items: center; justify-content: center; padding: 0">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2A2420" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
+    </button>
+    <div style="position: absolute; left: 8px; bottom: 8px; font-size: 10px; color: #7A6E64; background: #F4EEE2; padding: 2px 6px">地図（この図は見本）</div>
+  </div>
+
+  <div style="display: flex; align-items: center; gap: 12px; padding: 12px 20px 0 20px; font-size: 11px; color: #7A6E64">
+    <span style="display: inline-flex; align-items: center; gap: 4px"><span style="width: 10px; height: 10px; border-radius: 50%; background: #B8412E"></span>星 4 以上</span>
+    <span style="display: inline-flex; align-items: center; gap: 4px"><span style="width: 10px; height: 10px; border-radius: 50%; background: #2A2420"></span>3.5</span>
+    <span style="display: inline-flex; align-items: center; gap: 4px"><span style="width: 10px; height: 10px; border-radius: 50%; background: #7A6E64"></span>3 以下</span>
+    <span style="margin-left: auto">丸の中は杯数</span>
+  </div>
+
+  <div style="display: flex; flex-direction: column; padding: 10px 20px 0 20px">
+    <div style="display: flex; gap: 14px; font-size: 12px; padding: 4px 0 8px 0; border-bottom: 1px solid #2A2420">
+      <a href="#compare" style="text-decoration: none; color: #B8412E; font-weight: 700">すべて</a>
+      <a href="#compare" style="text-decoration: none; color: #7A6E64">カフェ</a>
+      <a href="#compare" style="text-decoration: none; color: #7A6E64">ロースター</a>
+      <a href="#compare" style="text-decoration: none; color: #7A6E64">評価順</a>
+    </div>
+
+    <a href="#compare" style="display: grid; grid-template-columns: 38px minmax(0, 1fr) 52px; gap: 0 10px; align-items: center; padding: 11px 0; border-bottom: 1px solid #D8CFC0; text-decoration: none; color: inherit">
+      <span style="width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid #B8412E; color: #B8412E; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; transform: rotate(-8deg)">K</span>
+      <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+        <span style="font-size: 16px; font-weight: 600">KIELO COFFEE 蔵前</span>
+        <span style="font-size: 12px; color: #7A6E64">カフェ · 台東区 · 2 杯</span>
+      </span>
+      <span style="font-family: 'Courier Prime', monospace; font-size: 15px; font-weight: 700; color: #B8412E; text-align: right">★4.5</span>
+    </a>
+    <a href="#compare" style="display: grid; grid-template-columns: 38px minmax(0, 1fr) 52px; gap: 0 10px; align-items: center; padding: 11px 0; border-bottom: 1px solid #D8CFC0; text-decoration: none; color: inherit">
+      <span style="width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid #B8412E; color: #B8412E; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; transform: rotate(5deg)">G</span>
+      <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+        <span style="font-size: 16px; font-weight: 600">Glint Coffee 表参道</span>
+        <span style="font-size: 12px; color: #7A6E64">カフェ · 渋谷区 · 1 杯</span>
+      </span>
+      <span style="font-family: 'Courier Prime', monospace; font-size: 15px; font-weight: 700; color: #B8412E; text-align: right">★5.0</span>
+    </a>
+    <a href="#compare" style="display: grid; grid-template-columns: 38px minmax(0, 1fr) 52px; gap: 0 10px; align-items: center; padding: 11px 0; border-bottom: 1px solid #D8CFC0; text-decoration: none; color: inherit">
+      <span style="width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid #2A2420; color: #2A2420; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; transform: rotate(-3deg)">S</span>
+      <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+        <span style="font-size: 16px; font-weight: 600">Sonar Coffee Stand 神保町</span>
+        <span style="font-size: 12px; color: #7A6E64">カフェ · 千代田区 · 1 杯</span>
+      </span>
+      <span style="font-family: 'Courier Prime', monospace; font-size: 15px; font-weight: 700; color: #2A2420; text-align: right">★3.5</span>
+    </a>
+    <a href="#compare" style="display: grid; grid-template-columns: 38px minmax(0, 1fr) 52px; gap: 0 10px; align-items: center; padding: 11px 0; border-bottom: 1px solid #D8CFC0; text-decoration: none; color: inherit">
+      <span style="width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid #7A6E64; color: #7A6E64; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; transform: rotate(7deg)">N</span>
+      <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0">
+        <span style="font-size: 16px; font-weight: 600">Nagare Roastery 清澄白河</span>
+        <span style="font-size: 12px; color: #7A6E64">ロースター · 江東区 · 3 杯</span>
+      </span>
+      <span style="font-family: 'Courier Prime', monospace; font-size: 15px; font-weight: 700; color: #7A6E64; text-align: right">★3.0</span>
+    </a>
+  </div>
+
+  <div style="position: sticky; bottom: 0; flex: none; margin-top: auto; padding: 22px 20px 22px; background: linear-gradient(to bottom, rgba(244,238,226,0), #F4EEE2 40%)">
+    <a href="#compare" style="display: flex; align-items: center; justify-content: center; gap: 10px; height: 50px; border: 1px solid #2A2420; color: #2A2420; text-decoration: none; font-size: 14px; font-weight: 600">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      お店を登録
+    </a>
+  </div>
+</div>
+    </div></div>
+      <div class="cmp-col col-b"><div class="cmp-lab">案 B · 伝票</div><div class="missing"><span>案 B は未作成</span></div></div>
+    </div>
+  </div>
+</div></section>
+
+<section id="notes"><div class="wrap">
+  <div class="secno">NOTES</div>
+  <h2>見るときの注意</h2>
+  <ul style="font-size:14px;color:var(--ink2);line-height:1.9;max-width:60em">
+    <li>案 A の明朝体は、画面上の長文では読みづらいことがある。本文だけゴシックに戻す折衷もある。</li>
+    <li>案 B は雰囲気の振り幅を見るための対照案。実用にするなら日本語の等幅書体を選び直す。</li>
+    <li>地図は見本の図。実装では Google マップ（移行中、ADR 0011）の上に朱と墨のピンを載せる。</li>
+    <li>方向が決まったら、残りの画面（ログイン、設定、分析、PC 版）を同じ作法で揃え、DESIGN.md と ADR を更新してから実装に落とす。</li>
+  </ul>
+</div></section>
+
+<script src="design.js"></script>
+<script>
+(function(){
+  var root=document.querySelector('.cmp');
+  var btns=document.querySelectorAll('.switch button');
+  btns.forEach(function(b){
+    b.addEventListener('click',function(){
+      root.setAttribute('data-show',b.getAttribute('data-show'));
+      btns.forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false');});
+    });
+  });
+})();
+</script>
+</body>
+</html>
