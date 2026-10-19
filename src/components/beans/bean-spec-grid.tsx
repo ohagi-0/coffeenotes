@@ -11,6 +11,8 @@ export type SpecItem = {
   unit?: string;
   /** 日本語の値（店名など）は num 書体にしない */
   ja?: boolean;
+  /** 値の後ろに小さく添える補足（「品種から」など、推定であることを示す） */
+  note?: string;
 };
 
 export type BeanSpecGridProps = {
@@ -41,6 +43,11 @@ export function BeanSpecGrid({ items, className }: BeanSpecGridProps) {
             {item.value}
             {item.unit && (
               <span className="text-muted-foreground ml-0.5 text-[12px] font-medium">{item.unit}</span>
+            )}
+            {item.note && (
+              <span className="text-muted-foreground ml-1.5 font-sans text-[10px] font-normal">
+                {item.note}
+              </span>
             )}
           </dd>
         </div>

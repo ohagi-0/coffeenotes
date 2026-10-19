@@ -65,6 +65,11 @@ describe('presenters', () => {
     expect(chipToFilters('process:natural', [], ['Natural', 'ナチュラル', 'Washed'])).toEqual({
       processes: ['Natural', 'ナチュラル'],
     });
+    // ロブスタ入りは品種から種を推定して、該当する品種の値で絞る（F-BEAN-18）
+    expect(chipToFilters('robusta', [], [], ['Geisha', 'Robusta', 'SL28 / ロブスタ', 'Bourbon'])).toEqual({
+      varieties: ['Robusta', 'SL28 / ロブスタ'],
+    });
+    expect(chipToFilters('robusta')).toEqual({ varieties: [] });
   });
 
   it('formatBrewRatio は 1:15 の形。整数でなければ小数 1 桁、無ければ null', () => {

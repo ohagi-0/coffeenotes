@@ -28,6 +28,8 @@ export interface LogFilters {
   processes?: readonly string[];
   process?: string;
   variety?: string;
+  /** 品種の表記をまとめて絞る（「ロブスタ入り」= 種がロブスタか混合と判定した品種の値を並べる）。空配列は 0 件 */
+  varieties?: readonly string[];
   roasterId?: string;
   shopId?: string;
   tagId?: string;
@@ -75,6 +77,7 @@ export function useLogs(filters: LogFilters = {}, sort: LogSort = 'date') {
       if (filters.processes) q = q.in('bean.process', [...filters.processes]);
       if (filters.process) q = q.eq('bean.process', filters.process);
       if (filters.variety) q = q.eq('bean.variety', filters.variety);
+      if (filters.varieties) q = q.in('bean.variety', [...filters.varieties]);
       if (filters.roasterId) q = q.eq('bean.roaster_id', filters.roasterId);
       if (filters.shopId) q = q.eq('shop_id', filters.shopId);
       if (filters.place) q = q.eq('place', filters.place);

@@ -25,6 +25,7 @@ import {
   PROCESSES,
   countryDisplayName,
   countryKeyOf,
+  hasRobusta,
   processDisplayName,
   processKeyOf,
 } from '@/lib/vocab';
@@ -32,7 +33,8 @@ import { cn } from '@/lib/utils';
 
 // S2 入力記録一覧（F-LIST-1 / F-LIST-2）。/logs（id なし）で描く。絞り込みは URL の ?f= に持ち、共有・戻るに対応する。
 // 2026-09-24 にホーム（/）は豆のコレクション（S10）になり、一覧はここへ移った。
-// チップの値: all / rating4 / home / shop / country:<国のキー> / process:<精製のキー>（語彙で表記ゆれをまとめる）
+// チップの値: all / rating4 / home / shop / robusta / country:<国のキー> / process:<精製のキー>（語彙で表記ゆれをまとめる）
+// 「ロブスタ入り」は品種から種を推定して絞る（F-BEAN-18）。該当する豆が無ければチップ自体を出さない
 // 「選択」で一括削除の選択モード（F-LOG-7）。行がチェックボックスになり、下のバーから確認ダイアログ → 削除。
 
 const FIXED_CHIPS: FilterChip[] = [
@@ -81,7 +83,13 @@ export function LogListView() {
   const twoPane = useMediaQuery(XL_QUERY);
   const options = useBeanFilterOptions();
   const filters = useMemo(
-    () => chipToFilters(chip, options.data?.countries ?? [], options.data?.processes ?? []),
+    () =>
+      chipToFilters(
+        chip,
+        options.data?.countries ?? [],
+        options.data?.processes ?? [],
+        options.data?.varieties ?? [],
+      ),
     [chip, options.data],
   );
 
@@ -133,7 +141,10 @@ export function LogListView() {
   const chips = useMemo<FilterChip[]>(() => {
     const countries = groupCountryChips(options.data?.countries ?? []).slice(0, MAX_OPTION_CHIPS);
     const processes = groupProcessChips(options.data?.processes ?? []).slice(0, MAX_OPTION_CHIPS);
-    return [...FIXED_CHIPS, ...countries, ...processes];
+    const robusta: FilterChip[] = (options.data?.varieties ?? []).some((v) => hasRobusta(v))
+      ? [{ value: 'robusta', label: 'ロブスタ入り' }]
+      : [];
+    return [...FIXED_CHIPS, ...robusta, ...countries, ...processes];
   }, [options.data]);
 
   function replaceQuery(next: { f?: string; q?: string }) {

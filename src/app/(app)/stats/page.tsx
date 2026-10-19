@@ -15,7 +15,9 @@ import {
   MIN_ROWS_FOR_TRENDS,
   PERIOD_CHIPS,
   filterByPeriod,
+  formatShare,
   monthly,
+  speciesShare,
   summarize,
   tasteAverages,
   topFlavors,
@@ -69,6 +71,19 @@ function Bars({ title, items, empty }: { title: string; items: CountItem[]; empt
   );
 }
 
+/** 1 行で出す内訳（「アラビカ 95% · ロブスタ 5%」）。横棒にするほどの軸ではないもの */
+function ShareLine({ title, text, note }: { title: string; text: string; note?: string }) {
+  return (
+    <section className="mt-6" aria-label={title}>
+      <h2 className="mb-1 text-[13px] font-bold">{title}</h2>
+      <p className="text-sm">
+        {text}
+        {note && <span className="text-muted-foreground ml-1.5 text-[11px]">{note}</span>}
+      </p>
+    </section>
+  );
+}
+
 function StatsInner() {
   const router = useRouter();
   const pathname = usePathname();
@@ -96,6 +111,7 @@ function StatsInner() {
       ),
     [filtered],
   );
+  const species = useMemo(() => speciesShare(filtered), [filtered]);
   const flavors = useMemo(() => topFlavors(filtered), [filtered]);
   const tasteHigh = useMemo(() => tasteAverages(filtered, true), [filtered]);
   const tasteAll = useMemo(() => tasteAverages(filtered, false), [filtered]);
@@ -170,6 +186,9 @@ function StatsInner() {
                 items={roasts}
                 empty="焙煎度を入れた星 4 以上の記録がまだありません。豆の編集で焙煎度を付けられます。"
               />
+              {species.length > 0 && (
+                <ShareLine title="星 4 以上の豆の種" text={formatShare(species)} note="品種から" />
+              )}
 
               <section className="mt-6" aria-label="よく出るフレーバー">
                 <h2 className="mb-2 text-[13px] font-bold">よく出るフレーバー</h2>

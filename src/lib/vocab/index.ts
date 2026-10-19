@@ -3,3 +3,4 @@ export * from './countries';
 export * from './varieties';
 export * from './processes';
 export * from './suggest';
+export * from './species';

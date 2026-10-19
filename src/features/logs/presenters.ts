@@ -1,7 +1,7 @@
 import type { LogListItemProps } from '@/components/logs/log-list-item';
 import { frontImagePath } from '@/features/beans/images';
 import type { LogFilters, LogWithRelations } from './queries';
-import { countryKeyOf, processKeyOf } from '@/lib/vocab';
+import { countryKeyOf, hasRobusta, processKeyOf } from '@/lib/vocab';
 
 // DB の行（LogWithRelations）を表示用の平らな型に変換する純関数（Issue #17 段階 2）。
 // 画面コンポーネントは DB の形を知らない。
@@ -73,8 +73,11 @@ export function chipToFilters(
   value: string,
   knownCountries: readonly string[] = [],
   knownProcesses: readonly string[] = [],
+  knownVarieties: readonly string[] = [],
 ): LogFilters {
   if (value === 'rating4') return { minRating: 4 };
+  // 種は品種からの推定なので DB に列が無い。自分の豆の品種のうちロブスタ入りと判定した値で絞る（F-BEAN-18）
+  if (value === 'robusta') return { varieties: knownVarieties.filter((v) => hasRobusta(v)) };
   if (value === 'home') return { place: 'home' };
   if (value === 'shop') return { place: 'shop' };
   if (value.startsWith('country:')) {

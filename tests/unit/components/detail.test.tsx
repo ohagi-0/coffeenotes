@@ -42,6 +42,9 @@ describe('beans presenters', () => {
     const items = beanSpecItems(bean);
     expect(items.find((i) => i.label === '標高')).toMatchObject({ value: '1,650', unit: 'm' });
     expect(items.find((i) => i.label === '焙煎度')?.value).toBe('浅煎り');
+    // 種は品種から推定し、推定であることを補足に添える（F-BEAN-18）。品種が空なら出ない（値 null はグリッドが省く）
+    expect(items.find((i) => i.label === '種')).toMatchObject({ value: 'アラビカ', note: '品種から' });
+    expect(beanSpecItems({ ...bean, variety: null }).find((i) => i.label === '種')?.value).toBeNull();
     expect(beanTaste(bean)).toEqual({ ...EMPTY_TASTE, flavor: 5 });
     expect(hasAnyTaste(beanTaste(bean))).toBe(true);
     expect(hasAnyTaste(EMPTY_TASTE)).toBe(false);

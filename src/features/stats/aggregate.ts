@@ -1,5 +1,6 @@
 // 好みの分析（S8、F-STAT-1〜4）の集計。全部純粋関数で、画面は結果を描くだけ。
 // 「高評価」= 星 4 以上（REQUIREMENTS.md UC5）。
+import { SPECIES_LABELS, speciesOf, type Species } from '@/lib/vocab';
 
 export interface StatsRow {
   logged_on: string;
@@ -9,6 +10,8 @@ export interface StatsRow {
     id: string;
     country: string | null;
     process: string | null;
+    /** 品種（種の推定に使う。F-BEAN-18） */
+    variety?: string | null;
     /** light / medium / dark。表示名は BEAN_ROAST_LEVEL_LABELS */
     roast_level: string | null;
     flavor_notes: string[];
@@ -116,6 +119,55 @@ export function topFlavors(rows: readonly StatsRow[], limit = 12): CountItem[] {
     }
   }
   return toCountItems(counts, limit);
+}
+
+export interface ShareItem {
+  label: string;
+  count: number;
+  /** 全体に対する割合（%）。四捨五入 */
+  percent: number;
+}
+
+/**
+ * 星 4 以上の豆の内訳を 1 行で出すための集計（豆ごとに 1 回、値が分からない豆は除く）。
+ * 全部不明なら []。並びは `order` の順
+ */
+function highRatedShare<K extends string>(
+  rows: readonly StatsRow[],
+  valueOf: (bean: StatsRow['bean']) => K | null,
+  order: readonly K[],
+  labels: Record<K, string>,
+): ShareItem[] {
+  const byBean = new Map<string, K>();
+  for (const r of rows) {
+    if (r.rating === null || r.rating < HIGH_RATING) continue;
+    if (byBean.has(r.bean.id)) continue;
+    const v = valueOf(r.bean);
+    if (v !== null) byBean.set(r.bean.id, v);
+  }
+  const total = byBean.size;
+  if (total === 0) return [];
+  const counts = new Map<K, number>();
+  for (const v of byBean.values()) counts.set(v, (counts.get(v) ?? 0) + 1);
+  return order
+    .filter((k) => counts.has(k))
+    .map((k) => ({
+      label: labels[k],
+      count: counts.get(k)!,
+      percent: Math.round((counts.get(k)! / total) * 100),
+    }));
+}
+
+const SPECIES_ORDER: readonly Species[] = ['arabica', 'robusta', 'liberica', 'mixed'];
+
+/** 星 4 以上の豆の種（品種から推定）の内訳（F-BEAN-18）。「アラビカ 95% · ロブスタ 5%」の 1 行 */
+export function speciesShare(rows: readonly StatsRow[]): ShareItem[] {
+  return highRatedShare(rows, (b) => speciesOf(b.variety), SPECIES_ORDER, SPECIES_LABELS);
+}
+
+/** 「アラビカ 95% · ロブスタ 5%」のように結ぶ */
+export function formatShare(items: readonly ShareItem[]): string {
+  return items.map((i) => `${i.label} ${i.percent}%`).join(' · ');
 }
 
 export interface TasteAverages {

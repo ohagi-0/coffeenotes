@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   filterByPeriod,
+  formatShare,
   monthly,
+  speciesShare,
   summarize,
   tasteAverages,
   topFlavors,
@@ -119,5 +121,35 @@ describe('monthly', () => {
     expect(m.map((x) => x.month)).toEqual(['2026-07', '2026-08', '2026-09']);
     expect(m[2]).toEqual({ month: '2026-09', count: 2, avgRating: 4.3 });
     expect(m[0]).toEqual({ month: '2026-07', count: 0, avgRating: null });
+  });
+});
+
+describe('speciesShare', () => {
+  it('星 4 以上の豆の種を品種から推定し、豆ごとに 1 回数えて割合にする', () => {
+    const r = (id: string, variety: string | null, rating: number | null): StatsRow => ({
+      logged_on: '2026-09-01',
+      rating,
+      shop_id: null,
+      bean: bean(id, { variety }),
+    });
+    const items = speciesShare([
+      r('a', 'Geisha', 5),
+      r('a', 'Geisha', 4), // 同じ豆は 1 回
+      r('b', 'SL28, SL34', 4.5),
+      r('c', 'Robusta', 4),
+      r('d', 'Robusta', 3), // 星 4 未満は数えない
+      r('e', 'Sudan Rume', 5), // 種が分からない豆は除く
+      r('f', null, 5),
+    ]);
+    expect(items).toEqual([
+      { label: 'アラビカ', count: 2, percent: 67 },
+      { label: 'ロブスタ', count: 1, percent: 33 },
+    ]);
+    expect(formatShare(items)).toBe('アラビカ 67% · ロブスタ 33%');
+  });
+  it('全部不明なら空', () => {
+    expect(speciesShare([{ logged_on: '2026-09-01', rating: 5, shop_id: null, bean: bean('a') }])).toEqual(
+      [],
+    );
   });
 });

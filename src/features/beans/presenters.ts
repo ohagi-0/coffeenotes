@@ -1,6 +1,7 @@
 import type { SpecItem } from '@/components/beans/bean-spec-grid';
 import type { TasteValues } from '@/components/beans/taste-dots';
 import type { Tables } from '@/types/database';
+import { speciesLabel, speciesOf } from '@/lib/vocab';
 
 // 豆の行を表示用に変換する純関数（S4 豆詳細、S5 の豆サマリ）。
 
@@ -41,13 +42,17 @@ export function sourceLabel(v: string): string {
   return SOURCE_LABELS[v] ?? v;
 }
 
-/** データグリッド（生産国 / 地域 / 農園 / 品種 / 精製 / 標高 / 価格 / 焙煎度 / 焙煎日 / 収穫年度）。null の項目はグリッド側が省く */
+/**
+ * データグリッド（生産国 / 地域 / 農園 / 品種 / 種 / 精製 / 標高 / 価格 / 焙煎度 / 焙煎日 / 収穫年度）。null の項目はグリッド側が省く。
+ * 種（アラビカ / ロブスタ）は入力項目ではなく品種からの推定なので、補足に「品種から」を添える（F-BEAN-18）
+ */
 export function beanSpecItems(bean: BeanLike): SpecItem[] {
   return [
     { label: '生産国', value: bean.country },
     { label: '地域', value: bean.region },
     { label: '農園', value: bean.farm },
     { label: '品種', value: bean.variety },
+    { label: '種', value: speciesLabel(speciesOf(bean.variety)), ja: true, note: '品種から' },
     { label: '精製', value: bean.process },
     {
       label: '標高',
