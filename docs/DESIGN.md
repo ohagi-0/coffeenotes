@@ -5,6 +5,7 @@
 | 文書バージョン | v1.3 |
 | 作成日 | 2026-09-21 |
 | 正とするもの | 要件は `docs/REQUIREMENTS.md`、見た目の参照は `docs/design/`（公開: https://ohagi-0.github.io/coffeenotes/design/ 。方針 index / Web スマホ mobile / Web PC desktop / iOS ios の 4 ページ）、決定は `docs/decisions/0006`（色・書体）と `0007`（PC 版・iOS 版） |
+| 袋の案 | `design/bags.html`（公開: https://ohagi-0.github.io/coffeenotes/design/bags.html ）に S10 の袋の 4 案（整え直し / 手書きラベル / タグ札 / 無地に刻印。手書き書体は切り替え可）がある（2026-10-20）。決定ではない |
 | 別案 | `design/alt.html`（公開: https://ohagi-0.github.io/coffeenotes/design/alt.html ）に、現行と「案 A 喫茶手帖」「案 B 伝票」を同じ画面で並べた比較がある（2026-10-19）。決定ではない。採るなら ADR 0006（ダーク専用）を改めてからこの文書を書き直す |
 | 運用 | アジャイルに変更する。画面や部品を変えるときは **モックとこの文書を同じ PR で更新** する。矛盾があればこの文書を優先し、モックを直す |
 

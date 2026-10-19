@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Coffeenotes 豆の袋 — 4 案</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Manrope:wght@400..800&family=Caveat:wght@500;700&family=Kalam:wght@400;700&family=Homemade+Apple&family=Klee+One:wght@400;600&family=Yomogi&family=Zen+Kurenaido&family=Special+Elite&family=Courier+Prime:wght@400;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=swap">
+<link rel="stylesheet" href="design.css">
+<style>
+/* このページだけの追加。design.css は触らない */
+.cmp-cols{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(375px,100%),1fr));gap:40px 32px;justify-items:center;margin-top:24px}
+#compare .wrap{max-width:1640px}
+@media (min-width:1600px){.cmp-cols{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.cmp-col{width:100%;max-width:375px}
+.cmp-lab{font:600 12px/1 var(--f-num),sans-serif;letter-spacing:.1em;color:var(--ink2);text-align:center}
+.cmp-note{font-size:12px;color:var(--ink2);margin:10px 0 0;line-height:1.7}
+.sw{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 0}
+.sw button{font:600 12px var(--f-num),sans-serif;padding:7px 11px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink2);cursor:pointer}
+.sw button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+/* 共通: 棚 */
+.a-body .sec{display:flex;align-items:baseline;gap:8px;margin-top:14px;padding-bottom:8px}
+.a-body .sec .n{font-family:var(--f-disp);font-weight:500;font-size:17px;letter-spacing:-.02em}
+.a-body .sec .en{font:600 10px var(--f-num),sans-serif;letter-spacing:.12em;color:var(--a-mute)}
+.a-body .sec .r{margin-left:auto;font:500 11px var(--f-num),sans-serif;color:var(--a-mute)}
+.shelf a{text-decoration:none;color:inherit;min-width:0}
+.shelf{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;padding:0 6px 14px;border-bottom:6px solid #2C231C;box-shadow:0 8px 10px -8px #000}
+.empty{border:1.5px dashed var(--a-line);border-radius:8px;min-height:150px;display:grid;place-items:center;font-size:12px;color:var(--a-mute);text-align:center;line-height:1.7;padding:0 6px;word-break:keep-all}
+
+/* ---------- 案 1 整え直し: 今の袋のまま、ラベルの階層を直す ---------- */
+.b1{position:relative;display:flex;flex-direction:column;border-radius:7px 7px 12px 12px;padding:0 8% 9%;background:linear-gradient(170deg,#C9A880 0%,#B08A5F 55%,#9B7752 100%);box-shadow:0 14px 22px -14px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.08),inset 0 -2px 0 rgba(0,0,0,.35)}
+.b1 .fold{margin:0 -8% 9%;height:14px;border-radius:6px 6px 0 0;background:#B48D62 repeating-linear-gradient(90deg,rgba(255,255,255,.10) 0 2px,transparent 2px 6px);background-size:100% 1px;background-position:0 8px;background-repeat:repeat-x;box-shadow:0 3px 4px rgba(0,0,0,.4)}
+.b1 .seal{position:absolute;right:-5px;top:-7px;width:28px;height:28px;border-radius:50%;background:var(--a-cu);color:var(--a-oncu);display:grid;place-items:center;font:800 11px var(--f-num),sans-serif;box-shadow:0 2px 4px rgba(0,0,0,.4)}
+.b1 .seal.none{background:transparent;border:1.5px dashed #F6F1E8aa;color:#F6F1E8aa}
+.b1 .lab{flex:1;display:flex;flex-direction:column;background:#F6F1E8;color:#2A2118;border-radius:3px;padding:10px 9px 8px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);min-height:128px}
+.b1 .ro{font:700 8px/1 var(--f-num),sans-serif;letter-spacing:.18em;text-transform:uppercase;color:#7A6A58;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.b1 .nm{font-family:var(--f-disp);font-weight:500;font-size:17px;line-height:1.08;letter-spacing:-.01em;margin-top:8px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.b1 .nm.long{font-size:14.5px}
+.b1 .og{font:500 9px/1.3 var(--f-num),sans-serif;color:#7A6A58;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.b1 .ft{margin-top:auto;padding-top:6px;border-top:1px solid rgba(0,0,0,.12);display:flex;justify-content:space-between;align-items:baseline;font:600 8.5px var(--f-num),sans-serif;color:#7A6A58}
+.b1 .ft b{color:#2A2118;font-weight:700}
+
+/* ---------- 案 2 手書きラベル ---------- */
+.hand[data-latin="caveat"]{--hand-latin:"Caveat",cursive;--hand-size:24px}
+.hand[data-latin="kalam"]{--hand-latin:"Kalam",cursive;--hand-size:17px}
+.hand[data-latin="apple"]{--hand-latin:"Homemade Apple",cursive;--hand-size:13px}
+.hand[data-jp="klee"]{--hand-jp:"Klee One",cursive}
+.hand[data-jp="yomogi"]{--hand-jp:"Yomogi",cursive}
+.hand[data-jp="kurenaido"]{--hand-jp:"Zen Kurenaido",cursive}
+.b2{position:relative;display:flex;flex-direction:column;border-radius:7px 7px 12px 12px;padding:0 7% 8%;background:linear-gradient(170deg,#CDB08A 0%,#B28D63 55%,#9C7A56 100%);box-shadow:0 14px 22px -14px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.08)}
+.b2 .fold{margin:0 -7% 10%;height:14px;border-radius:6px 6px 0 0;background:#B48D62;box-shadow:0 3px 4px rgba(0,0,0,.4)}
+.b2 .lab{position:relative;flex:1;min-width:0;display:flex;flex-direction:column;background:#F8F3EA;color:#2B2118;padding:14px 9px 8px;min-height:128px;transform:rotate(-1.2deg);box-shadow:0 2px 3px rgba(0,0,0,.25)}
+.b2 .tape{position:absolute;left:50%;top:-7px;width:46px;height:13px;transform:translateX(-50%) rotate(2deg);background:rgba(240,228,200,.85);box-shadow:0 1px 1px rgba(0,0,0,.15)}
+.b2 .ro{font:500 8px/1 var(--f-num),sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#8A7A66;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.b2 .nm{font-family:var(--hand-latin);font-weight:700;font-size:var(--hand-size);line-height:1.05;margin-top:6px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;color:#1F1812}
+.b2 .og{font-family:var(--hand-jp);font-size:11.5px;color:#4A3C30;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.b2 .ft{margin-top:auto;padding-top:8px;display:flex;justify-content:space-between;align-items:baseline;gap:6px;white-space:nowrap;font-family:var(--hand-jp);font-size:11px;color:#6B5B4B}
+.b2 .rt{font-family:var(--hand-latin);font-size:calc(var(--hand-size) * .85);color:#B8412E;line-height:1}
+.b2 .rt.none{color:#B9AE9C;font-size:12px}
+
+/* ---------- 案 3 タグ札（タイプライター） ---------- */
+.b3{position:relative;display:flex;flex-direction:column;min-height:168px;border-radius:7px 7px 12px 12px;background:linear-gradient(170deg,#2E261F 0%,#241D18 60%,#1E1813 100%);box-shadow:0 14px 22px -14px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.06);padding:14px 10px 10px}
+.b3 .fold{position:absolute;left:0;right:0;top:0;height:12px;border-radius:6px 6px 0 0;background:#352B23;box-shadow:0 3px 4px rgba(0,0,0,.5)}
+.b3 .rtr{position:absolute;left:22px;top:2px;width:1px;height:34px;background:#C9B99F;transform:rotate(-14deg);transform-origin:top}
+.b3 .tag{margin:22px auto 0;min-width:0;width:86%;background:#F3EBDD;color:#2A2118;padding:9px 9px 8px;position:relative;transform:rotate(-2deg);box-shadow:0 3px 6px rgba(0,0,0,.45);clip-path:polygon(0 0,100% 0,100% 100%,0 100%,0 0)}
+.b3 .tag::before{content:"";position:absolute;left:8px;top:7px;width:7px;height:7px;border-radius:50%;background:#2A2118;box-shadow:inset 0 0 0 2px #F3EBDD,0 0 0 1px #2A2118}
+.b3 .ro{font:400 8.5px/1 "Special Elite","Courier Prime",monospace;letter-spacing:.06em;color:#6B5B4B;margin-left:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.b3 .nm{font:400 13.5px/1.2 "Special Elite","Courier Prime",monospace;margin-top:8px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.b3 .og{font:400 9px/1.3 "Special Elite","Courier Prime",monospace;color:#6B5B4B;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.b3 .ft{margin-top:8px;display:flex;justify-content:space-between;align-items:center;gap:6px;white-space:nowrap;font:400 9px "Special Elite","Courier Prime",monospace;color:#6B5B4B}
+.b3 .rt{width:30px;height:30px;border-radius:50%;border:1.5px solid #B8412E;color:#B8412E;display:grid;place-items:center;font:700 10px "Courier Prime",monospace;transform:rotate(-10deg);outline:1px solid #B8412E;outline-offset:-5px}
+.b3 .rt.none{border-style:dashed;color:#B9AE9C;border-color:#B9AE9C;outline:0}
+
+/* ---------- 案 4 無地の袋に刻印 ---------- */
+.b4{position:relative;display:flex;flex-direction:column;min-height:168px;border-radius:7px 7px 12px 12px;padding:30px 12px 12px;background:#2A221B;background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0 1px,transparent 1px 7px),linear-gradient(170deg,rgba(255,255,255,.05),rgba(0,0,0,.18));box-shadow:0 14px 22px -14px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.06)}
+.b4 .fold{position:absolute;left:0;right:0;top:0;height:12px;border-radius:6px 6px 0 0;background:#352B23;box-shadow:0 3px 4px rgba(0,0,0,.5)}
+.b4 .ro{font:700 8px/1 var(--f-num),sans-serif;letter-spacing:.2em;text-transform:uppercase;color:var(--a-cu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.b4 .nm{font-family:"Cormorant Garamond",var(--f-disp),serif;font-style:italic;font-weight:500;font-size:21px;line-height:1.05;color:#F1E8DA;margin-top:10px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.b4 .og{font:400 9.5px/1.3 var(--f-num),sans-serif;color:#A39181;margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.b4 .ft{margin-top:auto;padding-top:10px;display:flex;justify-content:space-between;align-items:baseline;gap:6px;white-space:nowrap;font:600 9px var(--f-num),sans-serif;color:#A39181;letter-spacing:.04em}
+.b4 .rt{font:800 12px var(--f-num),sans-serif;color:var(--a-cu)}
+.b4 .rt.none{color:#6E5A4A}
+</style>
+</head>
+<body>
+<nav class="nav"><div class="wrap">
+  <a class="wm" href="index.html">Coffeenotes</a>
+  <ul>
+    <li><a href="index.html#direction">方向性</a></li>
+    <li><a href="index.html#tokens">色と書体</a></li>
+    <li><a href="index.html#components">部品</a></li>
+    <li class="sep"></li>
+    <li><a href="mobile.html">Web スマホ</a></li>
+    <li><a href="desktop.html">Web PC</a></li>
+    <li><a href="ios.html">iOS アプリ</a></li>
+    <li><a href="alt.html">別案の比較</a></li>
+    <li><a href="bags.html" class="on">豆の袋 4 案</a></li>
+  </ul>
+</div></nav>
+<header class="phead wrap">
+  <div class="secno">COLLECTION · BAGS · 2026-10-20</div>
+  <h1>豆の袋 — 4 案</h1>
+  <p class="lead">コレクション画面の袋を見直す。今の袋は、豆名の大文字が叫ぶように大きく、脇の文字は小さすぎ、封蝋がラベルに食い込み、「1 CUPS」が英語で、といった細部の積み重ねで野暮ったい。ここでは同じ 4 袋（本番の実データ）を 4 つの作法で並べる。案 2 は手書き書体を切り替えて比べられる。配色（ダーク + 銅）はそのまま。</p>
+  <dl class="facts">
+    <div><dt>案 1</dt><dd>整え直し — 今の袋のまま階層を直す</dd></div>
+    <div><dt>案 2</dt><dd>手書きラベル — 焙煎所が手で書いた袋</dd></div>
+    <div><dt>案 3</dt><dd>タグ札 — 紐で下げた札、タイプライター</dd></div>
+    <div><dt>案 4</dt><dd>無地の袋に刻印 — ラベル無し、最小限</dd></div>
+  </dl>
+</header>
+
+<section id="compare"><div class="wrap">
+  <div class="secno">COMPARE</div>
+  <h2>同じ棚を 4 つの作法で</h2>
+  <div class="cmp-cols">
+
+    <!-- 案 1 -->
+    <div class="cmp-col">
+      <div class="cmp-lab">案 1 · 整え直し</div>
+      <div class="ph"><div class="a-status"></div><div class="a-body">
+        <div class="sec"><span class="n">コロンビア</span><span class="en">COLOMBIA</span><span class="r">2 袋</span></div>
+        <div class="shelf">
+          <a class="b1" href="#compare"><span class="fold"></span><span class="seal">4.5</span>
+            <span class="lab"><span class="ro">TAOCA COFFEE 南青山店</span><span class="nm long">Colombia Las Flores Tabi Lot 2025</span><span class="og">コロンビア · Thermal shock</span><span class="ft"><span>2026.09.27</span><b>1 杯</b></span></span></a>
+          <a class="b1" href="#compare"><span class="fold"></span><span class="seal">5.0</span>
+            <span class="lab"><span class="ro">KIELO COFFEE</span><span class="nm">Lusitania Lime Geisha</span><span class="og">コロンビア · Lime infused</span><span class="ft"><span>2026.09.25</span><b>1 杯</b></span></span></a>
+        </div>
+        <div class="sec"><span class="n">エチオピア</span><span class="en">ETHIOPIA</span><span class="r">2 袋</span></div>
+        <div class="shelf">
+          <a class="b1" href="#compare"><span class="fold"></span><span class="seal">5.0</span>
+            <span class="lab"><span class="ro">THE WORD COFFEE</span><span class="nm">Bench Maji Gesha Natural</span><span class="og">エチオピア · Natural</span><span class="ft"><span>2026.10.18</span><b>1 杯</b></span></span></a>
+          <a class="b1" href="#compare"><span class="fold"></span><span class="seal">4.0</span>
+            <span class="lab"><span class="ro">Nagare Roastery</span><span class="nm">Ethiopia Guji Anaerobic</span><span class="og">エチオピア · Natural</span><span class="ft"><span>2026.10.17</span><b>4 杯</b></span></span></a>
+        </div>
+        <div class="sec"><span class="n">インドネシア</span><span class="en">INDONESIA</span><span class="r">アジア</span></div>
+        <div class="shelf"><div class="empty">まだ飲んでいません</div></div>
+      </div></div>
+      <p class="cmp-note">豆名は打ったとおりの大文字小文字で（叫ばせない）、長い名前は 1 段小さく 3 行まで。封蝋は袋の角に小さく、ラベルに重ねない。脇の文字は 8.5〜9px に上げ、杯数は「1 杯」。罫線はラベル下部の 1 本だけ。</p>
+    </div>
+
+    <!-- 案 2 -->
+    <div class="cmp-col hand" id="hand" data-latin="caveat" data-jp="klee">
+      <div class="cmp-lab">案 2 · 手書きラベル</div>
+      <div class="ph"><div class="a-status"></div><div class="a-body">
+        <div class="sec"><span class="n">コロンビア</span><span class="en">COLOMBIA</span><span class="r">2 袋</span></div>
+        <div class="shelf">
+          <a class="b2" href="#compare"><span class="fold"></span>
+            <span class="lab"><span class="tape"></span><span class="ro">TAOCA COFFEE 南青山店</span><span class="nm">Colombia Las Flores Tabi Lot 2025</span><span class="og">コロンビア・サーマルショック</span><span class="ft"><span>9/27 · 1杯</span><span class="rt">★4.5</span></span></span></a>
+          <a class="b2" href="#compare"><span class="fold"></span>
+            <span class="lab"><span class="tape"></span><span class="ro">KIELO COFFEE</span><span class="nm">Lusitania Lime Geisha</span><span class="og">コロンビア・ライムインフューズド</span><span class="ft"><span>9/25 · 1杯</span><span class="rt">★5.0</span></span></span></a>
+        </div>
+        <div class="sec"><span class="n">エチオピア</span><span class="en">ETHIOPIA</span><span class="r">2 袋</span></div>
+        <div class="shelf">
+          <a class="b2" href="#compare"><span class="fold"></span>
+            <span class="lab"><span class="tape"></span><span class="ro">THE WORD COFFEE</span><span class="nm">Bench Maji Gesha Natural</span><span class="og">エチオピア・ナチュラル</span><span class="ft"><span>10/18 · 1杯</span><span class="rt">★5.0</span></span></span></a>
+          <a class="b2" href="#compare"><span class="fold"></span>
+            <span class="lab"><span class="tape"></span><span class="ro">Nagare Roastery</span><span class="nm">Ethiopia Guji Anaerobic</span><span class="og">エチオピア・ナチュラル</span><span class="ft"><span>10/17 · 4杯</span><span class="rt">★4.0</span></span></span></a>
+        </div>
+        <div class="sec"><span class="n">インドネシア</span><span class="en">INDONESIA</span><span class="r">アジア</span></div>
+        <div class="shelf"><div class="empty">まだ飲んでいません</div></div>
+      </div></div>
+      <div class="sw" role="group" aria-label="英字の手書き書体">
+        <button type="button" data-latin="caveat" aria-pressed="true">Caveat</button>
+        <button type="button" data-latin="kalam" aria-pressed="false">Kalam</button>
+        <button type="button" data-latin="apple" aria-pressed="false">Homemade Apple</button>
+      </div>
+      <div class="sw" role="group" aria-label="日本語の手書き書体">
+        <button type="button" data-jp="klee" aria-pressed="true">Klee One</button>
+        <button type="button" data-jp="yomogi" aria-pressed="false">Yomogi</button>
+        <button type="button" data-jp="kurenaido" aria-pressed="false">Zen Kurenaido</button>
+      </div>
+      <p class="cmp-note">焙煎所が手で書いた袋。ラベルは少し傾け、上にマスキングテープ。豆名は手書き書体、星はペンで書いた朱。上のボタンで英字・日本語の手書き書体を切り替えて比べる。</p>
+    </div>
+
+    <!-- 案 3 -->
+    <div class="cmp-col">
+      <div class="cmp-lab">案 3 · タグ札</div>
+      <div class="ph"><div class="a-status"></div><div class="a-body">
+        <div class="sec"><span class="n">コロンビア</span><span class="en">COLOMBIA</span><span class="r">2 袋</span></div>
+        <div class="shelf">
+          <a class="b3" href="#compare"><span class="fold"></span><span class="str"></span>
+            <span class="tag"><span class="ro">TAOCA COFFEE 南青山店</span><span class="nm">Colombia Las Flores Tabi Lot 2025</span><span class="og">コロンビア · Thermal shock</span><span class="ft"><span>09.27 · 1 杯</span><span class="rt">4.5</span></span></span></a>
+          <a class="b3" href="#compare"><span class="fold"></span><span class="str"></span>
+            <span class="tag"><span class="ro">KIELO COFFEE</span><span class="nm">Lusitania Lime Geisha</span><span class="og">コロンビア · Lime infused</span><span class="ft"><span>09.25 · 1 杯</span><span class="rt">5.0</span></span></span></a>
+        </div>
+        <div class="sec"><span class="n">エチオピア</span><span class="en">ETHIOPIA</span><span class="r">2 袋</span></div>
+        <div class="shelf">
+          <a class="b3" href="#compare"><span class="fold"></span><span class="str"></span>
+            <span class="tag"><span class="ro">THE WORD COFFEE</span><span class="nm">Bench Maji Gesha Natural</span><span class="og">エチオピア · Natural</span><span class="ft"><span>10.18 · 1 杯</span><span class="rt">5.0</span></span></span></a>
+          <a class="b3" href="#compare"><span class="fold"></span><span class="str"></span>
+            <span class="tag"><span class="ro">Nagare Roastery</span><span class="nm">Ethiopia Guji Anaerobic</span><span class="og">エチオピア · Natural</span><span class="ft"><span>10.17 · 4 杯</span><span class="rt">4.0</span></span></span></a>
+        </div>
+        <div class="sec"><span class="n">インドネシア</span><span class="en">INDONESIA</span><span class="r">アジア</span></div>
+        <div class="shelf"><div class="empty">まだ飲んでいません</div></div>
+      </div></div>
+      <p class="cmp-note">黒い無地の袋に、紐で下げた札。札はタイプライター書体で打ち、星はゴム印。クラフト紙の色を使わないので画面が静かになる。</p>
+    </div>
+
+    <!-- 案 4 -->
+    <div class="cmp-col">
+      <div class="cmp-lab">案 4 · 無地の袋に刻印</div>
+      <div class="ph"><div class="a-status"></div><div class="a-body">
+        <div class="sec"><span class="n">コロンビア</span><span class="en">COLOMBIA</span><span class="r">2 袋</span></div>
+        <div class="shelf">
+          <a class="b4" href="#compare"><span class="fold"></span><span class="ro">TAOCA COFFEE 南青山店</span><span class="nm">Colombia Las Flores Tabi Lot 2025</span><span class="og">コロンビア · Thermal shock</span><span class="ft"><span>09.27 · 1 杯</span><span class="rt">★ 4.5</span></span></a>
+          <a class="b4" href="#compare"><span class="fold"></span><span class="ro">KIELO COFFEE</span><span class="nm">Lusitania Lime Geisha</span><span class="og">コロンビア · Lime infused</span><span class="ft"><span>09.25 · 1 杯</span><span class="rt">★ 5.0</span></span></a>
+        </div>
+        <div class="sec"><span class="n">エチオピア</span><span class="en">ETHIOPIA</span><span class="r">2 袋</span></div>
+        <div class="shelf">
+          <a class="b4" href="#compare"><span class="fold"></span><span class="ro">THE WORD COFFEE</span><span class="nm">Bench Maji Gesha Natural</span><span class="og">エチオピア · Natural</span><span class="ft"><span>10.18 · 1 杯</span><span class="rt">★ 5.0</span></span></a>
+          <a class="b4" href="#compare"><span class="fold"></span><span class="ro">Nagare Roastery</span><span class="nm">Ethiopia Guji Anaerobic</span><span class="og">エチオピア · Natural</span><span class="ft"><span>10.17 · 4 杯</span><span class="rt">★ 4.0</span></span></a>
+        </div>
+        <div class="sec"><span class="n">インドネシア</span><span class="en">INDONESIA</span><span class="r">アジア</span></div>
+        <div class="shelf"><div class="empty">まだ飲んでいません</div></div>
+      </div></div>
+      <p class="cmp-note">ラベルを貼らず、袋に直接刻印する。豆名はイタリックのセリフ（Cormorant）、ロースターは銅の小さな大文字。クラフト紙もラベルも無いので、いちばん静かで大人びる。</p>
+    </div>
+
+  </div>
+</div></section>
+
+<section id="notes"><div class="wrap">
+  <div class="secno">NOTES</div>
+  <h2>決め方</h2>
+  <ul style="font-size:14px;color:var(--ink2);line-height:1.9;max-width:60em">
+    <li>棚の見出し・空き棚・封蝋の色分けは 4 案とも共通。変えるのは袋とラベルだけ。</li>
+    <li>豆名は打ったとおりの表記で出す（全部大文字の豆名もそのまま）。案 1〜4 はすべて 3 行で切る。</li>
+    <li>案 2 の手書き書体は、英字と日本語で別の書体が要る。切り替えて、相性の良い組み合わせを選ぶ。</li>
+    <li>決まったら `components/beans/bean-bag.tsx` と DESIGN.md §S10 を同じ PR で直す。</li>
+  </ul>
+</div></section>
+
+<script src="design.js"></script>
+<script>
+(function(){
+  var root=document.getElementById('hand');
+  document.querySelectorAll('#hand .sw button').forEach(function(b){
+    b.addEventListener('click',function(){
+      var k=b.hasAttribute('data-latin')?'latin':'jp';
+      root.setAttribute('data-'+k,b.getAttribute('data-'+k));
+      b.parentElement.querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false');});
+    });
+  });
+})();
+</script>
+</body>
+</html>
