@@ -121,4 +121,25 @@ describe('createGoogleProvider', () => {
     await assertion;
     vi.useRealTimers();
   });
+
+  it('refreshPlace: 通常は ok、movedPlaceId があれば moved、404 は not_found（FieldMask に movedPlaceId）', async () => {
+    const f = vi.fn(async () => jsonRes(fx('google-details')));
+    const p = createGoogleProvider('KEY', f as unknown as typeof fetch);
+    const r = await p.refreshPlace('ChIJrWB6lbKMGGARp0QB0mMSNe4');
+    expect(r).toMatchObject({ status: 'ok', place: { name: 'FUGLEN TOKYO' } });
+    const mask = ((f.mock.calls[0] as unknown as [string, RequestInit])[1].headers as Record<string, string>)[
+      'X-Goog-FieldMask'
+    ];
+    expect(mask).toContain('movedPlaceId');
+
+    const moved = createGoogleProvider('KEY', (async () =>
+      jsonRes({ id: 'old', movedPlaceId: 'new' })) as unknown as typeof fetch);
+    expect(await moved.refreshPlace('old')).toEqual({ status: 'moved', movedPlaceId: 'new' });
+
+    const gone = createGoogleProvider('KEY', (async () => jsonRes({}, 404)) as unknown as typeof fetch);
+    expect(await gone.refreshPlace('x')).toEqual({ status: 'not_found' });
+
+    const flaky = createGoogleProvider('KEY', (async () => jsonRes({}, 503)) as unknown as typeof fetch);
+    await expect(flaky.refreshPlace('x')).rejects.toMatchObject({ code: 'provider' });
+  });
 });

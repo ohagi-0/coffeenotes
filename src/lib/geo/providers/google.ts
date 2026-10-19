@@ -22,6 +22,8 @@ export const NEARBY_FIELD_MASK = PLACE_FIELDS.split(',')
   .map((f) => `places.${f}`)
   .join(',');
 export const DETAILS_FIELD_MASK = PLACE_FIELDS;
+/** 30 日更新ジョブ用。移転先の ID（movedPlaceId）も見る */
+export const REFRESH_FIELD_MASK = `${PLACE_FIELDS},movedPlaceId`;
 
 type Fetch = typeof fetch;
 
@@ -33,6 +35,14 @@ const placeSchema = z.object({
   location: z.object({ latitude: z.number(), longitude: z.number() }).optional(),
 });
 type GooglePlace = z.infer<typeof placeSchema>;
+
+const refreshResponseSchema = placeSchema.extend({ movedPlaceId: z.string().min(1).optional() });
+
+/** 更新ジョブの結果。ok = 最新の写し、moved = 移転先の place_id、not_found = Google に無い（閉店・ID の失効） */
+export type RefreshPlaceResult =
+  | { status: 'ok'; place: PlaceCandidate }
+  | { status: 'moved'; movedPlaceId: string }
+  | { status: 'not_found' };
 
 const nearbyResponseSchema = z.object({ places: z.array(placeSchema).default([]) });
 const autocompleteResponseSchema = z.object({
@@ -129,10 +139,12 @@ export function createGoogleProvider(
   fetchImpl: Fetch = fetch,
 ): Required<Pick<GeoProvider, 'searchNearby' | 'suggestPlaces' | 'placeDetails'>> & {
   readonly name: string;
+  /** 30 日更新用。移転・消滅も結果で返す */
+  refreshPlace(placeId: string): Promise<RefreshPlaceResult>;
 } {
   async function call(
     path: string,
-    init: { method: 'GET' | 'POST'; fieldMask?: string; body?: unknown },
+    init: { method: 'GET' | 'POST'; fieldMask?: string; body?: unknown; notFoundAsNull?: boolean },
   ): Promise<unknown> {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), GOOGLE_TIMEOUT_MS);
@@ -147,6 +159,7 @@ export function createGoogleProvider(
         body: init.body ? JSON.stringify(init.body) : undefined,
         signal: ctrl.signal,
       });
+      if (res.status === 404 && init.notFoundAsNull) return null;
       if (!res.ok) throw httpError(res.status);
       return await res.json();
     } catch (err) {
@@ -202,6 +215,24 @@ export function createGoogleProvider(
       });
       const all = suggestionsFromAutocomplete(json);
       return limit ? all.slice(0, limit) : all;
+    },
+
+    /** 30 日以内の更新用（セッションなし）。404 は not_found、移転していれば moved。一時的な失敗は GeoError を投げる */
+    async refreshPlace(placeId: string): Promise<RefreshPlaceResult> {
+      const json = await call(`places/${encodeURIComponent(placeId)}?languageCode=ja&regionCode=JP`, {
+        method: 'GET',
+        fieldMask: REFRESH_FIELD_MASK,
+        notFoundAsNull: true,
+      });
+      if (json === null) return { status: 'not_found' };
+      const parsed = refreshResponseSchema.safeParse(json);
+      if (!parsed.success)
+        throw new GeoError('Google の店情報の応答が想定と違います', 'invalid_output', parsed.error);
+      if (parsed.data.movedPlaceId && parsed.data.movedPlaceId !== placeId) {
+        return { status: 'moved', movedPlaceId: parsed.data.movedPlaceId };
+      }
+      const place = toCandidate(parsed.data);
+      return place ? { status: 'ok', place } : { status: 'not_found' };
     },
 
     async placeDetails({ placeId, sessionToken }) {

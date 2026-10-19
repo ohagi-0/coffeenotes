@@ -25,7 +25,7 @@ export function fakeClient(script: {
 
   const chain = (result: FakeResult) => {
     const o: Record<string, unknown> = {};
-    for (const m of ['select', 'eq', 'in', 'is', 'order', 'limit', 'ilike']) o[m] = () => o;
+    for (const m of ['select', 'eq', 'in', 'is', 'lt', 'or', 'order', 'limit', 'ilike']) o[m] = () => o;
     o.single = () => Promise.resolve(result);
     o.then = (resolve: (r: FakeResult) => unknown, reject?: (e: unknown) => unknown) =>
       Promise.resolve(result).then(resolve, reject);

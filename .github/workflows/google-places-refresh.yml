@@ -1,0 +1,33 @@
+# Google の店の名前・住所・座標は 30 日以内に更新する決まり（ADR 0011）。週 1 回、/api/places/refresh を叩いて
+# 20 日より古い写しを取り直す。失敗（HTTP が 2xx でない、または failed が 0 でない）ならジョブを失敗にして GitHub の通知を飛ばす。
+# 合言葉 CRON_SECRET は ocr-warmup と同じ Secrets。
+name: Google places refresh
+
+on:
+  schedule:
+    - cron: '0 18 * * 0' # 月曜 03:00 JST
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: /api/places/refresh を叩く
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::CRON_SECRET が Secrets に未設定です"; exit 1
+          fi
+          body=$(mktemp)
+          code=$(curl -s -o "$body" -w '%{http_code}' --max-time 180 -X POST \
+            "https://coffee-notes.app/api/places/refresh" \
+            -H "Authorization: Bearer $CRON_SECRET")
+          echo "HTTP $code"
+          cat "$body"; echo
+          case "$code" in 2??) ;; *) echo "::error::更新ジョブが失敗しました（HTTP $code）"; exit 1 ;; esac
+          failed=$(jq -r '.failed // 0' "$body")
+          if [ "$failed" != "0" ]; then
+            echo "::error::$failed 件の店を更新できませんでした。30 日を過ぎる前に確認してください"; exit 1
+          fi

@@ -21,6 +21,7 @@ import { toTimelineItem } from '@/features/logs/presenters';
 import { useLogsByShop, useRatingStats } from '@/features/logs/queries';
 import { googleMapsUrl, shopKindLabel } from '@/features/shops/presenters';
 import { useShop } from '@/features/shops/queries';
+import { useLazyRefreshGoogleShop } from '@/features/shops/use-lazy-refresh';
 import { idFromSearchParams, routes } from '@/lib/routes';
 
 // 店詳細（S6 の行から。F-MAP-2）。店情報 + その店の記録一覧。URL は /shops/detail?id=（ADR 0008）。
@@ -32,6 +33,7 @@ function ShopDetailInner() {
   const id = idFromSearchParams(params);
   const editing = params.get('edit') === '1';
   const shop = useShop(id);
+  useLazyRefreshGoogleShop(shop.data);
   const updateShop = useUpdateShop();
   const logs = useLogsByShop(id);
   const stats = useRatingStats();
