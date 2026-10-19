@@ -1,9 +1,9 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import dynamic from 'next/dynamic';
 import { LocateFixed, MapPin, Search } from 'lucide-react';
 import { AppButton } from '@/components/app-button';
+import { ShopMapSwitch } from '@/components/map/shop-map-switch';
 import { GoogleAttribution } from '@/components/shops/google-attribution';
 import { isSuggestion, type ShopCandidateSources, type ShopSearchItem } from '@/features/geo/search';
 import { PlatformGeolocationError, getCurrentPosition } from '@/lib/platform/geolocation';
@@ -13,8 +13,6 @@ import { cn } from '@/lib/utils';
 
 // 店を探す 3 つの入口（S3 ③ / S6、F-SHOP-3/4/7）: 現在地から探す / 店名で検索 / 地図で指定。
 // 候補検索は入力補助で、失敗しても手入力で店を作れる（ADR 0003）。地図は SSR 不可なので dynamic。
-
-const ShopMap = dynamic(() => import('@/components/map/shop-map'), { ssr: false });
 
 export type ShopCandidate = PlaceCandidateDto;
 
@@ -225,7 +223,7 @@ export function ShopCandidateTools({
 
       {mode === 'map' && onPickPosition && (
         <div className="flex flex-col gap-1.5">
-          <ShopMap
+          <ShopMapSwitch
             shops={[]}
             center={position ?? userPos ?? DEFAULT_CENTER}
             zoom={position ? 16 : 14}

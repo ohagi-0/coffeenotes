@@ -50,6 +50,8 @@ describe('shops presenters', () => {
       count: 3,
       avgRating: 4.5,
       distanceM: null,
+      placeProvider: null,
+      externalPlaceId: null,
     });
     const r = toShopRow(shop({ kind: null, lat: null, lng: null, address: null }), undefined);
     expect(r).toMatchObject({
@@ -104,6 +106,19 @@ describe('shops presenters', () => {
       `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('KIELO COFFEE 台東区蔵前')}`,
     );
     expect(googleMapsUrl({ name: '  ', address: null })).toBeNull();
+    expect(
+      googleMapsUrl({
+        name: 'Fuglen Tokyo',
+        lat: 35.6,
+        lng: 139.6,
+        place_provider: 'google',
+        external_place_id: 'ChIJabc',
+      }),
+    ).toBe('https://www.google.com/maps/search/?api=1&query=Fuglen%20Tokyo&query_place_id=ChIJabc');
+    // OSM の店は ID があっても座標で開く
+    expect(
+      googleMapsUrl({ name: 'A', lat: 35.6, lng: 139.6, place_provider: 'osm', external_place_id: 'node/1' }),
+    ).toBe('https://www.google.com/maps/search/?api=1&query=35.6,139.6');
   });
 
   it('filterShopRows は種別と検索語（店名・住所、大文字小文字を無視）で絞る', () => {

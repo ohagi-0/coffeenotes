@@ -2,7 +2,6 @@
 
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import type { Route } from 'next';
-import dynamic from 'next/dynamic';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ExternalLink, LocateFixed, Search, Store } from 'lucide-react';
 import { toast } from 'sonner';
@@ -16,6 +15,7 @@ import { PinLegend } from '@/components/map/pin-legend';
 import { ShopForm } from '@/components/shops/shop-form';
 import { ShopList } from '@/components/shops/shop-list';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ShopMapSwitch } from '@/components/map/shop-map-switch';
 import { geocodePlace, searchNearbyPlaces, shopCandidateSources } from '@/features/geo/search';
 import { useLogsByShop, useRatingStats } from '@/features/logs/queries';
 import { initialCenter, toMapShops } from '@/features/shops/map-pins';
@@ -38,7 +38,7 @@ import type { ShopKind } from '@/lib/schemas/shop';
 // S6 記録したお店（F-SHOP-1/2/5/6 + F-MAP-1〜4、F-SHOP-7）。地図と一覧を 1 画面にまとめる（2026-09-24）:
 // 上に検索欄と絞り込みチップ、その下に 300px の地図（座標のある店のピン）、選んだ店のカード、店の一覧。
 // 選択中の店は ?shop= に持つ（ADR 0008）。?new=1 で登録フォームをページ内に出す（動的セグメントは使わない）。
-// 旧 /map はここへリダイレクトする。地図は SSR 不可なので dynamic。
+// 旧 /map はここへリダイレクトする。
 // チップの値: all / cafe / roaster / green_bean_shop / rating（評価順）/ near（近い順。現在地を取る）
 
 const CHIPS: FilterChip[] = [
@@ -50,11 +50,6 @@ const CHIPS: FilterChip[] = [
   { value: 'near', label: '近い順' },
 ];
 const KINDS: ShopKind[] = ['cafe', 'roaster', 'green_bean_shop', 'other'];
-
-const ShopMap = dynamic(() => import('@/components/map/shop-map'), {
-  ssr: false,
-  loading: () => <Skeleton className="h-[300px] w-full rounded-[14px]" />,
-});
 
 function ShopsInner() {
   const router = useRouter();
@@ -307,7 +302,7 @@ function ShopsInner() {
         <>
           {mapShops.length > 0 || focus ? (
             <>
-              <ShopMap
+              <ShopMapSwitch
                 shops={mapShops}
                 selectedId={selectedId}
                 onSelect={select}

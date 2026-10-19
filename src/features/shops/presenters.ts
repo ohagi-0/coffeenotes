@@ -20,6 +20,9 @@ export type ShopRow = {
   avgRating: number | null;
   /** 現在地からの距離（m）。現在地が無い・座標が無い店は null */
   distanceM: number | null;
+  /** 店の出どころと地図サービス側の ID（Google の店は place_id でリンクする） */
+  placeProvider?: string | null;
+  externalPlaceId?: string | null;
 };
 
 export type ShopSort = 'name' | 'rating' | 'distance';
@@ -58,6 +61,8 @@ export function toShopRow(shop: Shop, stat: RatingStat | undefined): ShopRow {
     count: stat?.count ?? 0,
     avgRating: stat?.avgRating ?? null,
     distanceM: null,
+    placeProvider: shop.place_provider,
+    externalPlaceId: shop.external_place_id,
   };
 }
 
@@ -105,14 +110,23 @@ export function sortShopRows(rows: readonly ShopRow[], sort: ShopSort): ShopRow[
   return copy;
 }
 
-/** Google マップで開く URL。座標があれば座標、無ければ店名と住所で検索する。どちらも無ければ null */
+/** Google マップで開く URL。Google の店は place_id で、そうでなければ座標、無ければ店名と住所で検索する。どれも無ければ null */
 export function googleMapsUrl(shop: {
   name: string;
   address?: string | null;
   lat?: number | null;
   lng?: number | null;
+  placeProvider?: string | null;
+  externalPlaceId?: string | null;
+  place_provider?: string | null;
+  external_place_id?: string | null;
 }): string | null {
   const base = 'https://www.google.com/maps/search/?api=1&query=';
+  const provider = shop.placeProvider ?? shop.place_provider;
+  const placeId = shop.externalPlaceId ?? shop.external_place_id;
+  if (provider === 'google' && placeId) {
+    return `${base}${encodeURIComponent(shop.name)}&query_place_id=${encodeURIComponent(placeId)}`;
+  }
   if (shop.lat != null && shop.lng != null) return `${base}${shop.lat},${shop.lng}`;
   const q = [shop.name, shop.address].filter((v): v is string => !!v && v.trim() !== '').join(' ');
   return q ? `${base}${encodeURIComponent(q)}` : null;

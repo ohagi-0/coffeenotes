@@ -4,29 +4,13 @@ import 'leaflet/dist/leaflet.css';
 import { useEffect, useMemo } from 'react';
 import L from 'leaflet';
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet';
+import type { ShopMapProps } from '@/components/map/map-types';
 import { PIN_COLORS, pinTextColor, pinTier, type MapShop } from '@/features/shops/map-pins';
 import { cn } from '@/lib/utils';
 
 // 店の地図（S7、F-MAP-1〜4、F-SHOP-7）。Leaflet + OSM タイル。SSR 不可なので、ページ側で
 // dynamic(() => import('@/components/map/shop-map'), { ssr: false }) で読み込む。
 // ピンは divIcon（画像アセット不要）。平均星で色分けし、中に記録件数。長押し（Leaflet の contextmenu）で座標を返す。
-
-export type ShopMapProps = {
-  shops: MapShop[];
-  selectedId?: string | null;
-  onSelect?: (id: string) => void;
-  /** 長押し（PC は右クリック）で呼ぶ。店の登録に使う */
-  onLongPress?: (pos: { lat: number; lng: number }) => void;
-  center: { lat: number; lng: number };
-  zoom?: number;
-  /** 現在地。あれば青い点を出し、変わったらそこへ移動する */
-  userLocation?: { lat: number; lng: number } | null;
-  /** 検索語から引いた場所（登録済みの店ではない）。点線のピンを出し、変わったらそこへ移動する */
-  focus?: { lat: number; lng: number; label: string } | null;
-  /** 地図の高さ（px）。既定 300 */
-  height?: number;
-  className?: string;
-};
 
 function pinIcon(shop: MapShop, selected: boolean): L.DivIcon {
   const tier = pinTier(shop.avgRating);
@@ -138,7 +122,12 @@ export default function ShopMap({
   );
 
   return (
-    <div className={cn('border-border overflow-hidden rounded-[14px] border', className)} style={{ height }}>
+    <div
+      role="region"
+      aria-label="店の地図"
+      className={cn('border-border overflow-hidden rounded-[14px] border', className)}
+      style={{ height }}
+    >
       <MapContainer
         center={[center.lat, center.lng]}
         zoom={zoom}
