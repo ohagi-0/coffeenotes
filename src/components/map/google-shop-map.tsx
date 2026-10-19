@@ -209,6 +209,8 @@ function Inner({
   return (
     <Map
       mapId={mapId}
+      // ダーク専用のアプリなので、Map ID の「ダークモード」枠（Google 標準のダーク配色）を使う（#37）
+      colorScheme="DARK"
       defaultCenter={center}
       defaultZoom={zoom}
       gestureHandling="greedy"

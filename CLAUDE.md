@@ -299,7 +299,8 @@ E2E_TEST_PASSWORD=
 - [x] Phase 5 分析・仕上げ: /stats（4 タイル、高評価の生産国・精製、フレーバー、味覚レーダー、月別）、PWA（serwist、オフライン閲覧、アイコン）、CSV / JSON エクスポート、カードの QR → 参照 URL（2026-09-22）
 - [x] Phase 5 の実機確認: ホーム画面に追加 → 機内モードで一覧・豆詳細が開く、エクスポートのダウンロード（2026-09-24）
 - [x] Google Maps 移行のコード（#33〜#39、2026-10-19）: 鍵・Map ID、Places API (New) の GeoProvider、DB 0005（place_provider / place_synced_at）、検索シート、Google マップ、30 日更新ジョブ、エクスポート・SW・帰属
-- [ ] Google Maps 移行の本番切り替え（#40）: Vercel の環境変数を google にして再デプロイ（`SUPABASE_SERVICE_ROLE_KEY` も Production に要る）、スマホで確認、2 週間後に Leaflet / OSM 候補検索の後始末
+- [x] Google Maps 移行の本番切り替え（#40、2026-10-19）: Vercel の `GEO_PROVIDER` / `NEXT_PUBLIC_MAP_PROVIDER` を `google` にし、`SUPABASE_SERVICE_ROLE_KEY` を Production / Preview に追加して再デプロイ。本番で近くの店・店名検索（フグレン → FUGLEN TOKYO）・選択・Google マップの表示を確認。戻すときは環境変数を `nominatim` / `osm` に戻して再デプロイ、完全に戻すなら git タグ `before-google-maps-cutover`
+- [ ] Google Maps 移行の後始末（#40 の残り）: 切り替えから 2 週間問題が無ければ Leaflet / OSM 候補検索のコードを削除（ユーザーの OK を取る）。1 週間後に `google-places-refresh.yml` の結果と Cloud の請求（0 円のはず）を確認
 - [ ] Phase 6 ネイティブ化（Capacitor）— 未着手。前提の制約（§2.2）は守られている
 
 進捗はこのチェックリストを更新して管理する。
