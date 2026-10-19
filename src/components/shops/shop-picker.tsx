@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronRight, LocateFixed, MapPin, Plus, Search, Store, X } from 'lucide-react';
 import type { ShopCandidate } from '@/components/shops/shop-candidate-tools';
-import type { ShopCandidateSources } from '@/features/geo/search';
+import { GoogleAttribution } from '@/components/shops/google-attribution';
+import { isSuggestion, type ShopCandidateSources, type ShopSearchItem } from '@/features/geo/search';
 import { matchScore, mergeCandidates, rankCandidates } from '@/lib/geo/match';
 import { PlatformGeolocationError, getCurrentPosition } from '@/lib/platform/geolocation';
 import { cn } from '@/lib/utils';
@@ -16,8 +17,17 @@ import { cn } from '@/lib/utils';
 // を 1 つの一覧にまとめて出す（ADR 0010、2026-10-19）。その下に登録済みの店、最後に「自分で登録する」。
 // ネイティブの <dialog> で開き、フォーカストラップ・Esc・最前面はブラウザに任せる（nav-drawer と同じ）。
 // 候補検索（/api/geo）は入力補助で、失敗しても「自分で登録する」から店名 + 住所で作れる（ADR 0003）。
+// Google の候補（ADR 0011）: 入力中は座標なしの予測が返り、選んだときに details で座標・正式な名前・住所を取る。
+// Google の結果は Google の順のまま出し（並べ替えない）、一覧の下に Google Maps のロゴを出す。
+// Autocomplete のセッションはシートを開いたときに作り、店を選んだら（details で閉じる）または閉じたら捨てる。
 
-export type ShopPickerOption = { id: string; name: string; address?: string | null };
+export type ShopPickerOption = {
+  id: string;
+  name: string;
+  address?: string | null;
+  /** 地図サービス側の ID。同じ店が「登録済み」と「候補」に重ねて出ないようにする */
+  externalPlaceId?: string | null;
+};
 
 export type ShopPickerHint = {
   /** 見出し（「カードのロースター」など） */
@@ -36,7 +46,7 @@ export type ShopPickerProps = {
   registered: ShopPickerOption[];
   registeredPending?: boolean;
   /** 地図上の候補検索。渡さなければ登録済みと手入力だけ */
-  candidates?: Pick<ShopCandidateSources, 'nearby' | 'search'>;
+  candidates?: Pick<ShopCandidateSources, 'nearby' | 'search' | 'details'>;
   /** カードのロースター名などの手がかり。開いたときに候補を先に引いて上に出す */
   hint?: ShopPickerHint | null;
   onPickShop: (shop: ShopPickerOption) => void;
@@ -56,8 +66,13 @@ const LOCAL_MATCH_SHOWN = 20;
 type Fetched =
   | { status: 'idle' }
   | { status: 'loading' }
-  | { status: 'ok'; items: ShopCandidate[] }
+  | { status: 'ok'; items: ShopSearchItem[] }
   | { status: 'error'; message: string };
+
+/** 予測（Google）か、Google 由来の候補か。帰属ロゴと注記の出し分けに使う */
+function isGoogleItem(i: ShopSearchItem): boolean {
+  return isSuggestion(i) || i.placeProvider === 'google';
+}
 
 type Locate =
   | { status: 'idle' }
@@ -99,17 +114,24 @@ export function ShopPicker({
   const [nearbyResult, setNearbyResult] = useState<Fetched>({ status: 'idle' });
   const requestSeq = useRef(0);
   const userPos = locate.status === 'ok' ? locate.pos : null;
+  /** Autocomplete のセッショントークン（開いたときに作り、店を選ぶか閉じるまで使う） */
+  const sessionRef = useRef<string | null>(null);
+  /** 予測を選んで座標を取っている行と、失敗した行 */
+  const [picking, setPicking] = useState<{ id: string; error?: string } | null>(null);
 
   // 開閉をネイティブ dialog に同期し、開いたら検索欄にフォーカス
   useEffect(() => {
     const d = dialogRef.current;
     if (!d) return;
     if (open && !d.open) {
+      sessionRef.current = crypto.randomUUID();
+      setPicking(null);
       d.showModal();
       // showModal 直後は dialog 自身にフォーカスが移るので、次のフレームで入力欄へ
       requestAnimationFrame(() => inputRef.current?.focus());
     }
     if (!open && d.open) d.close();
+    if (!open) sessionRef.current = null;
   }, [open]);
 
   async function runNearby() {
@@ -155,7 +177,7 @@ export function ShopPicker({
     hintQueryRef.current = hintQuery;
     const seq = ++hintSeq.current;
     setHintResult({ status: 'loading' });
-    search(hintQuery, userPos ?? undefined)
+    search(hintQuery, userPos ?? undefined, sessionRef.current ?? undefined)
       .then((items) => seq === hintSeq.current && setHintResult({ status: 'ok', items }))
       .catch(
         (e: unknown) =>
@@ -174,7 +196,7 @@ export function ShopPicker({
     const seq = ++requestSeq.current;
     setSearchResult({ status: 'loading' });
     const timer = setTimeout(() => {
-      search(q, userPos ?? undefined)
+      search(q, userPos ?? undefined, sessionRef.current ?? undefined)
         .then((items) => seq === requestSeq.current && setSearchResult({ status: 'ok', items }))
         .catch(
           (e: unknown) =>
@@ -187,15 +209,50 @@ export function ShopPicker({
 
   const q = query.trim();
   const nearbyAll = useMemo(() => (nearbyResult.status === 'ok' ? nearbyResult.items : []), [nearbyResult]);
-  /** 検索語ありの一覧: 周辺の店のあいまい照合 → 店名検索の結果（重複は除く） */
-  const found = useMemo(() => {
+  const nearbyItems = nearbyAll as ShopCandidate[];
+  /** 登録済みの店と同じ ID の候補は出さない（登録済みの方を出す） */
+  const registeredIds = useMemo(
+    () => new Set(registered.map((r) => r.externalPlaceId).filter((v): v is string => !!v)),
+    [registered],
+  );
+  const notRegistered = (items: ShopSearchItem[]) =>
+    items.filter((i) => !i.externalPlaceId || !registeredIds.has(i.externalPlaceId));
+  /** 検索語ありの一覧。Google の予測が返っていればその順のまま。OSM なら周辺の店のあいまい照合 → 店名検索の結果（重複は除く） */
+  const found = useMemo((): ShopSearchItem[] => {
     if (!q) return [];
-    const local = rankCandidates(q, nearbyAll).slice(0, LOCAL_MATCH_SHOWN);
     const remote = searchResult.status === 'ok' ? searchResult.items : [];
-    return mergeCandidates(local, remote);
-  }, [q, nearbyAll, searchResult]);
+    if (remote.some(isSuggestion)) return notRegistered(remote);
+    const local = rankCandidates(q, nearbyItems).slice(0, LOCAL_MATCH_SHOWN);
+    return notRegistered(mergeCandidates(local, remote as ShopCandidate[]));
+    // notRegistered は registeredIds だけに依存する
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q, nearbyItems, searchResult, registeredIds]);
   const registeredRows = registered.filter((s) => matchScore(q, [s.name], s.address) > 0);
   const showHint = !!hint && q === '' && hintResult.status !== 'idle';
+  const hintItems = hintResult.status === 'ok' ? notRegistered(hintResult.items) : [];
+  const nearbyShown = notRegistered(nearbyAll).slice(0, NEARBY_SHOWN);
+  const googleMode =
+    found.some(isGoogleItem) ||
+    nearbyShown.some(isGoogleItem) ||
+    hintItems.some(isGoogleItem) ||
+    (searchResult.status === 'ok' && searchResult.items.some(isGoogleItem));
+
+  /** 候補を選ぶ。予測（座標なし）は details で座標・正式な名前・住所を取ってから渡す */
+  async function pick(item: ShopSearchItem) {
+    if (!isSuggestion(item)) return onPickCandidate(item);
+    const placeId = item.externalPlaceId;
+    if (!candidates?.details) return;
+    setPicking({ id: placeId });
+    try {
+      const d = await candidates.details(placeId, sessionRef.current ?? undefined);
+      if (!d) throw new Error('not found');
+      sessionRef.current = null; // details でセッションが閉じる
+      setPicking(null);
+      onPickCandidate({ ...d, placeProvider: 'google' });
+    } catch {
+      setPicking({ id: placeId, error: '位置を取得できませんでした。もう一度選んでください' });
+    }
+  }
 
   return (
     <dialog
@@ -250,9 +307,10 @@ export function ShopPicker({
               note="同じ名前の店が複数あることがあります。住所を確かめてから選んでください"
             >
               <CandidateList
-                result={hintResult}
+                result={hintResult.status === 'ok' ? { status: 'ok', items: hintItems } : hintResult}
                 emptyText="地図上に見つかりませんでした。下の検索欄で探すか、自分で登録できます"
-                onPick={onPickCandidate}
+                onPick={pick}
+                picking={picking}
               />
             </Section>
           )}
@@ -262,13 +320,10 @@ export function ShopPicker({
           {candidates && q === '' && nearbyResult.status !== 'idle' && (
             <Section title="近くの店" note="現在地から 2 km 以内のカフェ・コーヒー店を近い順に">
               <CandidateList
-                result={
-                  nearbyResult.status === 'ok'
-                    ? { status: 'ok', items: nearbyResult.items.slice(0, NEARBY_SHOWN) }
-                    : nearbyResult
-                }
+                result={nearbyResult.status === 'ok' ? { status: 'ok', items: nearbyShown } : nearbyResult}
                 emptyText="近くにカフェ・コーヒー店が見つかりませんでした。店名で検索するか、自分で登録できます"
-                onPick={onPickCandidate}
+                onPick={pick}
+                picking={picking}
               />
             </Section>
           )}
@@ -277,16 +332,21 @@ export function ShopPicker({
             <Section
               title="見つかった店"
               note={
-                userPos
-                  ? '近くの店から先に。OpenStreetMap の登録から探します'
-                  : 'OpenStreetMap の登録から探します。位置情報を許可すると近くの店が先に出ます'
+                googleMode
+                  ? userPos
+                    ? '近くの店から先に出ます'
+                    : '位置情報を許可すると近くの店が先に出ます'
+                  : userPos
+                    ? '近くの店から先に。OpenStreetMap の登録から探します'
+                    : 'OpenStreetMap の登録から探します。位置情報を許可すると近くの店が先に出ます'
               }
             >
               {found.length > 0 && (
                 <CandidateList
                   result={{ status: 'ok', items: found }}
                   emptyText=""
-                  onPick={onPickCandidate}
+                  onPick={pick}
+                  picking={picking}
                 />
               )}
               {searchResult.status === 'loading' ? (
@@ -309,6 +369,7 @@ export function ShopPicker({
               )}
             </Section>
           )}
+          {googleMode && <GoogleAttribution />}
           <Section title={q ? '登録済みの店（該当）' : '登録済みの店'}>
             {registeredPending && registered.length === 0 ? (
               <p className="text-muted-foreground py-3 text-xs" role="status">
@@ -421,10 +482,13 @@ function CandidateList({
   result,
   emptyText,
   onPick,
+  picking,
 }: {
   result: Fetched;
   emptyText: string;
-  onPick: (c: ShopCandidate) => void;
+  onPick: (c: ShopSearchItem) => void;
+  /** 予測を選んで座標を取っている行（スピナー）と、失敗した行（再試行の文言） */
+  picking: { id: string; error?: string } | null;
 }) {
   if (result.status === 'loading') {
     return (
@@ -450,6 +514,8 @@ function CandidateList({
             type="button"
             role="option"
             aria-selected={false}
+            aria-busy={picking?.id === c.externalPlaceId && !picking.error}
+            disabled={!!picking && !picking.error && picking.id === c.externalPlaceId}
             onClick={() => onPick(c)}
             className={cn('hover:bg-secondary flex min-h-[56px] w-full items-center gap-3 py-2 text-left')}
           >
@@ -468,6 +534,16 @@ function CandidateList({
               {c.address && (
                 <span className="text-muted-foreground block truncate text-[11px]">{c.address}</span>
               )}
+              {picking?.id === c.externalPlaceId &&
+                (picking.error ? (
+                  <span role="alert" className="text-destructive block text-[11px]">
+                    {picking.error}
+                  </span>
+                ) : (
+                  <span role="status" className="text-muted-foreground block text-[11px]">
+                    位置を取得しています…
+                  </span>
+                ))}
             </span>
           </button>
         </li>

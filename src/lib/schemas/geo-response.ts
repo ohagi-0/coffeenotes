@@ -10,6 +10,8 @@ export const placeCandidateSchema = z.object({
   externalPlaceId: z.string().nullable(),
   distanceM: z.number().nonnegative().optional(),
   aliases: z.array(z.string()).optional(),
+  /** 出どころ。Google の結果にだけサーバーが付ける（OSM の店は ID の形から決める）。ADR 0011 */
+  placeProvider: z.enum(['google', 'osm']).optional(),
 });
 export type PlaceCandidateDto = z.infer<typeof placeCandidateSchema>;
 

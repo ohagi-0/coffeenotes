@@ -160,7 +160,12 @@ function LogPageInner() {
             roast_level: r.roast_level,
           }))}
           greenShops={(greenShops.data ?? []).map((s) => ({ id: s.id, name: s.name }))}
-          shopOptions={(shops.data ?? []).map((s) => ({ id: s.id, name: s.name, address: s.address }))}
+          shopOptions={(shops.data ?? []).map((s) => ({
+            id: s.id,
+            name: s.name,
+            address: s.address,
+            externalPlaceId: s.external_place_id,
+          }))}
           shopOptionsPending={shops.isPending}
           onShopSearch={setShopQuery}
           shopCandidates={shopCandidateSources}

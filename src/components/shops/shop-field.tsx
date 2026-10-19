@@ -94,6 +94,7 @@ export function ShopField({
       lat: c.lat,
       lng: c.lng,
       externalPlaceId: c.externalPlaceId,
+      placeProvider: c.placeProvider ?? null,
     });
     setManual(false);
     setManualNote(null);
@@ -145,11 +146,13 @@ export function ShopField({
       ? value.address
         ? `登録済みの店 · ${value.address}`
         : '登録済みの店'
-      : value.lat != null
-        ? `新しい店として登録します（地図に出ます${value.address ? ` · ${value.address}` : ''}）`
-        : value.address
-          ? `新しい店として登録します（${value.address}）`
-          : '新しい店として登録します';
+      : value.placeProvider === 'google'
+        ? `Google マップの店として登録します${value.address ? `（${value.address}）` : ''}`
+        : value.lat != null
+          ? `新しい店として登録します（地図に出ます${value.address ? ` · ${value.address}` : ''}）`
+          : value.address
+            ? `新しい店として登録します（${value.address}）`
+            : '新しい店として登録します';
 
   return (
     <div className={cn('flex flex-col gap-1', className)}>

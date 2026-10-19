@@ -1,6 +1,8 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { ShopPicker, type ShopPickerProps } from '@/components/shops/shop-picker';
+import type { ShopSearchItem } from '@/features/geo/search';
+import type { ShopCandidate } from '@/components/shops/shop-candidate-tools';
 import { PlatformGeolocationError } from '@/lib/platform/geolocation';
 
 // 店の検索シート（S3 ③ / 記録・豆の編集）。開閉、「自分で登録する」、登録済みの絞り込み、
@@ -140,7 +142,7 @@ describe('ShopPicker', () => {
     expect(search).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(500);
     expect(search).toHaveBeenCalledTimes(1);
-    expect(search).toHaveBeenCalledWith('Blu', { lat: 35.66, lng: 139.7 });
+    expect(search).toHaveBeenCalledWith('Blu', { lat: 35.66, lng: 139.7 }, expect.any(String));
     vi.useRealTimers();
     expect(await screen.findByRole('option', { name: /Blue Bottle 清澄白河/ })).toBeInTheDocument();
     expect(screen.getAllByRole('option', { name: /Blue Bottle 渋谷/ })).toHaveLength(1);
@@ -156,7 +158,7 @@ describe('ShopPicker', () => {
       hint: { label: 'カードのロースター', query: 'KIELO COFFEE' },
     });
     expect(await screen.findByText('カードのロースター「KIELO COFFEE」の場所')).toBeInTheDocument();
-    expect(search).toHaveBeenCalledWith('KIELO COFFEE', undefined);
+    expect(search).toHaveBeenCalledWith('KIELO COFFEE', undefined, expect.any(String));
     expect(await screen.findByText('福岡市')).toBeInTheDocument();
     fireEvent.click(screen.getByText('福岡市'));
     expect(props.onPickCandidate).toHaveBeenCalledWith(expect.objectContaining({ address: '福岡市' }));
@@ -172,5 +174,110 @@ describe('ShopPicker', () => {
     });
     expect(await screen.findByRole('alert')).toHaveTextContent('候補のサービスに接続できませんでした');
     expect(screen.getByRole('button', { name: /自分で登録する/ })).toBeInTheDocument();
+  });
+
+  describe('Google の候補（ADR 0011）', () => {
+    const sug = (name: string, id: string, address = '東京都渋谷区') => ({
+      externalPlaceId: id,
+      name,
+      address,
+      distanceM: 1269,
+    });
+    const gcand = (name: string, id: string) => ({
+      ...cand(name, '渋谷区', 90),
+      externalPlaceId: id,
+      placeProvider: 'google' as const,
+    });
+
+    it('近くの店は Google の順のまま出し、帰属ロゴ（alt=Google Maps）を付ける', async () => {
+      const nearby = vi.fn(async () => [gcand('B店', 'p2'), gcand('A店', 'p1')]);
+      setup({ candidates: { nearby, search: vi.fn(async () => []) } });
+      await screen.findByRole('option', { name: /B店/ });
+      const names = screen.getAllByRole('option').map((o) => o.textContent ?? '');
+      expect(names.findIndex((t) => t.includes('B店'))).toBeLessThan(
+        names.findIndex((t) => t.includes('A店')),
+      );
+      expect(screen.getByAltText('Google Maps')).toBeInTheDocument();
+    });
+
+    it('OSM の候補だけのときはロゴを出さない', async () => {
+      const nearby = vi.fn(async () => [cand('Fuglen Tokyo')]);
+      setup({ candidates: { nearby, search: vi.fn(async () => []) } });
+      await screen.findByRole('option', { name: /Fuglen Tokyo/ });
+      expect(screen.queryByAltText('Google Maps')).toBeNull();
+    });
+
+    it('入力 → 予測 → 選ぶと details（同じセッション）で座標を取り、google の候補として渡す', async () => {
+      const nearby = vi.fn(async () => []);
+      const search = vi.fn<(q: string, near?: unknown, session?: string) => Promise<ShopSearchItem[]>>(
+        async () => [sug('フグレントウキョウ', 'pF'), sug('フグレン 羽根木公園', 'pH')],
+      );
+      let release: () => void = () => {};
+      const gate = new Promise<void>((r) => (release = r));
+      const details = vi.fn<(id: string, session?: string) => Promise<ShopCandidate>>(async () => {
+        await gate;
+        return {
+          name: 'FUGLEN TOKYO',
+          address: '渋谷区富ケ谷１丁目１６−１１',
+          lat: 35.6666,
+          lng: 139.6924,
+          externalPlaceId: 'pF',
+        };
+      });
+      const { props, rerender } = setup({ candidates: { nearby, search, details } });
+      await screen.findByText('近くの店');
+      vi.useFakeTimers();
+      rerender(<ShopPicker {...props} candidates={{ nearby, search, details }} query="フグレン" />);
+      await vi.advanceTimersByTimeAsync(500);
+      vi.useRealTimers();
+      const first = await screen.findByRole('option', { name: /フグレントウキョウ/ });
+      expect(screen.getByAltText('Google Maps')).toBeInTheDocument();
+      const session = search.mock.calls[0]![2];
+      expect(session).toEqual(expect.any(String));
+      fireEvent.click(first);
+      expect(await screen.findByText('位置を取得しています…')).toBeInTheDocument();
+      release();
+      await vi.waitFor(() => expect(props.onPickCandidate).toHaveBeenCalled());
+      expect(details).toHaveBeenCalledWith('pF', session);
+      expect(props.onPickCandidate).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'FUGLEN TOKYO', lat: 35.6666, placeProvider: 'google' }),
+      );
+    });
+
+    it('details が失敗したらその行に文言を出し、選び直せる', async () => {
+      const search = vi.fn(async () => [sug('フグレントウキョウ', 'pF')]);
+      const details = vi
+        .fn()
+        .mockRejectedValueOnce(new Error('boom'))
+        .mockResolvedValueOnce({ name: 'F', address: null, lat: 1, lng: 2, externalPlaceId: 'pF' });
+      const { props, rerender } = setup({ candidates: { nearby: vi.fn(async () => []), search, details } });
+      await screen.findByText('近くの店');
+      vi.useFakeTimers();
+      rerender(
+        <ShopPicker
+          {...props}
+          candidates={{ nearby: vi.fn(async () => []), search, details }}
+          query="フグ"
+        />,
+      );
+      await vi.advanceTimersByTimeAsync(500);
+      vi.useRealTimers();
+      fireEvent.click(await screen.findByRole('option', { name: /フグレントウキョウ/ }));
+      expect(
+        await screen.findByText('位置を取得できませんでした。もう一度選んでください'),
+      ).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('option', { name: /フグレントウキョウ/ }));
+      await vi.waitFor(() => expect(props.onPickCandidate).toHaveBeenCalledTimes(1));
+    });
+
+    it('登録済みの店と同じ place_id の候補は出さない（登録済みの方を出す）', async () => {
+      const nearby = vi.fn(async () => [gcand('Fuglen Tokyo', 'pF'), gcand('B店', 'p2')]);
+      setup({
+        registered: [{ id: '9', name: 'Fuglen Tokyo', address: '富ケ谷', externalPlaceId: 'pF' }],
+        candidates: { nearby, search: vi.fn(async () => []) },
+      });
+      await screen.findByRole('option', { name: /B店/ });
+      expect(screen.getAllByRole('option', { name: /Fuglen Tokyo/ })).toHaveLength(1);
+    });
   });
 });

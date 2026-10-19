@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { LocateFixed, MapPin, Search } from 'lucide-react';
 import { AppButton } from '@/components/app-button';
+import { GoogleAttribution } from '@/components/shops/google-attribution';
+import { isSuggestion, type ShopCandidateSources, type ShopSearchItem } from '@/features/geo/search';
 import { PlatformGeolocationError, getCurrentPosition } from '@/lib/platform/geolocation';
 import type { PlaceCandidateDto } from '@/lib/schemas/geo-response';
 import { DEFAULT_CENTER } from '@/features/shops/map-pins';
@@ -20,7 +22,9 @@ export type ShopCandidateToolsProps = {
   /** 「店名で検索」に使う現在の入力 */
   query: string;
   nearby?: (pos: { lat: number; lng: number }) => Promise<ShopCandidate[]>;
-  geocode?: (query: string, near?: { lat: number; lng: number }) => Promise<ShopCandidate[]>;
+  /** 店名・住所での検索。Google なら座標なしの予測が返り、選んだときに details で座標を取る */
+  search?: ShopCandidateSources['search'];
+  details?: ShopCandidateSources['details'];
   onPick: (c: ShopCandidate) => void;
   /** 地図の長押しで座標だけ決める */
   onPickPosition?: (pos: { lat: number; lng: number }) => void;
@@ -39,7 +43,8 @@ function formatDistance(m: number | undefined): string | null {
 export function ShopCandidateTools({
   query,
   nearby,
-  geocode,
+  search,
+  details,
   onPick,
   onPickPosition,
   position,
@@ -48,7 +53,9 @@ export function ShopCandidateTools({
   const [mode, setMode] = useState<Mode>('idle');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [candidates, setCandidates] = useState<ShopCandidate[] | null>(null);
+  const [candidates, setCandidates] = useState<ShopSearchItem[] | null>(null);
+  /** Autocomplete のセッション（検索を押すたびに作り、店を選んだら details で閉じる） */
+  const sessionRef = useRef<string | null>(null);
   const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
 
   async function locate(): Promise<{ lat: number; lng: number } | null> {
@@ -69,6 +76,24 @@ export function ShopCandidateTools({
     }
   }
 
+  /** 候補を選ぶ。予測（座標なし）は details で座標・正式な名前・住所を取ってから渡す */
+  async function pick(item: ShopSearchItem) {
+    if (!isSuggestion(item)) return onPick(item);
+    if (!details) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const d = await details(item.externalPlaceId, sessionRef.current ?? undefined);
+      if (!d) throw new Error('not found');
+      sessionRef.current = null;
+      onPick({ ...d, placeProvider: 'google' });
+    } catch {
+      setError('位置を取得できませんでした。もう一度選んでください');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function runNearby() {
     if (!nearby) return;
     setMode('nearby');
@@ -86,8 +111,8 @@ export function ShopCandidateTools({
     }
   }
 
-  async function runGeocode() {
-    if (!geocode) return;
+  async function runSearch() {
+    if (!search) return;
     const q = query.trim();
     setMode('geocode');
     setError(null);
@@ -98,7 +123,8 @@ export function ShopCandidateTools({
     }
     setBusy(true);
     try {
-      setCandidates(await geocode(q, userPos ?? undefined));
+      sessionRef.current = crypto.randomUUID();
+      setCandidates(await search(q, userPos ?? undefined, sessionRef.current));
     } catch (e) {
       setError(e instanceof Error ? e.message : '候補を取得できませんでした');
     } finally {
@@ -123,8 +149,8 @@ export function ShopCandidateTools({
             現在地から探す
           </button>
         )}
-        {geocode && (
-          <button type="button" className={chip(mode === 'geocode')} onClick={runGeocode} disabled={busy}>
+        {search && (
+          <button type="button" className={chip(mode === 'geocode')} onClick={runSearch} disabled={busy}>
             <Search className="size-4" aria-hidden />
             店名で検索
           </button>
@@ -174,7 +200,7 @@ export function ShopCandidateTools({
                     type="button"
                     role="option"
                     aria-selected={false}
-                    onClick={() => onPick(c)}
+                    onClick={() => void pick(c)}
                     className="hover:bg-secondary flex w-full flex-col justify-center px-3.5 py-2 text-left"
                   >
                     <span className="flex items-baseline justify-between gap-2 text-sm">
@@ -193,6 +219,7 @@ export function ShopCandidateTools({
               ))}
             </ul>
           )}
+          {candidates.some((c) => isSuggestion(c) || c.placeProvider === 'google') && <GoogleAttribution />}
         </div>
       )}
 

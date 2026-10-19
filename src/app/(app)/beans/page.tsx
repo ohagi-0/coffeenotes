@@ -152,7 +152,12 @@ function BeanPageInner() {
           onRetry={() => void logs.refetch()}
           edits={shopEdits}
           onEdit={(logId, shop) => setShopEdits((prev) => ({ ...prev, [logId]: shop }))}
-          shopOptions={(shops.data ?? []).map((s) => ({ id: s.id, name: s.name, address: s.address }))}
+          shopOptions={(shops.data ?? []).map((s) => ({
+            id: s.id,
+            name: s.name,
+            address: s.address,
+            externalPlaceId: s.external_place_id,
+          }))}
           shopOptionsPending={shops.isPending}
           onShopSearch={setShopQuery}
           candidates={shopCandidateSources}

@@ -135,19 +135,30 @@ export function geocodePlace(
 export const PICKER_NEARBY_RADIUS_M = 2000;
 export const PICKER_NEARBY_LIMIT = 300;
 
+/** 店名検索の 1 件。座標があれば候補、無ければ Google の予測 */
+export type ShopSearchItem = PlaceCandidateDto | PlaceSuggestionDto;
+
+export function isSuggestion(item: ShopSearchItem): item is PlaceSuggestionDto {
+  return !('lat' in item);
+}
+
 /** 店を選ぶ部品に渡す候補の取り方（近くの店 / 店名で検索 / 住所から位置） */
 export type ShopCandidateSources = {
   nearby: (pos: { lat: number; lng: number }) => Promise<PlaceCandidateDto[]>;
-  search: (query: string, near?: { lat: number; lng: number }) => Promise<PlaceCandidateDto[]>;
+  /** 店名検索。OSM なら座標つきの候補、Google なら座標なしの予測（選んだら details で座標を取る）が返る */
+  search: (query: string, near?: { lat: number; lng: number }, session?: string) => Promise<ShopSearchItem[]>;
   geocode: (query: string, near?: { lat: number; lng: number }) => Promise<PlaceCandidateDto[]>;
-  /** 予測で選んだ店の座標を取る（Google のみ。#36 で検索シートが使う） */
+  /** 予測で選んだ店の座標を取る（Google のみ）。session を渡すと Autocomplete のセッションが閉じる */
   details?: (placeId: string, session?: string) => Promise<PlaceCandidateDto | null>;
 };
 
 export const shopCandidateSources: ShopCandidateSources = {
   nearby: (pos) =>
     searchNearbyPlaces({ ...pos, radiusM: PICKER_NEARBY_RADIUS_M, limit: PICKER_NEARBY_LIMIT }),
-  search: (query, near) => searchPlacesByName({ query, near }),
+  search: async (query, near, session) => {
+    const r = await suggestPlacesByName({ query, near, session });
+    return [...r.suggestions, ...r.candidates];
+  },
   geocode: (query, near) => geocodePlace({ query, near }),
   details: (placeId, session) => getPlaceDetails({ placeId, session }),
 };

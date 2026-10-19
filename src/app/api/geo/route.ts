@@ -34,10 +34,16 @@ export async function GET(request: Request): Promise<Response> {
   try {
     const provider = getGeoProvider();
     const cache = { 'Cache-Control': 'private, max-age=60' };
+    // Google の結果（周辺・詳細）には出どころを付ける。geocode は合成プロバイダ内で Nominatim なので付けない
+    const tag = <T extends object>(c: T): T & { placeProvider?: 'google' } =>
+      provider.name === 'google' ? { ...c, placeProvider: 'google' } : c;
     if (q.op === 'details') {
       if (!provider.placeDetails) return fail(400, 'bad_request', 'この店検索サービスでは詳細を取れません');
       const candidate = await provider.placeDetails({ placeId: q.id, sessionToken: q.session });
-      const detailsBody: GeoDetailsResponse = { candidate, provider: provider.name };
+      const detailsBody: GeoDetailsResponse = {
+        candidate: candidate && tag(candidate),
+        provider: provider.name,
+      };
       return Response.json(detailsBody, { headers: cache });
     }
     const near =
@@ -55,7 +61,10 @@ export async function GET(request: Request): Promise<Response> {
         : q.op === 'search'
           ? await (provider.searchPlaces?.({ query: q.q, near }) ?? Promise.resolve([]))
           : await provider.geocode({ query: q.q, near });
-    const body: GeoResponse = { candidates, provider: provider.name };
+    const body: GeoResponse = {
+      candidates: q.op === 'geocode' ? candidates : candidates.map(tag),
+      provider: provider.name,
+    };
     return Response.json(body, { headers: cache });
   } catch (err) {
     if (err instanceof GeoError) {

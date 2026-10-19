@@ -6,6 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { AppButton } from '@/components/app-button';
 import { Field, Select, TextInput } from '@/components/form/field';
 import { ShopCandidateTools, type ShopCandidate } from '@/components/shops/shop-candidate-tools';
+import type { ShopCandidateSources } from '@/features/geo/search';
+import { placeProviderOf } from '@/features/shops/find-or-create-shop';
 import {
   SHOP_KIND_LABELS,
   shopFormSchema,
@@ -24,11 +26,7 @@ export type ShopFormProps = {
   submitLabel?: string;
   className?: string;
   /** 候補検索。渡さなければチップを出さない */
-  candidates?: {
-    nearby: (pos: { lat: number; lng: number }) => Promise<ShopCandidate[]>;
-    search: (query: string, near?: { lat: number; lng: number }) => Promise<ShopCandidate[]>;
-    geocode: (query: string, near?: { lat: number; lng: number }) => Promise<ShopCandidate[]>;
-  };
+  candidates?: Pick<ShopCandidateSources, 'nearby' | 'search' | 'details'>;
 };
 
 export function ShopForm({
@@ -62,6 +60,17 @@ export function ShopForm({
     setValue('lat', c.lat, { shouldDirty: true, shouldValidate: true });
     setValue('lng', c.lng, { shouldDirty: true, shouldValidate: true });
     setValue('external_place_id', c.externalPlaceId, { shouldDirty: true });
+    // 出どころ。Google の写しは取得時刻も持つ（30 日以内に更新する。ADR 0011）
+    const provider = placeProviderOf({
+      id: null,
+      name: c.name,
+      externalPlaceId: c.externalPlaceId,
+      placeProvider: c.placeProvider,
+    });
+    setValue('place_provider', provider, { shouldDirty: true });
+    setValue('place_synced_at', provider === 'google' ? new Date().toISOString() : null, {
+      shouldDirty: true,
+    });
   }
   function pickPosition(pos: { lat: number; lng: number }) {
     setValue('lat', pos.lat, { shouldDirty: true, shouldValidate: true });
@@ -104,7 +113,8 @@ export function ShopForm({
       <ShopCandidateTools
         query={[String(name), String(address)].filter((s) => s.trim()).join(' ')}
         nearby={candidates?.nearby}
-        geocode={candidates?.search}
+        search={candidates?.search}
+        details={candidates?.details}
         onPick={pickCandidate}
         onPickPosition={pickPosition}
         position={position}

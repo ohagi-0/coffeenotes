@@ -118,6 +118,8 @@ function ShopDetailInner() {
             lat: s.lat ?? '',
             lng: s.lng ?? '',
             external_place_id: s.external_place_id ?? '',
+            place_provider: (s.place_provider as 'google' | 'osm' | null) ?? '',
+            place_synced_at: s.place_synced_at ?? '',
           }}
           candidates={{
             ...shopCandidateSources,
