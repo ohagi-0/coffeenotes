@@ -38,7 +38,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 項目 | 決定 | 実装上の扱い |
 |---|---|---|
 | OCR エンジン | Claude Haiku 4.5 Vision | `OcrProvider` 抽象化は維持（§5.2） |
-| 店候補・ジオコーディング | まず Nominatim。**店名・住所の手入力と地図タップでの位置指定は Must** | `GeoProvider` 抽象化。候補検索は入力補助であり、失敗しても手入力で店を作れること |
+| 店候補・ジオコーディング | まず Nominatim。**店名・住所の手入力と地図タップでの位置指定は Must**。**2026-10-19 に Google Maps Platform への移行を決定**（ADR 0011、Issue #41 〜 #40。地図も Google マップに替える。切り替えまでは `GEO_PROVIDER=nominatim` / `NEXT_PUBLIC_MAP_PROVIDER=osm` のまま） | `GeoProvider` 抽象化。候補検索は入力補助であり、失敗しても手入力で店を作れること。Google 由来の店は place_id だけ永続、名前・住所・座標は 30 日以内に更新 |
 | ログイン方式 | メールリンク + Google の両方 | Supabase Auth で両プロバイダ有効化。同一メールは同一アカウント |
 | 星の刻み | 0.5 刻み（1.0〜5.0） | DB `numeric(2,1)`。UI は星の左右半分タップ |
 | ロースター名 | 全ユーザー共通マスタ | `roasters` は RLS で読み取り全員可・INSERT は認証ユーザー可・UPDATE/DELETE は作成者のみ |
@@ -291,6 +291,7 @@ E2E_TEST_PASSWORD=
 - [x] Phase 4 自宅抽出・焙煎: レシピの折りたたみ、比率の自動計算、前回のレシピを複製、焙煎バッチ（一覧・登録・記録への紐づけ・バッチ別平均星）（2026-09-22）
 - [x] Phase 5 分析・仕上げ: /stats（4 タイル、高評価の生産国・精製、フレーバー、味覚レーダー、月別）、PWA（serwist、オフライン閲覧、アイコン）、CSV / JSON エクスポート、カードの QR → 参照 URL（2026-09-22）
 - [x] Phase 5 の実機確認: ホーム画面に追加 → 機内モードで一覧・豆詳細が開く、エクスポートのダウンロード（2026-09-24）
+- [ ] Google Maps 移行（ADR 0011、Issue #41 〜 #40。2026-10-19 にチケット化、別ウィンドウで実施）
 - [ ] Phase 6 ネイティブ化（Capacitor）— 未着手。前提の制約（§2.2）は守られている
 
 進捗はこのチェックリストを更新して管理する。

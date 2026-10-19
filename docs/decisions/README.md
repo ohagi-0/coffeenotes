@@ -34,3 +34,4 @@
 | [0007](0007-desktop-layout-and-ios-adaptation.md) | PC は 3 列レイアウトで「振り返る」、iOS は同じ UI に OS の作法だけ足す | 決定 |
 | [0008](0008-detail-page-url-query-string.md) | 詳細ページの URL はクエリ文字列（`/beans?id=…`）。静的出力で `[id]` が使えないため | 決定 |
 | [0010](0010-shop-search-osm-photon-fuzzy.md) | 店名検索は OSM のまま、周辺の店の一括取得 + 端末でのあいまい照合 + Photon（Google は規約上 OSM の地図と併用不可） | 決定 |
+| [0011](0011-google-maps-platform.md) | 店の検索と地図を Google Maps Platform に移行（place_id を永続化、名前・住所・座標は 30 日以内に更新、手入力の店は Nominatim のまま） | 決定 |
