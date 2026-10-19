@@ -178,3 +178,10 @@ export function countryDisplayName(raw: string | null | undefined): string | nul
   if (key === null) return null;
   return byKey.get(key)?.ja ?? raw!.trim();
 }
+
+/** 英名（Colombia など）。別名表に無い国は null（呼び出し側で打ったままを使う）。豆の袋のラベル用（S10） */
+export function countryEnglishName(raw: string | null | undefined): string | null {
+  const key = countryKeyOf(raw);
+  if (key === null) return null;
+  return byKey.get(key)?.en ?? null;
+}

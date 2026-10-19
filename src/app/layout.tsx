@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Bodoni_Moda, Manrope } from 'next/font/google';
+import { Bodoni_Moda, Kaushan_Script, Manrope } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/providers';
 import { DevTestHooks } from '@/components/dev-test-hooks';
@@ -17,6 +17,13 @@ const manrope = Manrope({
   subsets: ['latin'],
   weight: 'variable',
   variable: '--font-manrope',
+  display: 'swap',
+});
+// 豆の袋のラベルの筆記体（DESIGN.md S10、2026-10-20）。英字だけなので軽い
+const kaushan = Kaushan_Script({
+  subsets: ['latin'],
+  weight: '400',
+  variable: '--font-kaushan',
   display: 'swap',
 });
 
@@ -47,7 +54,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="ja" className={`${bodoni.variable} ${manrope.variable}`}>
+    <html lang="ja" className={`${bodoni.variable} ${manrope.variable} ${kaushan.variable}`}>
       <body className="min-h-dvh antialiased">
         <Providers>{children}</Providers>
         {/* E2E 用の seam。本番では何もしない */}

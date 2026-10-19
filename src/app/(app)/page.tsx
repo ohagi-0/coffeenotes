@@ -143,7 +143,7 @@ function CollectionInner() {
       {logs.isPending && (
         <div role="status" aria-busy="true" aria-label="読み込み中" className="grid grid-cols-2 gap-4">
           {[0, 1, 2, 3].map((i) => (
-            <Skeleton key={i} className="aspect-[3/4] rounded-[12px]" />
+            <Skeleton key={i} className="aspect-[3/4.3] rounded-[5px_5px_14px_14px]" />
           ))}
         </div>
       )}

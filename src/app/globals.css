@@ -8,6 +8,7 @@
   --font-sans: var(--font-sans);
   --font-display: var(--font-display);
   --font-num: var(--font-num);
+  --font-script: var(--font-script);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -70,6 +71,7 @@
     'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Yu Gothic UI', system-ui, sans-serif;
   --font-display: var(--font-bodoni), Didot, 'Bodoni 72', 'Times New Roman', serif;
   --font-num: var(--font-manrope), system-ui, sans-serif;
+  --font-script: var(--font-kaushan), 'Brush Script MT', cursive; /* 豆の袋のラベル（S10） */
   /* 地・面 */
   --background: #17120f; /* Espresso: 画面の地 */
   --foreground: #f1e8da; /* Crema: 本文 */
