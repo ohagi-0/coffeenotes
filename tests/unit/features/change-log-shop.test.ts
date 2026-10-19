@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { changeLogShops } from '@/features/logs/change-log-shop';
 import { findOrCreateShop, resolveShopId, shopInputFromPick } from '@/features/shops/find-or-create-shop';
-import { fakeClient } from './fake-client';
+import { fakeClient, UNIQUE_VIOLATION } from './fake-client';
 
 const ok = <T>(data: T) => ({ data, error: null });
 const U = '11111111-1111-4111-8111-111111111111';
@@ -17,12 +17,82 @@ describe('shopInputFromPick', () => {
         lng: 139.6,
         externalPlaceId: 'node/1',
       }),
-    ).toEqual({ name: 'Fuglen', address: '渋谷区', lat: 35.6, lng: 139.6, external_place_id: 'node/1' });
+    ).toEqual({
+      name: 'Fuglen',
+      address: '渋谷区',
+      lat: 35.6,
+      lng: 139.6,
+      external_place_id: 'node/1',
+      place_provider: 'osm',
+    });
     expect(shopInputFromPick({ id: null, name: 'A', lat: 35.6, lng: null })).toEqual({ name: 'A' });
   });
 });
 
+describe('shopInputFromPick: 出どころ', () => {
+  const now = () => new Date('2026-10-19T00:00:00Z');
+  it('OSM の ID の形なら osm、Google と明示されれば google + 取得時刻、手入力は付けない', () => {
+    expect(shopInputFromPick({ id: null, name: 'A', externalPlaceId: 'node/1' }, now)).toMatchObject({
+      place_provider: 'osm',
+    });
+    const g = shopInputFromPick(
+      { id: null, name: 'B', externalPlaceId: 'ChIJabc', placeProvider: 'google' },
+      now,
+    );
+    expect(g).toMatchObject({
+      external_place_id: 'ChIJabc',
+      place_provider: 'google',
+      place_synced_at: '2026-10-19T00:00:00.000Z',
+    });
+    const manual = shopInputFromPick({ id: null, name: 'C' }, now);
+    expect(manual).not.toHaveProperty('place_provider');
+    expect(manual).not.toHaveProperty('place_synced_at');
+  });
+});
+
 describe('findOrCreateShop', () => {
+  it('Google の店は place_provider 付きで登録される', async () => {
+    const { client, calls } = fakeClient({ selects: [ok([])], inserts: [ok({ id: 'g1' })] });
+    const input = shopInputFromPick({
+      id: null,
+      name: 'Fuglen',
+      externalPlaceId: 'ChIJabc',
+      placeProvider: 'google',
+    });
+    expect(await findOrCreateShop(client, U, input)).toEqual({ id: 'g1', created: true });
+    expect(calls[1]!.payload).toMatchObject({
+      place_provider: 'google',
+      external_place_id: 'ChIJabc',
+      user_id: U,
+    });
+  });
+  it('同時登録で 23505 になったら探し直して先に入った店を返す', async () => {
+    const { client, calls } = fakeClient({
+      selects: [ok([]), ok([{ id: 'raced' }])],
+      inserts: [{ data: null, error: UNIQUE_VIOLATION }],
+    });
+    const input = shopInputFromPick({
+      id: null,
+      name: 'Fuglen',
+      externalPlaceId: 'ChIJabc',
+      placeProvider: 'google',
+    });
+    expect(await findOrCreateShop(client, U, input)).toEqual({ id: 'raced', created: false });
+    expect(calls.map((c) => c.op)).toEqual(['select', 'insert', 'select']);
+  });
+  it('23505 でも見つからなければ元のエラーを投げる', async () => {
+    const { client } = fakeClient({
+      selects: [ok([]), ok([])],
+      inserts: [{ data: null, error: UNIQUE_VIOLATION }],
+    });
+    const input = shopInputFromPick({
+      id: null,
+      name: 'F',
+      externalPlaceId: 'ChIJabc',
+      placeProvider: 'google',
+    });
+    await expect(findOrCreateShop(client, U, input)).rejects.toMatchObject({ code: '23505' });
+  });
   it('同じ OSM の ID の店があれば作らずにその ID を返す', async () => {
     const { client, calls } = fakeClient({ selects: [ok([{ id: 's1' }])] });
     expect(await findOrCreateShop(client, U, { name: 'Fuglen', external_place_id: 'node/1' })).toEqual({

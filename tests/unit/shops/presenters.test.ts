@@ -20,6 +20,8 @@ const shop = (over: Partial<Shop> = {}): Shop => ({
   lat: 35.7,
   lng: 139.79,
   external_place_id: null,
+  place_provider: null,
+  place_synced_at: null,
   created_at: '',
   updated_at: '',
   ...over,

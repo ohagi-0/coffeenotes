@@ -13,6 +13,8 @@ describe('shopFormSchema', () => {
       lat: null,
       lng: null,
       external_place_id: null,
+      place_provider: null,
+      place_synced_at: null,
     });
   });
   it('フォームの空文字は null に寄る', () => {
@@ -41,5 +43,21 @@ describe('shopFormSchema', () => {
     expect(shopInsertSchema.safeParse({ name: 'A' }).success).toBe(false);
     expect(shopInsertSchema.safeParse({ name: 'A', user_id: UID }).success).toBe(true);
     expect(shopInsertSchema.safeParse({ name: 'A', user_id: UID, lat: 1 }).success).toBe(false);
+  });
+
+  it('place_provider は google / osm / 空のみ。google は place_id が必須（DB の CHECK と同じ）', () => {
+    expect(shopFormSchema.safeParse({ name: 'A', place_provider: 'osm' }).success).toBe(true);
+    expect(shopFormSchema.safeParse({ name: 'A', place_provider: 'bing' }).success).toBe(false);
+    const noId = shopFormSchema.safeParse({ name: 'A', place_provider: 'google' });
+    expect(noId.success).toBe(false);
+    if (!noId.success) expect(noId.error.issues[0]?.path).toEqual(['external_place_id']);
+    expect(
+      shopInsertSchema.safeParse({
+        name: 'A',
+        user_id: UID,
+        place_provider: 'google',
+        external_place_id: 'ChIJ',
+      }).success,
+    ).toBe(true);
   });
 });

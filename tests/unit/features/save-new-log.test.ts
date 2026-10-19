@@ -42,6 +42,7 @@ describe('saveNewLog', () => {
       lat: 35.6,
       lng: 139.7,
       external_place_id: 'node/1',
+      place_provider: 'osm',
     });
     expect(r.shopId).toBe('s1');
     expect(d.calls.log![0]).toMatchObject({ bean_id: BEAN, shop_id: 's1' });
