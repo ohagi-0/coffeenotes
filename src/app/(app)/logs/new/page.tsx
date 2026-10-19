@@ -31,7 +31,7 @@ import {
   type DraftImages,
 } from '@/features/logs/new-log-draft';
 import { saveNewLog, type SaveNewLogStage, type LogFormDraft } from '@/features/logs/save-new-log';
-import { geocodePlace, searchNearbyPlaces } from '@/features/geo/search';
+import { shopCandidateSources } from '@/features/geo/search';
 import { clearCaptureDraft, readCaptureDraft, writeCaptureDraft } from '@/features/ocr/capture-draft';
 import { OcrRequestError, requestBeanCardExtraction } from '@/features/ocr/extract-bean-card';
 import { extractionToBeanForm, type BeanFormPrefill } from '@/features/ocr/to-bean-form';
@@ -620,10 +620,7 @@ function PlaceStep() {
           roast_level: r.roast_level,
         }))}
         greenShops={(greenShops.data ?? []).map((s) => ({ id: s.id, name: s.name }))}
-        shopCandidates={{
-          nearby: (pos) => searchNearbyPlaces(pos),
-          geocode: (query, near) => geocodePlace({ query, near }),
-        }}
+        shopCandidates={shopCandidateSources}
         onSubmit={onSubmit}
         submitting={saving}
         submittingText={stage ? SAVE_STAGE_TEXT[stage] : null}

@@ -26,6 +26,7 @@ export type ShopFormProps = {
   /** 候補検索。渡さなければチップを出さない */
   candidates?: {
     nearby: (pos: { lat: number; lng: number }) => Promise<ShopCandidate[]>;
+    search: (query: string, near?: { lat: number; lng: number }) => Promise<ShopCandidate[]>;
     geocode: (query: string, near?: { lat: number; lng: number }) => Promise<ShopCandidate[]>;
   };
 };
@@ -103,7 +104,7 @@ export function ShopForm({
       <ShopCandidateTools
         query={[String(name), String(address)].filter((s) => s.trim()).join(' ')}
         nearby={candidates?.nearby}
-        geocode={candidates?.geocode}
+        geocode={candidates?.search}
         onPick={pickCandidate}
         onPickPosition={pickPosition}
         position={position}

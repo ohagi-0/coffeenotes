@@ -8,7 +8,7 @@ import { ErrorCallout } from '@/components/error-callout';
 import { FullScreenLoading } from '@/components/full-screen-loading';
 import { LogDetail } from '@/components/logs/log-detail';
 import { LogForm } from '@/components/logs/log-form';
-import { geocodePlace, searchNearbyPlaces } from '@/features/geo/search';
+import { shopCandidateSources } from '@/features/geo/search';
 import { LogListSkeleton } from '@/components/logs/log-list-item-skeleton';
 import { frontImagePath, useBeanImageUrl } from '@/features/beans/images';
 import { useDeleteLog, useUpdateLog } from '@/features/logs/mutations';
@@ -18,6 +18,7 @@ import { useRoastsByBean } from '@/features/roasts/queries';
 import { roastLevelLabel } from '@/components/roasts/roast-batches';
 import { useLog, useLogsByBean } from '@/features/logs/queries';
 import type { LogFormDraft } from '@/features/logs/save-new-log';
+import { shopInputFromPick } from '@/features/shops/find-or-create-shop';
 import { useCreateShop } from '@/features/shops/mutations';
 import { useShops } from '@/features/shops/queries';
 import { useTags } from '@/features/tags/queries';
@@ -91,16 +92,23 @@ function LogPageInner() {
       try {
         let shopId: string | null = null;
         if (values.fields.place === 'shop' && values.shop) {
+          // 候補で選んだ店は住所・座標つきで作る（同じ地図上の店がすでにあればそれを使う）
           shopId =
             values.shop.id ??
             (values.shop.name.trim()
-              ? (await createShop.mutateAsync({ name: values.shop.name.trim() })).id
+              ? (await createShop.mutateAsync(shopInputFromPick(values.shop))).id
               : null);
         }
         let roastId = values.fields.roast_id ?? null;
         if (values.newRoast)
           roastId = (await createRoast.mutateAsync({ ...values.newRoast, bean_id: l.bean.id })).id;
-        await updateLog.mutateAsync({ id: l.id, ...values.fields, shop_id: shopId, roast_id: roastId });
+        await updateLog.mutateAsync({
+          id: l.id,
+          ...values.fields,
+          shop_id: shopId,
+          roast_id: roastId,
+          previousShopId: l.shop?.id ?? null,
+        });
         toast.success('保存しました');
         router.replace(routes.log(l.id) as Route);
       } catch (e) {
@@ -155,10 +163,7 @@ function LogPageInner() {
           shopOptions={(shops.data ?? []).map((s) => ({ id: s.id, name: s.name, address: s.address }))}
           shopOptionsPending={shops.isPending}
           onShopSearch={setShopQuery}
-          shopCandidates={{
-            nearby: (pos) => searchNearbyPlaces(pos),
-            geocode: (query, near) => geocodePlace({ query, near }),
-          }}
+          shopCandidates={shopCandidateSources}
           tagSuggestions={(tags.data ?? []).map((t) => t.name)}
           onSubmit={onSubmit}
           submitLabel="保存する"

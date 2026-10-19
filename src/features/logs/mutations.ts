@@ -4,8 +4,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import type { LogFormInput } from '@/lib/schemas/log';
 import { requireUserId } from '@/features/auth/require-user-id';
+import { deleteOrphanShops } from '@/features/shops/orphan-shops';
 import { shopKeys } from '@/features/shops/queries';
+import { statsKeys } from '@/features/stats/queries';
 import { tagKeys } from '@/features/tags/queries';
+import { changeLogShops, type LogShopChange } from './change-log-shop';
 import { deleteLogsAndOrphanShops, type DeleteLogsResult } from './delete-log';
 import { createLogWithTags, type LogPatch, updateLogWithTags } from './create-log';
 import { LOG_SELECT, logKeys, type LogWithRelations } from './queries';
@@ -38,20 +41,46 @@ export function useCreateLog() {
   });
 }
 
-export type UpdateLogInput = { id: string } & LogPatch;
+export type UpdateLogInput = {
+  id: string;
+  /** 変更前の店。渡すと、店を付け替えて記録が 0 件になった元の店を消す（記録を消したときと同じ規則） */
+  previousShopId?: string | null;
+} & LogPatch;
 
 /** 記録を部分更新する（F-LOG-7）。`tag_names` を渡したときだけタグを差し替える。 */
 export function useUpdateLog() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...patch }: UpdateLogInput): Promise<LogWithRelations> => {
-      await updateLogWithTags(getSupabaseBrowserClient(), id, patch, await requireUserId());
+    mutationFn: async ({ id, previousShopId, ...patch }: UpdateLogInput): Promise<LogWithRelations> => {
+      const client = getSupabaseBrowserClient();
+      await updateLogWithTags(client, id, patch, await requireUserId());
+      if (previousShopId !== undefined && 'shop_id' in patch && patch.shop_id !== previousShopId)
+        await deleteOrphanShops(client, [previousShopId]);
       return fetchLog(id);
     },
     onSuccess: (log) => {
       queryClient.invalidateQueries({ queryKey: logKeys.all });
       queryClient.invalidateQueries({ queryKey: tagKeys.all });
+      queryClient.invalidateQueries({ queryKey: shopKeys.all });
+      queryClient.invalidateQueries({ queryKey: statsKeys.all });
       queryClient.setQueryData(logKeys.detail(log.id), log);
+    },
+  });
+}
+
+/**
+ * 記録の「飲んだ店」だけをまとめて付け替える（豆の編集画面。2026-10-19）。
+ * 新しい店は候補の住所・座標つきで作り、記録が 0 件になった元の店は消す（change-log-shop.ts）。
+ */
+export function useChangeLogShops() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (changes: readonly LogShopChange[]) =>
+      changeLogShops(getSupabaseBrowserClient(), await requireUserId(), changes),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: logKeys.all });
+      queryClient.invalidateQueries({ queryKey: shopKeys.all });
+      queryClient.invalidateQueries({ queryKey: statsKeys.all });
     },
   });
 }

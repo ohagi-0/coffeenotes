@@ -9,6 +9,7 @@ export const placeCandidateSchema = z.object({
   lng: z.number().min(-180).max(180),
   externalPlaceId: z.string().nullable(),
   distanceM: z.number().nonnegative().optional(),
+  aliases: z.array(z.string()).optional(),
 });
 export type PlaceCandidateDto = z.infer<typeof placeCandidateSchema>;
 
@@ -23,6 +24,14 @@ export const geoNearbyQuerySchema = z.object({
   lat: z.coerce.number().min(-90).max(90),
   lng: z.coerce.number().min(-180).max(180),
   radiusM: z.coerce.number().int().min(100).max(3000).default(800),
+  /** 検索シートは周辺の店をまとめて取り、絞り込みは端末で行う（ADR 0010）ので多めに取れるようにする */
+  limit: z.coerce.number().int().min(1).max(400).default(20),
+});
+export const geoSearchQuerySchema = z.object({
+  op: z.literal('search'),
+  q: z.string().trim().min(1).max(200),
+  lat: z.coerce.number().min(-90).max(90).optional(),
+  lng: z.coerce.number().min(-180).max(180).optional(),
 });
 export const geoGeocodeQuerySchema = z.object({
   op: z.literal('geocode'),
@@ -30,7 +39,11 @@ export const geoGeocodeQuerySchema = z.object({
   lat: z.coerce.number().min(-90).max(90).optional(),
   lng: z.coerce.number().min(-180).max(180).optional(),
 });
-export const geoQuerySchema = z.discriminatedUnion('op', [geoNearbyQuerySchema, geoGeocodeQuerySchema]);
+export const geoQuerySchema = z.discriminatedUnion('op', [
+  geoNearbyQuerySchema,
+  geoSearchQuerySchema,
+  geoGeocodeQuerySchema,
+]);
 
 export const geoApiErrorCodeSchema = z.enum([
   'unauthorized',

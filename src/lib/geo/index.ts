@@ -1,4 +1,4 @@
-// 店候補・ジオコーディングの抽象化（ADR 0003、F-SHOP-3/4）。実装は providers/nominatim.ts。
+// 店候補・ジオコーディングの抽象化（ADR 0003 / ADR 0010、F-SHOP-3/4）。実装は providers/nominatim.ts（OSM）。
 // 候補検索は入力補助であり、失敗しても手入力 + 地図タップで店を作れること。`/api/geo` からのみ呼ぶ。
 
 export interface PlaceCandidate {
@@ -8,8 +8,10 @@ export interface PlaceCandidate {
   lng: number;
   /** 地図サービス側の ID（OSM なら "node/123"）。shops.external_place_id に入れる */
   externalPlaceId: string | null;
-  /** 現在地からの距離（m）。searchNearby のときだけ */
+  /** 現在地からの距離（m）。現在地が分かっているときだけ */
   distanceM?: number;
+  /** 照合用の別名（英字名・読み・ブランド名など）。表示はしない（lib/geo/match.ts） */
+  aliases?: string[];
 }
 
 export interface GeoProvider {
@@ -21,7 +23,13 @@ export interface GeoProvider {
     radiusM?: number;
     limit?: number;
   }): Promise<PlaceCandidate[]>;
-  /** 店名・住所から候補（F-SHOP-4） */
+  /** 店名からカフェ・コーヒー店の候補（F-SHOP-2/4）。near を渡すと近い店を優先する。部分一致に強い */
+  searchPlaces(params: {
+    query: string;
+    near?: { lat: number; lng: number };
+    limit?: number;
+  }): Promise<PlaceCandidate[]>;
+  /** 住所・地名から座標（F-SHOP-4 / F-SHOP-6 の「住所から位置を付ける」） */
   geocode(params: {
     query: string;
     near?: { lat: number; lng: number };

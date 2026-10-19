@@ -54,19 +54,34 @@ async function callGeo(params: Record<string, string>, signal?: AbortSignal): Pr
 }
 
 /** 現在地周辺のカフェ・ロースター（F-SHOP-3） */
-export function searchNearbyPlaces(p: { lat: number; lng: number; radiusM?: number }, signal?: AbortSignal) {
+export function searchNearbyPlaces(
+  p: { lat: number; lng: number; radiusM?: number; limit?: number },
+  signal?: AbortSignal,
+) {
   return callGeo(
     {
       op: 'nearby',
       lat: String(p.lat),
       lng: String(p.lng),
       ...(p.radiusM ? { radiusM: String(p.radiusM) } : {}),
+      ...(p.limit ? { limit: String(p.limit) } : {}),
     },
     signal,
   );
 }
 
-/** 店名・住所から候補（F-SHOP-4）。near を渡すと近い順 */
+/** 店名からカフェ・コーヒー店の候補（F-SHOP-2/4）。部分一致に強く、near を渡すと近い店を優先する */
+export function searchPlacesByName(
+  p: { query: string; near?: { lat: number; lng: number } },
+  signal?: AbortSignal,
+) {
+  return callGeo(
+    { op: 'search', q: p.query, ...(p.near ? { lat: String(p.near.lat), lng: String(p.near.lng) } : {}) },
+    signal,
+  );
+}
+
+/** 住所・地名から座標（F-SHOP-4/6）。near を渡すと近い順 */
 export function geocodePlace(
   p: { query: string; near?: { lat: number; lng: number } },
   signal?: AbortSignal,
@@ -76,3 +91,21 @@ export function geocodePlace(
     signal,
   );
 }
+
+/** 検索シートが近くの店をまとめて取るときの範囲と件数（絞り込みは端末で行う。ADR 0010） */
+export const PICKER_NEARBY_RADIUS_M = 2000;
+export const PICKER_NEARBY_LIMIT = 300;
+
+/** 店を選ぶ部品に渡す候補の取り方（近くの店 / 店名で検索 / 住所から位置） */
+export type ShopCandidateSources = {
+  nearby: (pos: { lat: number; lng: number }) => Promise<PlaceCandidateDto[]>;
+  search: (query: string, near?: { lat: number; lng: number }) => Promise<PlaceCandidateDto[]>;
+  geocode: (query: string, near?: { lat: number; lng: number }) => Promise<PlaceCandidateDto[]>;
+};
+
+export const shopCandidateSources: ShopCandidateSources = {
+  nearby: (pos) =>
+    searchNearbyPlaces({ ...pos, radiusM: PICKER_NEARBY_RADIUS_M, limit: PICKER_NEARBY_LIMIT }),
+  search: (query, near) => searchPlacesByName({ query, near }),
+  geocode: (query, near) => geocodePlace({ query, near }),
+};

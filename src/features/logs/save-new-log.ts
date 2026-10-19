@@ -4,19 +4,14 @@ import type { RoastFormValues } from '@/lib/schemas/roast';
 import type { ShopFormInput } from '@/lib/schemas/shop';
 import type { Json } from '@/types/database';
 import type { CreateBeanInput } from '@/features/beans/mutations';
+import { shopInputFromPick, type PickedShop } from '@/features/shops/find-or-create-shop';
 import type { DraftImages, NewLogDraft } from './new-log-draft';
 
 // 記録作成ウィザードの「保存する」（S3 ③）。豆・ロースター・（画像）・店・記録をこの順に作る。
 // フックから切り離し、mutation 関数を外から渡す形にして偽物で単体テストできるようにする。
 
-export type NewLogShop = {
-  id: string | null;
-  name: string;
-  address?: string | null;
-  lat?: number | null;
-  lng?: number | null;
-  externalPlaceId?: string | null;
-};
+/** 選んだ店（features/shops/find-or-create-shop.ts の PickedShop と同じ） */
+export type NewLogShop = PickedShop;
 
 export type LogFormDraft = {
   fields: Omit<LogFormInput, 'bean_id' | 'shop_id'>;
@@ -92,19 +87,8 @@ export async function saveNewLog(
     if (!log.shop.id && log.shop.name.trim()) progress('shop');
     shopId =
       log.shop.id ??
-      (log.shop.name.trim()
-        ? (
-            await deps.createShop({
-              name: log.shop.name.trim(),
-              // 候補や地図で決めた座標があるときだけ付ける（無ければ店名だけの登録）
-              ...(log.shop.address != null ? { address: log.shop.address } : {}),
-              ...(log.shop.lat != null && log.shop.lng != null
-                ? { lat: log.shop.lat, lng: log.shop.lng }
-                : {}),
-              ...(log.shop.externalPlaceId != null ? { external_place_id: log.shop.externalPlaceId } : {}),
-            })
-          ).id
-        : null);
+      // 候補や住所で決めた住所・座標があるときだけ付ける（無ければ店名だけの登録）
+      (log.shop.name.trim() ? (await deps.createShop(shopInputFromPick(log.shop))).id : null);
   }
 
   // 3. 焙煎バッチ（新規なら豆の後に作り、記録に付ける）

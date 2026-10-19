@@ -67,7 +67,13 @@ describe('LogForm', () => {
       .mockResolvedValue([
         { name: 'x', address: '東京都台東区蔵前3-1-2', lat: 35.7, lng: 139.79, externalPlaceId: null },
       ]);
-    render(<LogForm beanName="Geisha" onSubmit={onSubmit} shopCandidates={{ nearby: vi.fn(), geocode }} />);
+    render(
+      <LogForm
+        beanName="Geisha"
+        onSubmit={onSubmit}
+        shopCandidates={{ nearby: vi.fn(async () => []), search: vi.fn(async () => []), geocode }}
+      />,
+    );
     fireEvent.click(screen.getByRole('button', { name: /店を選ぶ/ }));
     fireEvent.click(screen.getByRole('button', { name: /自分で登録する/ }));
     fireEvent.change(screen.getByLabelText('店'), { target: { value: 'ぽぽろ' } });
@@ -92,7 +98,13 @@ describe('LogForm', () => {
   it('住所から位置が引けなくても、案内を出して保存はできる', async () => {
     const onSubmit = vi.fn();
     const geocode = vi.fn().mockResolvedValue([]);
-    render(<LogForm beanName="Geisha" onSubmit={onSubmit} shopCandidates={{ nearby: vi.fn(), geocode }} />);
+    render(
+      <LogForm
+        beanName="Geisha"
+        onSubmit={onSubmit}
+        shopCandidates={{ nearby: vi.fn(async () => []), search: vi.fn(async () => []), geocode }}
+      />,
+    );
     fireEvent.click(screen.getByRole('button', { name: /店を選ぶ/ }));
     fireEvent.click(screen.getByRole('button', { name: /自分で登録する/ }));
     fireEvent.change(screen.getByLabelText('店'), { target: { value: 'ぽぽろ' } });
@@ -123,7 +135,8 @@ describe('LogForm', () => {
     expect(screen.queryByRole('option', { name: /Onibus/ })).toBeNull();
     fireEvent.click(await screen.findByRole('option', { name: /KIELO COFFEE 蔵前/ }));
     // 選択中のカード（店名 + 「登録済みの店」）。押すと選び直し（シートが開く）
-    const card = screen.getByRole('button', { name: /KIELO COFFEE 蔵前.*登録済みの店/ });
+    expect(screen.getByText('登録済みの店 · 台東区蔵前')).toBeInTheDocument();
+    const card = screen.getByRole('button', { name: '店「KIELO COFFEE 蔵前」を選び直す' });
     fireEvent.click(card);
     expect(screen.getByLabelText('店名・住所で探す')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('option', { name: /Onibus/ }));
@@ -132,7 +145,24 @@ describe('LogForm', () => {
     expect(onSubmit.mock.calls[0][0].shop).toEqual({
       id: '33333333-3333-4333-8333-333333333333',
       name: 'Onibus',
+      address: '目黒区',
     });
+  });
+
+  it('× で店を外すと、店なし（null）で保存される', async () => {
+    const onSubmit = vi.fn();
+    render(
+      <LogForm
+        beanName="Geisha"
+        onSubmit={onSubmit}
+        defaultValues={{ place: 'shop', shop_id: '22222222-2222-4222-8222-222222222222', shop_name: 'KIELO' }}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: '店を外す' }));
+    expect(screen.getByRole('button', { name: /店を選ぶ/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: '保存する' }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0].shop).toBeNull();
   });
 
   it('タグは候補のトグルと手入力（# を落とす）、飲み方は「その他」で自由入力', async () => {

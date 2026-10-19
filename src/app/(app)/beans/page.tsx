@@ -12,12 +12,16 @@ import { useRoastsByBean } from '@/features/roasts/queries';
 import { useShops } from '@/features/shops/queries';
 import { BeanDetailSkeleton } from '@/components/beans/bean-detail-skeleton';
 import { BeanForm, type BeanFormSubmit } from '@/components/beans/bean-form';
+import { BeanLogShops, isShopChanged } from '@/components/beans/bean-log-shops';
 import { ErrorCallout } from '@/components/error-callout';
 import { FullScreenLoading } from '@/components/full-screen-loading';
 import { useUpdateBean } from '@/features/beans/mutations';
 import { beanSpecItems, beanTaste } from '@/features/beans/presenters';
 import { useBean, useBeanFilterOptions } from '@/features/beans/queries';
+import { shopCandidateSources } from '@/features/geo/search';
+import { useChangeLogShops } from '@/features/logs/mutations';
 import { writeNewLogDraft } from '@/features/logs/new-log-draft';
+import type { PickedShop } from '@/features/shops/find-or-create-shop';
 import { toTimelineItem } from '@/features/logs/presenters';
 import { useLogsByBean, useRatingStats } from '@/features/logs/queries';
 import { useCreateRoaster } from '@/features/roasters/mutations';
@@ -25,6 +29,7 @@ import { useRoasterSearch } from '@/features/roasters/queries';
 import { idFromSearchParams, routes } from '@/lib/routes';
 
 // S4 豆詳細。URL は /beans?id=（ADR 0008）。?edit=1 で同じページ内に豆フォームを出す。
+// 編集では豆フォームの上に「飲んだ店」（記録ごとの店。2026-10-19）を出し、「保存する」で豆と一緒に反映する。
 
 function BeanPageInner() {
   const router = useRouter();
@@ -47,6 +52,11 @@ function BeanPageInner() {
   const updateBean = useUpdateBean();
   const createRoaster = useCreateRoaster();
   const [failure, setFailure] = useState<string | null>(null);
+  /** 「飲んだ店」の変更（記録 ID → 変更後の店。null は外す） */
+  const [shopEdits, setShopEdits] = useState<Record<string, PickedShop | null>>({});
+  const [shopQuery, setShopQuery] = useState('');
+  const shops = useShops(shopQuery.trim() ? { search: shopQuery } : {});
+  const changeLogShops = useChangeLogShops();
 
   const crumb = (
     <div className="text-muted-foreground pt-3 pb-2.5 text-xs">
@@ -102,6 +112,11 @@ function BeanPageInner() {
             ? (await createRoaster.mutateAsync({ name: values.roaster.name.trim() })).id
             : null);
         await updateBean.mutateAsync({ id: b.id, ...values.form, roaster_id: roasterId });
+        const changes = (logs.data ?? [])
+          .filter((l) => l.place === 'shop' && l.id in shopEdits && isShopChanged(l, shopEdits[l.id] ?? null))
+          .map((l) => ({ logId: l.id, previousShopId: l.shop?.id ?? null, shop: shopEdits[l.id] ?? null }));
+        if (changes.length > 0) await changeLogShops.mutateAsync(changes);
+        setShopEdits({});
         toast.success('保存しました');
         router.replace(routes.bean(b.id) as Route);
       } catch (e) {
@@ -130,6 +145,18 @@ function BeanPageInner() {
             className="mb-4"
           />
         )}
+        <BeanLogShops
+          logs={logs.data}
+          isPending={logs.isPending}
+          error={logs.error}
+          onRetry={() => void logs.refetch()}
+          edits={shopEdits}
+          onEdit={(logId, shop) => setShopEdits((prev) => ({ ...prev, [logId]: shop }))}
+          shopOptions={(shops.data ?? []).map((s) => ({ id: s.id, name: s.name, address: s.address }))}
+          shopOptionsPending={shops.isPending}
+          onShopSearch={setShopQuery}
+          candidates={shopCandidateSources}
+        />
         <BeanForm
           defaultValues={{
             name: b.name,
@@ -163,7 +190,7 @@ function BeanPageInner() {
           recentProcesses={beanOptions.data?.processes}
           onSubmit={onSubmit}
           submitLabel="保存する"
-          submitting={updateBean.isPending || createRoaster.isPending}
+          submitting={updateBean.isPending || createRoaster.isPending || changeLogShops.isPending}
         />
       </div>
     );

@@ -3,24 +3,21 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { pickProvided } from '@/lib/schemas/common';
-import { shopFormSchema, shopInsertSchema, type ShopFormInput } from '@/lib/schemas/shop';
+import { shopFormSchema, type ShopFormInput } from '@/lib/schemas/shop';
 import { requireUserId } from '@/features/auth/require-user-id';
-import { type Shop, shopKeys } from './queries';
+import { findOrCreateShop } from './find-or-create-shop';
+import { shopKeys } from './queries';
+import type { Shop } from './queries';
 
-/** 店を登録する（F-SHOP-1/6）。座標が無くても保存できる。 */
+/**
+ * 店を登録する（F-SHOP-1/6）。座標が無くても保存できる。
+ * 地図の候補から選んだ店（OSM の ID あり）は、同じ店がすでにあればそれを返す（二重登録しない）。
+ */
 export function useCreateShop() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: ShopFormInput): Promise<Shop> => {
-      const values = shopInsertSchema.parse({ ...input, user_id: await requireUserId() });
-      const { data, error } = await getSupabaseBrowserClient()
-        .from('shops')
-        .insert(values)
-        .select('*')
-        .single();
-      if (error) throw error;
-      return data;
-    },
+    mutationFn: async (input: ShopFormInput): Promise<{ id: string; created: boolean }> =>
+      findOrCreateShop(getSupabaseBrowserClient(), await requireUserId(), input),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: shopKeys.all }),
   });
 }

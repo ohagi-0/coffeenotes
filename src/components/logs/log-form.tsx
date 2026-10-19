@@ -5,12 +5,14 @@ import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
-import { ChevronDown, ChevronRight, Copy, Plus, Store, X } from 'lucide-react';
+import { ChevronDown, Copy, Plus, X } from 'lucide-react';
 import { AppButton } from '@/components/app-button';
 import { Field, TextInput, Textarea } from '@/components/form/field';
 import { PlaceSegment } from '@/components/logs/place-segment';
-import type { ShopCandidate } from '@/components/shops/shop-candidate-tools';
-import { ShopPicker, type ShopPickerHint } from '@/components/shops/shop-picker';
+import { ShopField } from '@/components/shops/shop-field';
+import type { ShopPickerHint } from '@/components/shops/shop-picker';
+import type { ShopCandidateSources } from '@/features/geo/search';
+import type { PickedShop } from '@/features/shops/find-or-create-shop';
 import { RatingStars } from '@/components/logs/rating-stars';
 import { RoastForm, type GreenShopOption } from '@/components/roasts/roast-form';
 import { RECIPE_KEYS, hasRecipe, type RecipeValues } from '@/features/logs/aggregate';
@@ -22,10 +24,8 @@ import { logFormFieldsSchema, type LogPlace } from '@/lib/schemas/log';
 import { cn } from '@/lib/utils';
 
 // ③ 店・日付・評価・メモ（S3 ③、F-LOG-2/3/4/8、F-SHOP-2/6、F-TAG-1/2）。
-// 星とメモだけでも保存できる。店は「店で」を押すと開く全画面の検索シート（ShopPicker）で選ぶ:
-// 登録済みの店 / カードのロースター名からの候補 / 近くの店 / 地図で見つかった店、一番上に「自分で登録する」。
-// 「自分で登録する」は店名 + 住所の手入力。決定時に住所から位置を引く（F-SHOP-6。地図のピン刺しはスマホでは無理があるので使わない。2026-09-25）。
-// 選んだ候補や住所から引いた座標は shopMeta に持って submit に含める。
+// 星とメモだけでも保存できる。店の欄は共通の部品（components/shops/shop-field.tsx。豆の編集の「飲んだ店」と同じ）。
+// 「店で」を押すと全画面の検索シートが開く。選んだ候補の住所・座標は submit の shop に含める。
 
 export type ShopOption = { id: string; name: string; address?: string | null };
 
@@ -51,11 +51,8 @@ export type LogFormProps = {
   homeRoasted?: boolean;
   /** 新規バッチのフォームに出す生豆販売店 */
   greenShops?: GreenShopOption[];
-  /** 店の候補検索（F-SHOP-3/4）。渡さなければチップを出さない */
-  shopCandidates?: {
-    nearby: (pos: { lat: number; lng: number }) => Promise<ShopCandidate[]>;
-    geocode: (query: string, near?: { lat: number; lng: number }) => Promise<ShopCandidate[]>;
-  };
+  /** 店の候補検索（F-SHOP-2/3/4）。渡さなければ登録済みと手入力だけ */
+  shopCandidates?: ShopCandidateSources;
   /** 検索シートの上に出す手がかり（カードのロースター名など）。候補を先に引いておく */
   shopHint?: ShopPickerHint | null;
   /** 登録済みの店を読み込み中か（検索シートの表示用） */
@@ -113,8 +110,6 @@ export function LogForm({
 
   const place = (useWatch({ control, name: 'place' }) ?? 'shop') as LogPlace;
   const rating = useWatch({ control, name: 'rating' });
-  const shopId = useWatch({ control, name: 'shop_id' }) ?? null;
-  const shopName = useWatch({ control, name: 'shop_name' }) ?? '';
   const tags = (useWatch({ control, name: 'tag_names' }) ?? []) as string[];
   const brewMethod = useWatch({ control, name: 'brew_method' });
   const doseG = useWatch({ control, name: 'dose_g' });
@@ -129,22 +124,14 @@ export function LogForm({
   const [newRoast, setNewRoast] = useState<RoastFormValues | null>(null);
   const [roastAdding, setRoastAdding] = useState(false);
 
-  /** 検索シートの開閉と検索語 */
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const [pickerQuery, setPickerQuery] = useState('');
-  /** 「自分で登録する」を選んで店名を手入力している間 true */
-  const [manual, setManual] = useState(false);
-  /** 候補や住所で決めた新規店の付帯情報（既存の店を選んだら null） */
-  const [shopMeta, setShopMeta] = useState<{
-    address: string | null;
-    lat: number | null;
-    lng: number | null;
-    externalPlaceId: string | null;
-  } | null>(null);
-  /** 「自分で登録する」の住所欄と、決定時の位置の問い合わせ */
-  const [manualAddress, setManualAddress] = useState('');
-  const [manualBusy, setManualBusy] = useState(false);
-  const [manualNote, setManualNote] = useState<string | null>(null);
+  /** 選んだ店（未設定は null）。初期値は編集時の店 */
+  const [shop, setShop] = useState<PickedShop | null>(() =>
+    defaultValues?.shop_id || defaultValues?.shop_name
+      ? { id: defaultValues.shop_id ?? null, name: defaultValues.shop_name ?? '' }
+      : null,
+  );
+  /** 「店で」を押したら検索シートを開く合図 */
+  const [pickerSignal, setPickerSignal] = useState(0);
   const [tagDraft, setTagDraft] = useState('');
   const brewIsOther =
     typeof brewMethod === 'string' &&
@@ -154,73 +141,6 @@ export function LogForm({
 
   const ratingValue = typeof rating === 'number' ? rating : null;
 
-  function openPicker() {
-    setPickerQuery('');
-    onShopSearch?.('');
-    setManual(false);
-    setPickerOpen(true);
-  }
-  function setQuery(q: string) {
-    setPickerQuery(q);
-    onShopSearch?.(q);
-  }
-  function pickShop(s: ShopOption) {
-    setValue('shop_id', s.id, { shouldDirty: true });
-    setValue('shop_name', s.name, { shouldDirty: true });
-    setShopMeta(null);
-    setManual(false);
-    setPickerOpen(false);
-  }
-  function pickCandidate(c: ShopCandidate) {
-    setValue('shop_id', null);
-    setValue('shop_name', c.name, { shouldDirty: true, shouldValidate: true });
-    setShopMeta({ address: c.address, lat: c.lat, lng: c.lng, externalPlaceId: c.externalPlaceId });
-    setManual(false);
-    setPickerOpen(false);
-  }
-  function registerManually(name: string) {
-    setValue('shop_id', null);
-    setValue('shop_name', name, { shouldDirty: true });
-    setShopMeta(null);
-    setManualAddress('');
-    setManualNote(null);
-    setPickerOpen(false);
-    setManual(true);
-  }
-  /** 店名 + 住所で決定。住所があれば位置を引く。引けなくても保存はできる（あとから店の編集で直せる） */
-  async function confirmManual() {
-    const address = manualAddress.trim();
-    let meta: NonNullable<typeof shopMeta> = {
-      address: address || null,
-      lat: null,
-      lng: null,
-      externalPlaceId: null,
-    };
-    if (address && shopCandidates?.geocode) {
-      setManualBusy(true);
-      try {
-        const hits = await shopCandidates.geocode(address);
-        const hit = hits[0];
-        if (hit) meta = { ...meta, lat: hit.lat, lng: hit.lng };
-        setManualNote(
-          hit ? null : '住所から位置を特定できませんでした。保存はできます。位置は店の編集で付けられます',
-        );
-      } catch {
-        setManualNote('位置の問い合わせに失敗しました。保存はできます。位置は店の編集で付けられます');
-      } finally {
-        setManualBusy(false);
-      }
-    }
-    setShopMeta(meta);
-    setManual(false);
-  }
-  function clearShop() {
-    setValue('shop_id', null);
-    setValue('shop_name', '');
-    setShopMeta(null);
-    setManual(false);
-    openPicker();
-  }
   function copyLastRecipe() {
     if (!lastRecipe) return;
     for (const k of RECIPE_KEYS) {
@@ -247,13 +167,14 @@ export function LogForm({
   }
 
   const submit = handleSubmit((values) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { shop_id, shop_name, ...fields } = values;
     onSubmit({
       fields: { ...fields, roast_id: fields.place === 'home' ? (newRoast ? null : fields.roast_id) : null },
       newRoast: fields.place === 'home' ? newRoast : null,
       shop:
-        fields.place === 'shop' && (shop_id || shop_name)
-          ? { id: shop_id, name: shop_name, ...(shop_id ? {} : (shopMeta ?? {})) }
+        fields.place === 'shop' && shop && (shop.id || shop.name.trim())
+          ? { ...shop, name: shop.name.trim() }
           : null,
     });
   });
@@ -271,124 +192,23 @@ export function LogForm({
         onChange={(v) => {
           setValue('place', v, { shouldDirty: true });
           // 「店で」を押したら（すでに店でも）検索シートを開く。店を選び直したいときの入口も兼ねる
-          if (v === 'shop') openPicker();
-          else {
-            setPickerOpen(false);
-            setManual(false);
-          }
+          if (v === 'shop') setPickerSignal((n) => n + 1);
         }}
       />
 
       {place === 'shop' && (
-        <div className="flex flex-col gap-1">
-          <span className="text-muted-foreground text-[11px]">店</span>
-          {shopId || (!manual && shopName) ? (
-            <button
-              type="button"
-              onClick={clearShop}
-              className="border-primary bg-card flex items-center gap-3 rounded-[14px] border px-3.5 py-3 text-left"
-            >
-              <span className="bg-secondary text-primary font-num grid size-10 shrink-0 place-items-center rounded-full text-sm font-bold">
-                {shopName.slice(0, 1).toUpperCase()}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-bold">{shopName}</span>
-                <span className="text-muted-foreground block text-xs">
-                  {shopId
-                    ? '登録済みの店'
-                    : shopMeta?.lat != null
-                      ? `新しい店として登録します（地図に出ます${shopMeta.address ? ` · ${shopMeta.address}` : ''}）`
-                      : shopMeta?.address
-                        ? `新しい店として登録します（${shopMeta.address}）`
-                        : '新しい店として登録します'}
-                </span>
-              </span>
-              <ChevronRight className="text-muted-foreground size-[18px]" aria-hidden />
-            </button>
-          ) : manual ? (
-            <div className="flex flex-col gap-2">
-              <div className="relative">
-                <Store
-                  className="text-muted-foreground pointer-events-none absolute top-1/2 left-3.5 size-[18px] -translate-y-1/2"
-                  aria-hidden
-                />
-                <TextInput
-                  id={id('shop')}
-                  placeholder="店名を入力"
-                  autoComplete="off"
-                  autoFocus
-                  className="pl-10"
-                  aria-label="店"
-                  {...register('shop_name', {
-                    onChange: () => setValue('shop_id', null),
-                  })}
-                />
-              </div>
-              <TextInput
-                id={id('shop-address')}
-                placeholder="住所（例: 東京都台東区蔵前 3-1-2）"
-                autoComplete="off"
-                aria-label="店の住所"
-                value={manualAddress}
-                onChange={(e) => setManualAddress(e.target.value)}
-              />
-              <p className="text-muted-foreground text-[11px]">
-                住所を入れると地図に出ます。店名だけでも登録できます
-              </p>
-              <div className="flex items-center justify-between">
-                <button type="button" onClick={openPicker} className="text-primary text-[12px] font-medium">
-                  検索に戻る
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void confirmManual()}
-                  disabled={!shopName.trim() || manualBusy}
-                  className="text-primary text-[12px] font-bold disabled:opacity-50"
-                >
-                  {manualBusy ? '位置を調べています…' : 'この内容で決定'}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={openPicker}
-              className="border-border bg-card flex items-center gap-3 rounded-[14px] border px-3.5 py-3 text-left"
-            >
-              <span className="bg-secondary text-muted-foreground grid size-10 shrink-0 place-items-center rounded-full">
-                <Store className="size-[18px]" aria-hidden />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-bold">店を選ぶ</span>
-                <span className="text-muted-foreground block text-xs">
-                  登録済み・現在地・地図から探す。無ければ自分で登録
-                </span>
-              </span>
-              <ChevronRight className="text-muted-foreground size-[18px]" aria-hidden />
-            </button>
-          )}
-          {manualNote && !manual && (
-            <p role="status" className="text-muted-foreground text-xs">
-              {manualNote}
-            </p>
-          )}
-          <p className="text-muted-foreground text-xs">
-            店は後から付けることもできます。店の情報はあとから編集できます。
-          </p>
-          <ShopPicker
-            open={pickerOpen}
-            onClose={() => setPickerOpen(false)}
-            query={pickerQuery}
-            onQueryChange={setQuery}
-            registered={shopOptions}
-            registeredPending={shopOptionsPending}
-            candidates={shopCandidates}
-            hint={shopHint}
-            onPickShop={pickShop}
-            onPickCandidate={pickCandidate}
-            onRegisterManually={registerManually}
-          />
-        </div>
+        <ShopField
+          label="店"
+          value={shop}
+          onChange={setShop}
+          shopOptions={shopOptions}
+          shopOptionsPending={shopOptionsPending}
+          onShopSearch={onShopSearch}
+          candidates={shopCandidates}
+          hint={shopHint}
+          openSignal={pickerSignal}
+          note="店は後から付けることもできます。店の情報はあとから編集できます。"
+        />
       )}
 
       {place === 'home' && (homeRoasted || roastOptions.length > 0) && (

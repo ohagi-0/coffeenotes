@@ -16,7 +16,7 @@ import { PinLegend } from '@/components/map/pin-legend';
 import { ShopForm } from '@/components/shops/shop-form';
 import { ShopList } from '@/components/shops/shop-list';
 import { Skeleton } from '@/components/ui/skeleton';
-import { geocodePlace, searchNearbyPlaces } from '@/features/geo/search';
+import { geocodePlace, searchNearbyPlaces, shopCandidateSources } from '@/features/geo/search';
 import { useLogsByShop, useRatingStats } from '@/features/logs/queries';
 import { initialCenter, toMapShops } from '@/features/shops/map-pins';
 import { useCreateShop } from '@/features/shops/mutations';
@@ -212,14 +212,14 @@ function ShopsInner() {
         <ShopForm
           defaultValues={preset}
           candidates={{
+            ...shopCandidateSources,
             nearby: (pos) => searchNearbyPlaces(pos),
-            geocode: (query, near) => geocodePlace({ query, near }),
           }}
           submitting={createShop.isPending}
           onSubmit={(values) =>
             createShop.mutate(values, {
               onSuccess: (shop) => {
-                toast.success('登録しました');
+                toast.success(shop.created ? '登録しました' : 'すでに登録済みの店です。その店を開きました');
                 router.replace(routes.shop(shop.id) as Route);
               },
             })

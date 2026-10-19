@@ -1,13 +1,19 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronRight, LocateFixed, MapPin, Plus, Search, Store, X } from 'lucide-react';
 import type { ShopCandidate } from '@/components/shops/shop-candidate-tools';
+import type { ShopCandidateSources } from '@/features/geo/search';
+import { matchScore, mergeCandidates, rankCandidates } from '@/lib/geo/match';
 import { PlatformGeolocationError, getCurrentPosition } from '@/lib/platform/geolocation';
 import { cn } from '@/lib/utils';
 
-// 店を選ぶ全画面の検索シート（S3 ③、F-SHOP-2/3/4）。Instagram の場所検索のように、
-// 上に検索欄。並びは 地図で見つかった店（第一候補）→ 近くの店 → 登録済みの店（該当）→ 最後に「自分で登録する」（2026-09-24 に並び替え）。
+// 店を選ぶ全画面の検索シート（S3 ③ / 記録・豆の編集、F-SHOP-2/3/4）。Instagram の場所検索のように上に検索欄。
+// 開いたら現在地を取り、周辺のカフェ・コーヒー店をまとめて読み込む（位置情報の許可はこのときブラウザが聞く）。
+// 検索語が空なら「近くの店」を近い順に、語を打ったら
+//   1. 読み込んだ周辺の店を端末であいまい照合（カタカナで打っても英字名の店に当たる。lib/geo/match.ts）
+//   2. 店名検索（/api/geo?op=search。Photon。遠くの店も部分一致で当たる）
+// を 1 つの一覧にまとめて出す（ADR 0010、2026-10-19）。その下に登録済みの店、最後に「自分で登録する」。
 // ネイティブの <dialog> で開き、フォーカストラップ・Esc・最前面はブラウザに任せる（nav-drawer と同じ）。
 // 候補検索（/api/geo）は入力補助で、失敗しても「自分で登録する」から店名 + 住所で作れる（ADR 0003）。
 
@@ -26,14 +32,11 @@ export type ShopPickerProps = {
   /** 検索語（親が保持する。登録済みの店の絞り込みにも使う） */
   query: string;
   onQueryChange: (query: string) => void;
-  /** 登録済みの店（親が検索語で絞っていてもよい。ここでも名前・住所で絞る） */
+  /** 登録済みの店（親が検索語で絞っていてもよい。ここでもあいまい照合で絞る） */
   registered: ShopPickerOption[];
   registeredPending?: boolean;
   /** 地図上の候補検索。渡さなければ登録済みと手入力だけ */
-  candidates?: {
-    nearby: (pos: { lat: number; lng: number }) => Promise<ShopCandidate[]>;
-    geocode: (query: string, near?: { lat: number; lng: number }) => Promise<ShopCandidate[]>;
-  };
+  candidates?: Pick<ShopCandidateSources, 'nearby' | 'search'>;
   /** カードのロースター名などの手がかり。開いたときに候補を先に引いて上に出す */
   hint?: ShopPickerHint | null;
   onPickShop: (shop: ShopPickerOption) => void;
@@ -42,9 +45,13 @@ export type ShopPickerProps = {
   onRegisterManually: (name: string) => void;
 };
 
-/** 検索語を投げるまでの待ち時間（公開サーバーの Nominatim なので 1 文字ごとには叩かない） */
+/** 店名検索を投げるまでの待ち時間（公開サーバーなので 1 文字ごとには叩かない） */
 export const SHOP_PICKER_DEBOUNCE_MS = 450;
+/** 店名検索（サーバー）を投げる最短の文字数。周辺の店の絞り込みは 1 文字から */
 export const SHOP_PICKER_MIN_QUERY = 2;
+/** 一覧に出す件数 */
+const NEARBY_SHOWN = 30;
+const LOCAL_MATCH_SHOWN = 20;
 
 type Fetched =
   | { status: 'idle' }
@@ -52,17 +59,20 @@ type Fetched =
   | { status: 'ok'; items: ShopCandidate[] }
   | { status: 'error'; message: string };
 
+type Locate =
+  | { status: 'idle' }
+  | { status: 'locating' }
+  | { status: 'ok'; pos: { lat: number; lng: number } }
+  | { status: 'denied' }
+  | { status: 'error'; message: string };
+
 function formatDistance(m: number | undefined): string | null {
   if (m === undefined) return null;
   return m < 1000 ? `${m} m` : `${(m / 1000).toFixed(1)} km`;
 }
 
-/** 空白区切りの語がすべて店名か住所に含まれれば一致（順不同・部分一致） */
-function matches(shop: ShopPickerOption, q: string): boolean {
-  const terms = q.toLowerCase().split(/\s+/).filter(Boolean);
-  if (terms.length === 0) return true;
-  const hay = `${shop.name}\n${shop.address ?? ''}`.toLowerCase();
-  return terms.every((t) => hay.includes(t));
+function errorMessage(e: unknown, fallback: string): string {
+  return e instanceof Error ? e.message : fallback;
 }
 
 export function ShopPicker({
@@ -85,9 +95,10 @@ export function ShopPicker({
   const hintQueryRef = useRef<string | null>(null);
   const hintSeq = useRef(0);
   const [searchResult, setSearchResult] = useState<Fetched>({ status: 'idle' });
+  const [locate, setLocate] = useState<Locate>({ status: 'idle' });
   const [nearbyResult, setNearbyResult] = useState<Fetched>({ status: 'idle' });
-  const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
   const requestSeq = useRef(0);
+  const userPos = locate.status === 'ok' ? locate.pos : null;
 
   // 開閉をネイティブ dialog に同期し、開いたら検索欄にフォーカス
   useEffect(() => {
@@ -101,77 +112,89 @@ export function ShopPicker({
     if (!open && d.open) d.close();
   }, [open]);
 
+  async function runNearby() {
+    if (!candidates) return;
+    setLocate({ status: 'locating' });
+    let pos: { lat: number; lng: number };
+    try {
+      const cur = await getCurrentPosition({ timeoutMs: 8000 });
+      pos = { lat: cur.lat, lng: cur.lng };
+      setLocate({ status: 'ok', pos });
+    } catch (e) {
+      setLocate(
+        e instanceof PlatformGeolocationError && e.kind === 'permission-denied'
+          ? { status: 'denied' }
+          : { status: 'error', message: errorMessage(e, '現在地を取得できませんでした') },
+      );
+      return;
+    }
+    setNearbyResult({ status: 'loading' });
+    try {
+      setNearbyResult({ status: 'ok', items: await candidates.nearby(pos) });
+    } catch (e) {
+      setNearbyResult({ status: 'error', message: errorMessage(e, '近くの店を取得できませんでした') });
+    }
+  }
+
+  // 開いたら 1 回だけ現在地を取りに行き、周辺の店を読み込む（閉じても保持し、開き直しでは引き直さない）
+  const autoLocated = useRef(false);
+  useEffect(() => {
+    if (!open || !candidates || autoLocated.current) return;
+    autoLocated.current = true;
+    void runNearby();
+    // runNearby は毎回作り直されるが、開いた最初の 1 回だけ呼べばよい
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, candidates]);
+
   // 手がかり（カードのロースター名）は開いたときに 1 回だけ引く。同じ語なら引き直さない
-  const geocode = candidates?.geocode;
+  const search = candidates?.search;
   const hintQuery = hint?.query.trim() ?? '';
   useEffect(() => {
-    if (!open || !geocode || hintQuery.length < SHOP_PICKER_MIN_QUERY || hintQueryRef.current === hintQuery)
+    if (!open || !search || hintQuery.length < SHOP_PICKER_MIN_QUERY || hintQueryRef.current === hintQuery)
       return;
     hintQueryRef.current = hintQuery;
     const seq = ++hintSeq.current;
     setHintResult({ status: 'loading' });
-    geocode(hintQuery)
+    search(hintQuery, userPos ?? undefined)
       .then((items) => seq === hintSeq.current && setHintResult({ status: 'ok', items }))
       .catch(
         (e: unknown) =>
           seq === hintSeq.current &&
-          setHintResult({
-            status: 'error',
-            message: e instanceof Error ? e.message : '候補を取得できませんでした',
-          }),
+          setHintResult({ status: 'error', message: errorMessage(e, '候補を取得できませんでした') }),
       );
-  }, [open, geocode, hintQuery]);
+  }, [open, search, hintQuery, userPos]);
 
-  // 入力した語で地図上の候補を引く（デバウンス、古い応答は捨てる）
+  // 入力した語で店名検索（デバウンス、古い応答は捨てる）。現在地が後から分かったら近い順で引き直す
   useEffect(() => {
     const q = query.trim();
-    if (!open || !geocode || q.length < SHOP_PICKER_MIN_QUERY) {
+    if (!open || !search || q.length < SHOP_PICKER_MIN_QUERY) {
       setSearchResult({ status: 'idle' });
       return;
     }
     const seq = ++requestSeq.current;
     setSearchResult({ status: 'loading' });
     const timer = setTimeout(() => {
-      geocode(q, userPos ?? undefined)
+      search(q, userPos ?? undefined)
         .then((items) => seq === requestSeq.current && setSearchResult({ status: 'ok', items }))
         .catch(
           (e: unknown) =>
             seq === requestSeq.current &&
-            setSearchResult({
-              status: 'error',
-              message: e instanceof Error ? e.message : '候補を取得できませんでした',
-            }),
+            setSearchResult({ status: 'error', message: errorMessage(e, '候補を取得できませんでした') }),
         );
     }, SHOP_PICKER_DEBOUNCE_MS);
     return () => clearTimeout(timer);
-  }, [open, geocode, query, userPos]);
-
-  async function runNearby() {
-    if (!candidates) return;
-    setNearbyResult({ status: 'loading' });
-    try {
-      let p: { lat: number; lng: number } | null = userPos;
-      if (!p) {
-        const cur = await getCurrentPosition({ timeoutMs: 8000 });
-        p = { lat: cur.lat, lng: cur.lng };
-      }
-      setUserPos(p);
-      setNearbyResult({ status: 'ok', items: await candidates.nearby(p) });
-    } catch (e) {
-      setNearbyResult({
-        status: 'error',
-        message:
-          e instanceof PlatformGeolocationError && e.kind === 'permission-denied'
-            ? '位置情報が許可されていません。端末の設定で許可するか、店名で検索してください。'
-            : e instanceof Error
-              ? e.message
-              : '現在地を取得できませんでした',
-      });
-    }
-  }
+  }, [open, search, query, userPos]);
 
   const q = query.trim();
-  const registeredRows = registered.filter((s) => matches(s, q));
+  const nearbyAll = useMemo(() => (nearbyResult.status === 'ok' ? nearbyResult.items : []), [nearbyResult]);
+  /** 検索語ありの一覧: 周辺の店のあいまい照合 → 店名検索の結果（重複は除く） */
+  const found = useMemo(() => {
+    if (!q) return [];
+    const local = rankCandidates(q, nearbyAll).slice(0, LOCAL_MATCH_SHOWN);
+    const remote = searchResult.status === 'ok' ? searchResult.items : [];
+    return mergeCandidates(local, remote);
+  }, [q, nearbyAll, searchResult]);
+  const registeredRows = registered.filter((s) => matchScore(q, [s.name], s.address) > 0);
   const showHint = !!hint && q === '' && hintResult.status !== 'idle';
 
   return (
@@ -205,7 +228,7 @@ export function ShopPicker({
               aria-label="店名・住所で探す"
               autoComplete="off"
               enterKeyHint="search"
-              className="text-foreground placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-base outline-none"
+              className="text-foreground placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-base outline-none [&::-webkit-search-cancel-button]:appearance-none"
             />
             {query && (
               <button
@@ -234,45 +257,56 @@ export function ShopPicker({
             </Section>
           )}
 
-          {candidates && q === '' && (
-            <div className="border-border border-b py-2">
-              <button
-                type="button"
-                onClick={runNearby}
-                disabled={nearbyResult.status === 'loading'}
-                className="text-primary flex h-11 items-center gap-2 text-[13px] font-medium disabled:opacity-60"
-              >
-                <LocateFixed className="size-4" aria-hidden />
-                {nearbyResult.status === 'loading' ? '現在地から探しています…' : '現在地から探す'}
-              </button>
-              {nearbyResult.status === 'error' && (
-                <p role="alert" className="text-destructive text-xs">
-                  {nearbyResult.message}
-                </p>
-              )}
-            </div>
-          )}
+          {candidates && <LocateStatus locate={locate} onRetry={() => void runNearby()} />}
 
           {candidates && q === '' && nearbyResult.status !== 'idle' && (
-            <Section title="近くの店">
+            <Section title="近くの店" note="現在地から 2 km 以内のカフェ・コーヒー店を近い順に">
               <CandidateList
-                result={nearbyResult}
-                emptyText="近くにカフェ・ロースターが見つかりませんでした"
+                result={
+                  nearbyResult.status === 'ok'
+                    ? { status: 'ok', items: nearbyResult.items.slice(0, NEARBY_SHOWN) }
+                    : nearbyResult
+                }
+                emptyText="近くにカフェ・コーヒー店が見つかりませんでした。店名で検索するか、自分で登録できます"
                 onPick={onPickCandidate}
               />
             </Section>
           )}
 
-          {candidates && q.length >= SHOP_PICKER_MIN_QUERY && (
+          {candidates && q !== '' && (
             <Section
-              title="地図で見つかった店"
-              note="OpenStreetMap の登録から。見つからなければ下の「自分で登録する」"
+              title="見つかった店"
+              note={
+                userPos
+                  ? '近くの店から先に。OpenStreetMap の登録から探します'
+                  : 'OpenStreetMap の登録から探します。位置情報を許可すると近くの店が先に出ます'
+              }
             >
-              <CandidateList
-                result={searchResult}
-                emptyText="見つかりませんでした"
-                onPick={onPickCandidate}
-              />
+              {found.length > 0 && (
+                <CandidateList
+                  result={{ status: 'ok', items: found }}
+                  emptyText=""
+                  onPick={onPickCandidate}
+                />
+              )}
+              {searchResult.status === 'loading' ? (
+                <p className="text-muted-foreground py-3 text-xs" role="status">
+                  {found.length > 0 ? 'ほかの店も探しています…' : '候補を探しています…'}
+                </p>
+              ) : searchResult.status === 'error' ? (
+                <p role="alert" className="text-destructive py-3 text-xs">
+                  {found.length > 0
+                    ? `遠くの店は探せませんでした（${searchResult.message}）`
+                    : searchResult.message}
+                </p>
+              ) : (
+                found.length === 0 &&
+                (q.length >= SHOP_PICKER_MIN_QUERY || nearbyAll.length > 0) && (
+                  <p className="text-muted-foreground py-3 text-xs">
+                    見つかりませんでした。別の書き方（英字・カタカナ）で探すか、下の「自分で登録する」から登録できます
+                  </p>
+                )
+              )}
             </Section>
           )}
           <Section title={q ? '登録済みの店（該当）' : '登録済みの店'}>
@@ -335,6 +369,41 @@ export function ShopPicker({
         </div>
       </div>
     </dialog>
+  );
+}
+
+/** 現在地の取得状態。許可されていない・取れないときは理由と、もう一度試すボタン */
+function LocateStatus({ locate, onRetry }: { locate: Locate; onRetry: () => void }) {
+  if (locate.status === 'ok') return null;
+  if (locate.status === 'locating') {
+    return (
+      <p
+        className="text-muted-foreground border-border flex h-11 items-center gap-2 border-b text-xs"
+        role="status"
+      >
+        <LocateFixed className="size-4" aria-hidden />
+        現在地を確かめています…
+      </p>
+    );
+  }
+  const message =
+    locate.status === 'denied'
+      ? '位置情報が許可されていないため、近くの店を出せません。端末やブラウザの設定で許可すると、近い店から順に出ます。'
+      : locate.status === 'error'
+        ? `現在地を取得できませんでした（${locate.message}）。店名で検索できます。`
+        : null;
+  return (
+    <div className="border-border border-b py-2">
+      {message && <p className="text-muted-foreground text-xs">{message}</p>}
+      <button
+        type="button"
+        onClick={onRetry}
+        className="text-primary flex h-11 items-center gap-2 text-[13px] font-medium"
+      >
+        <LocateFixed className="size-4" aria-hidden />
+        {locate.status === 'idle' ? '現在地から探す' : 'もう一度、現在地から探す'}
+      </button>
+    </div>
   );
 }
 

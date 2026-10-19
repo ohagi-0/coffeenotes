@@ -1,5 +1,6 @@
-// GET /api/geo?op=nearby&lat=&lng=[&radiusM=] | ?op=geocode&q=[&lat=&lng=]
-// 店候補（F-SHOP-3）とジオコーディング（F-SHOP-4）。公開の OSM サーバーを叩くので、認証必須にして乱用を防ぐ。
+// GET /api/geo?op=nearby&lat=&lng=[&radiusM=&limit=] | ?op=search&q=[&lat=&lng=] | ?op=geocode&q=[&lat=&lng=]
+// 周辺の店（F-SHOP-3）、店名での検索（F-SHOP-2/4）、住所 → 座標（F-SHOP-4/6）。
+// 公開の OSM サーバーを叩くので、認証必須にして乱用を防ぐ。
 import { GeoError } from '@/lib/geo';
 import { getGeoProvider } from '@/lib/geo/factory';
 import { geoQuerySchema, type GeoApiErrorCode, type GeoResponse } from '@/lib/schemas/geo-response';
@@ -26,13 +27,16 @@ export async function GET(request: Request): Promise<Response> {
 
   try {
     const provider = getGeoProvider();
+    const near =
+      q.op !== 'nearby' && q.lat !== undefined && q.lng !== undefined
+        ? { lat: q.lat, lng: q.lng }
+        : undefined;
     const candidates =
       q.op === 'nearby'
-        ? await provider.searchNearby({ lat: q.lat, lng: q.lng, radiusM: q.radiusM })
-        : await provider.geocode({
-            query: q.q,
-            near: q.lat !== undefined && q.lng !== undefined ? { lat: q.lat, lng: q.lng } : undefined,
-          });
+        ? await provider.searchNearby({ lat: q.lat, lng: q.lng, radiusM: q.radiusM, limit: q.limit })
+        : q.op === 'search'
+          ? await provider.searchPlaces({ query: q.q, near })
+          : await provider.geocode({ query: q.q, near });
     const body: GeoResponse = { candidates, provider: provider.name };
     return Response.json(body, { headers: { 'Cache-Control': 'private, max-age=60' } });
   } catch (err) {

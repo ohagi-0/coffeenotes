@@ -14,7 +14,7 @@ import { LogTimeline } from '@/components/logs/log-timeline';
 import { RatingStars } from '@/components/logs/rating-stars';
 import { ADD_LOG_HREF } from '@/components/nav';
 import { ShopForm } from '@/components/shops/shop-form';
-import { geocodePlace, searchNearbyPlaces } from '@/features/geo/search';
+import { searchNearbyPlaces, shopCandidateSources } from '@/features/geo/search';
 import { useUpdateShop } from '@/features/shops/mutations';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toTimelineItem } from '@/features/logs/presenters';
@@ -120,8 +120,8 @@ function ShopDetailInner() {
             external_place_id: s.external_place_id ?? '',
           }}
           candidates={{
+            ...shopCandidateSources,
             nearby: (pos) => searchNearbyPlaces(pos),
-            geocode: (query, near) => geocodePlace({ query, near }),
           }}
           submitting={updateShop.isPending}
           submitLabel="保存する"
