@@ -207,7 +207,7 @@ export function LogForm({
           candidates={shopCandidates}
           hint={shopHint}
           openSignal={pickerSignal}
-          note="店はあとから付けることもできます。"
+          note="店名は後から追加することもできます。"
         />
       )}
 

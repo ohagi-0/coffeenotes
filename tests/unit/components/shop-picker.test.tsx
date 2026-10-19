@@ -5,7 +5,7 @@ import type { ShopSearchItem } from '@/features/geo/search';
 import type { ShopCandidate } from '@/components/shops/shop-candidate-tools';
 import { PlatformGeolocationError } from '@/lib/platform/geolocation';
 
-// 店の検索シート（S3 ③ / 記録・豆の編集）。開閉、「自分で登録する」、登録済みの絞り込み、
+// 店の検索シート（S3 ③ / 記録・豆の編集）。開閉、「手動で登録する」、登録済みの絞り込み、
 // 開いたときの現在地 → 近くの店、近くの店のあいまい照合 + 店名検索（デバウンス）、手がかりの先読みを確かめる。
 
 const getCurrentPosition = vi.fn();
@@ -64,12 +64,12 @@ function setup(over: Partial<ShopPickerProps> = {}) {
 }
 
 describe('ShopPicker', () => {
-  it('一番上に「自分で登録する」があり、検索語があればその名前で呼ばれる', () => {
+  it('一番上に「手動で登録する」があり、検索語があればその名前で呼ばれる', () => {
     const { props, rerender } = setup();
-    fireEvent.click(screen.getByRole('button', { name: /自分で登録する/ }));
+    fireEvent.click(screen.getByRole('button', { name: /手動で登録する/ }));
     expect(props.onRegisterManually).toHaveBeenCalledWith('');
     rerender(<ShopPicker {...props} query="  KIELO " />);
-    fireEvent.click(screen.getByRole('button', { name: /「KIELO」を自分で登録する/ }));
+    fireEvent.click(screen.getByRole('button', { name: /「KIELO」を手動で登録する/ }));
     expect(props.onRegisterManually).toHaveBeenLastCalledWith('KIELO');
   });
 
@@ -131,7 +131,7 @@ describe('ShopPicker', () => {
     expect(props.onPickCandidate).toHaveBeenCalledWith(expect.objectContaining({ name: '猿田彦珈琲' }));
   });
 
-  it('位置情報が許可されていなければ理由と「もう一度」を出し、店名検索と自分で登録はできる', async () => {
+  it('位置情報が許可されていなければ理由と「もう一度」を出し、店名検索と手動で登録はできる', async () => {
     getCurrentPosition.mockImplementation(async () => {
       throw new PlatformGeolocationError('permission-denied');
     });
@@ -140,7 +140,7 @@ describe('ShopPicker', () => {
     expect(await screen.findByText(/位置情報が許可されていないため/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /もう一度、現在地から探す/ })).toBeInTheDocument();
     expect(nearby).not.toHaveBeenCalled();
-    expect(screen.getByRole('button', { name: /自分で登録する/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /手動で登録する/ })).toBeInTheDocument();
   });
 
   it('カタカナで打つと、近くの店の英字名にも当たる（店名検索を待たずに出る）', async () => {
@@ -196,7 +196,7 @@ describe('ShopPicker', () => {
     expect(props.onPickCandidate).toHaveBeenCalledWith(expect.objectContaining({ address: '福岡市' }));
   });
 
-  it('候補検索の失敗は文言で出し、自分で登録する導線は残る', async () => {
+  it('候補検索の失敗は文言で出し、手動で登録する導線は残る', async () => {
     const search = vi.fn(async () => {
       throw new Error('候補のサービスに接続できませんでした');
     });
@@ -205,7 +205,7 @@ describe('ShopPicker', () => {
       hint: { label: 'ロースター', query: 'KIELO' },
     });
     expect(await screen.findByRole('alert')).toHaveTextContent('候補のサービスに接続できませんでした');
-    expect(screen.getByRole('button', { name: /自分で登録する/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /手動で登録する/ })).toBeInTheDocument();
   });
 
   describe('Google の候補（ADR 0011）', () => {

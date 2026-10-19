@@ -15,9 +15,9 @@ import { cn } from '@/lib/utils';
 // 検索語が空なら「近くの店」を近い順に、語を打ったら
 //   1. 読み込んだ周辺の店を端末であいまい照合（カタカナで打っても英字名の店に当たる。lib/geo/match.ts）
 //   2. 店名検索（/api/geo?op=search。Photon。遠くの店も部分一致で当たる）
-// を 1 つの一覧にまとめて出す（ADR 0010、2026-10-19）。その下に登録済みの店、最後に「自分で登録する」。
+// を 1 つの一覧にまとめて出す（ADR 0010、2026-10-19）。その下に登録済みの店、最後に「手動で登録する」。
 // ネイティブの <dialog> で開き、フォーカストラップ・Esc・最前面はブラウザに任せる（nav-drawer と同じ）。
-// 候補検索（/api/geo）は入力補助で、失敗しても「自分で登録する」から店名 + 住所で作れる（ADR 0003）。
+// 候補検索（/api/geo）は入力補助で、失敗しても「手動で登録する」から店名 + 住所で作れる（ADR 0003）。
 // Google の候補（ADR 0011）: 入力中は座標なしの予測が返り、選んだときに details で座標・正式な名前・住所を取る。
 // Google の結果は Google の順のまま出し（並べ替えない）、一覧の下に Google Maps のロゴを出す。
 // Autocomplete のセッションはシートを開いたときに作り、店を選んだら（details で閉じる）または閉じたら捨てる。
@@ -58,7 +58,7 @@ export type ShopPickerProps = {
   hint?: ShopPickerHint | null;
   onPickShop: (shop: ShopPickerOption) => void;
   onPickCandidate: (candidate: ShopCandidate) => void;
-  /** 「自分で登録する」。検索語を店名の初期値として渡す */
+  /** 「手動で登録する」。検索語を店名の初期値として渡す */
   onRegisterManually: (name: string) => void;
 };
 
@@ -319,7 +319,7 @@ export function ShopPicker({
             >
               <CandidateList
                 result={hintResult.status === 'ok' ? { status: 'ok', items: hintItems } : hintResult}
-                emptyText="地図上に見つかりませんでした。下の検索欄で探すか、自分で登録できます"
+                emptyText="地図上に見つかりませんでした。下の検索欄で探すか、手動で登録してください。"
                 onPick={pick}
                 picking={picking}
               />
@@ -332,7 +332,7 @@ export function ShopPicker({
             <Section title="近くの店" note="現在地から 2 km 以内、近い順">
               <CandidateList
                 result={nearbyResult.status === 'ok' ? { status: 'ok', items: nearbyShown } : nearbyResult}
-                emptyText="近くに店が見つかりませんでした。店名で探すか、自分で登録してください"
+                emptyText="近くに店が見つかりませんでした。店名で探すか、手動で登録してください。"
                 onPick={pick}
                 picking={picking}
               />
@@ -374,7 +374,7 @@ export function ShopPicker({
                 found.length === 0 &&
                 (q.length >= SHOP_PICKER_MIN_QUERY || nearbyAll.length > 0) && (
                   <p className="text-muted-foreground py-3 text-xs">
-                    見つかりませんでした。英字やカタカナなど別の書き方で探すか、自分で登録してください
+                    見つかりませんでした。英字やカタカナなど別の書き方で探すか、手動で登録してください。
                   </p>
                 )
               )}
@@ -441,10 +441,10 @@ export function ShopPicker({
             </span>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-sm font-bold">
-                {q ? `「${q}」を自分で登録する` : '自分で登録する'}
+                {q ? `「${q}」を手動で登録する` : '手動で登録する'}
               </span>
               <span className="text-muted-foreground block text-[11px]">
-                店名と住所を入れて登録します。位置は住所から付けます
+                店名と住所を入力して、新規のお店として登録します。位置情報は入力された住所を元に記録します。
               </span>
             </span>
             <ChevronRight className="text-muted-foreground size-[18px] shrink-0" aria-hidden />

@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 // 「飲んだ店」の入力欄（F-SHOP-2/3/4/6）。記録作成③・記録の編集・豆の編集の「飲んだ店」で同じものを使う（2026-10-19）。
 // - 未選択: 「店を選ぶ」を押すと全画面の検索シート（ShopPicker）
 // - 選択済み: 押すと選び直し、× で外す（未設定に戻す）
-// - 「自分で登録する」: 店名 + 住所の手入力。決定時に住所から位置を引く（F-SHOP-6。ピン刺しはスマホでは使わない）
+// - 「手動で登録する」: 店名 + 住所の手入力。決定時に住所から位置を引く（F-SHOP-6。ピン刺しはスマホでは使わない）
 // 値は親が持つ（制御コンポーネント）。保存時の店の作成は features/shops/find-or-create-shop.ts。
 
 export type ShopFieldProps = {
@@ -53,7 +53,7 @@ export function ShopField({
   const uid = useId();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerQuery, setPickerQuery] = useState('');
-  /** 「自分で登録する」で店名・住所を入力している間 true */
+  /** 「手動で登録する」で店名・住所を入力している間 true */
   const [manual, setManual] = useState(false);
   const [manualAddress, setManualAddress] = useState('');
   const [manualBusy, setManualBusy] = useState(false);

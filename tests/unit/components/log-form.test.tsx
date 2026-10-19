@@ -35,13 +35,13 @@ describe('LogForm', () => {
     expect(screen.queryByLabelText('店')).toBeNull();
   });
 
-  it('「店を選ぶ」→ 検索シート → 「自分で登録する」で店名を手入力すると新しい店（id null）として渡る。星は空でも保存できる', async () => {
+  it('「店を選ぶ」→ 検索シート → 「手動で登録する」で店名を手入力すると新しい店（id null）として渡る。星は空でも保存できる', async () => {
     const onSubmit = vi.fn();
     render(<LogForm beanName="Geisha" onSubmit={onSubmit} />);
     fireEvent.click(screen.getByRole('button', { name: /店を選ぶ/ }));
     const search = screen.getByLabelText('店名・住所で探す');
     fireEvent.change(search, { target: { value: 'KIELO COFFEE 蔵前' } });
-    fireEvent.click(screen.getByRole('button', { name: /「KIELO COFFEE 蔵前」を自分で登録する/ }));
+    fireEvent.click(screen.getByRole('button', { name: /「KIELO COFFEE 蔵前」を手動で登録する/ }));
     // 手入力欄に検索語が入った状態で開く
     expect(screen.getByLabelText('店')).toHaveValue('KIELO COFFEE 蔵前');
     fireEvent.click(screen.getByRole('button', { name: 'この内容で決定' }));
@@ -60,7 +60,7 @@ describe('LogForm', () => {
     expect(arg.fields.rating).toBeNull();
   });
 
-  it('「自分で登録する」で住所も入れると、決定時に住所から位置を引いて新しい店に付ける', async () => {
+  it('「手動で登録する」で住所も入れると、決定時に住所から位置を引いて新しい店に付ける', async () => {
     const onSubmit = vi.fn();
     const geocode = vi
       .fn()
@@ -75,7 +75,7 @@ describe('LogForm', () => {
       />,
     );
     fireEvent.click(screen.getByRole('button', { name: /店を選ぶ/ }));
-    fireEvent.click(screen.getByRole('button', { name: /自分で登録する/ }));
+    fireEvent.click(screen.getByRole('button', { name: /手動で登録する/ }));
     fireEvent.change(screen.getByLabelText('店'), { target: { value: 'ぽぽろ' } });
     fireEvent.change(screen.getByLabelText('店の住所'), { target: { value: '東京都台東区蔵前 3-1-2' } });
     fireEvent.click(screen.getByRole('button', { name: 'この内容で決定' }));
@@ -106,7 +106,7 @@ describe('LogForm', () => {
       />,
     );
     fireEvent.click(screen.getByRole('button', { name: /店を選ぶ/ }));
-    fireEvent.click(screen.getByRole('button', { name: /自分で登録する/ }));
+    fireEvent.click(screen.getByRole('button', { name: /手動で登録する/ }));
     fireEvent.change(screen.getByLabelText('店'), { target: { value: 'ぽぽろ' } });
     fireEvent.change(screen.getByLabelText('店の住所'), { target: { value: 'どこか' } });
     fireEvent.click(screen.getByRole('button', { name: 'この内容で決定' }));
