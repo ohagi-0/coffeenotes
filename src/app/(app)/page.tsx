@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Package } from 'lucide-react';
 import { AppButton } from '@/components/app-button';
 import { BeanBag, BeanBagEmpty } from '@/components/beans/bean-bag';
+import { ShelfRow, WoodPlank } from '@/components/beans/shelf-row';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorCallout } from '@/components/error-callout';
 import { FilterChips } from '@/components/filter-chips';
@@ -30,21 +31,12 @@ import { useLogs } from '@/features/logs/queries';
 // 見せ方は ?s=（生産国の棚 / 品種の棚 / すべての豆）、「すべての豆」のときだけ並び順 ?o=（最近 / 星 / 回数）を出す。
 // 一覧（S2、/logs）とは別の見せ方で、袋を押すと豆の詳細（S4）へ。記録は S2 と同じ useLogs から集計する。
 
-/** 棚 1 段（横一列）。袋の間と下に板を描く */
+/** 「すべての豆」のスマホ用: 2 袋ずつの段（横スクロールはしない）。下に木の棚板 */
 function Shelf({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative">
-      <div className="relative z-10 grid grid-cols-2 gap-x-4 gap-y-8 px-1">{children}</div>
+      <div className="relative z-10 grid grid-cols-2 gap-x-4 px-1">{children}</div>
     </div>
-  );
-}
-
-function ShelfPlank() {
-  return (
-    <div
-      aria-hidden
-      className="bg-shelf -mx-5 mt-[-14px] mb-7 h-[14px] shadow-[0_8px_14px_-6px_rgba(0,0,0,.85),inset_0_1px_0_rgba(255,255,255,.08)] md:-mx-8"
-    />
   );
 }
 
@@ -159,9 +151,9 @@ function CollectionInner() {
 
       {logs.data && items.length === 0 && (
         <>
-          {/* 棚板は袋の下に食い込む前提（mt-[-14px]）なので、空状態では上に余白を置いて小見出しから離す */}
+          {/* 空の棚板を 1 枚置いて、その下に案内を出す */}
           <div className="h-8" aria-hidden />
-          <ShelfPlank />
+          <WoodPlank className="mb-6" />
           <EmptyState
             icon={Package}
             title="まだ記録がありません"
@@ -198,39 +190,12 @@ function CollectionInner() {
                   {shelf.items.length > 0 ? `${shelf.items.length} 袋` : (shelf.note ?? '')}
                 </span>
               </div>
-              {shelf.items.length > 0 ? (
-                <div className="md:hidden">
-                  {Array.from({ length: Math.ceil(shelf.items.length / perRow) }, (_, i) =>
-                    shelf.items.slice(i * perRow, i * perRow + perRow),
-                  ).map((row, i) => (
-                    <div key={i}>
-                      <Shelf>
-                        {row.map((item) => (
-                          <BeanBag key={item.beanId} item={item} />
-                        ))}
-                      </Shelf>
-                      <ShelfPlank />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="md:hidden">
-                  <Shelf>
-                    <BeanBagEmpty label={shelf.title} sub={shelf.sub} />
-                  </Shelf>
-                  <ShelfPlank />
-                </div>
-              )}
-              <div className="hidden md:block">
-                <div className="border-shelf grid grid-cols-3 gap-x-5 gap-y-10 border-b-[10px] pb-3 xl:grid-cols-4">
-                  {shelf.items.length > 0 ? (
-                    shelf.items.map((item) => <BeanBag key={item.beanId} item={item} />)
-                  ) : (
-                    <BeanBagEmpty label={shelf.title} sub={shelf.sub} />
-                  )}
-                </div>
-                <div className="h-7" />
-              </div>
+              <ShelfRow count={Math.max(shelf.items.length, 1)} label={shelf.title}>
+                {shelf.items.length > 0
+                  ? shelf.items.map((item) => <BeanBag key={item.beanId} item={item} />)
+                  : [<BeanBagEmpty key="empty" label={shelf.title} sub={shelf.sub} />]}
+              </ShelfRow>
+              <div className="h-8" />
             </section>
           ))}
         </>
@@ -248,15 +213,16 @@ function CollectionInner() {
                     <BeanBag key={item.beanId} item={item} />
                   ))}
                 </Shelf>
-                <ShelfPlank />
+                <WoodPlank className="mb-8" />
               </div>
             ))}
           </div>
           <div className="hidden md:block">
             <div className="grid grid-cols-3 gap-x-5 gap-y-10 xl:grid-cols-4">
               {items.map((item) => (
-                <div key={item.beanId} className="border-shelf border-b-[10px] pb-2">
+                <div key={item.beanId}>
                   <BeanBag item={item} />
+                  <WoodPlank className="mx-0 md:mx-0" />
                 </div>
               ))}
             </div>
