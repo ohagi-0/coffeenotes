@@ -300,6 +300,9 @@ E2E_TEST_PASSWORD=
 - [x] Phase 5 の実機確認: ホーム画面に追加 → 機内モードで一覧・豆詳細が開く、エクスポートのダウンロード（2026-09-24）
 - [x] Google Maps 移行のコード（#33〜#39、2026-10-19）: 鍵・Map ID、Places API (New) の GeoProvider、DB 0005（place_provider / place_synced_at）、検索シート、Google マップ、30 日更新ジョブ、エクスポート・SW・帰属
 - [x] Google Maps 移行の本番切り替え（#40、2026-10-19）: Vercel の `GEO_PROVIDER` / `NEXT_PUBLIC_MAP_PROVIDER` を `google` にし、`SUPABASE_SERVICE_ROLE_KEY` を Production / Preview に追加して再デプロイ。本番で近くの店・店名検索（フグレン → FUGLEN TOKYO）・選択・Google マップの表示を確認。戻すときは環境変数を `nominatim` / `osm` に戻して再デプロイ、完全に戻すなら git タグ `before-google-maps-cutover`
+- [x] UI の見直し（2026-10-20、すべて本番反映済み）: 豆の袋を窓付きのチャック袋に（筆記体 Kaushan Script、DESIGN v2.3）、棚を木の棚板 + 横スクロール（PC は「<」「>」、v2.4）、読み込み中をコーヒーの所作の動き（ハンドドリップは「の」の字、手網、手挽きミルをランダム。v2.5）、店まわりの文言を自然に、入力例を架空の店に、1 文字の打ち損じを候補から除外。比較ページは `docs/design/alt.html`（UI 別案。据え置き）/ `bags.html`（袋と棚）/ `loading.html`（読み込み）
+- [ ] 読み込み中の動きの実機確認と微調整（Issue #47）
+- [ ] 種（アラビカ / ロブスタ）の推定（F-BEAN-18、Issue #45）、シングルオリジン / ブレンド（F-BEAN-19、Issue #46。スキーマ変更あり）— 未着手
 - [ ] Google Maps 移行の後始末（#40 の残り）: 切り替えから 2 週間問題が無ければ Leaflet / OSM 候補検索のコードを削除（ユーザーの OK を取る）。1 週間後に `google-places-refresh.yml` の結果と Cloud の請求（0 円のはず）を確認
 - [ ] Phase 6 ネイティブ化（Capacitor）— 未着手。前提の制約（§2.2）は守られている
 
