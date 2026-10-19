@@ -128,7 +128,9 @@ function StatsInner() {
     <div className="pb-2">
       <div className="pt-5 pb-4">
         <h1 className="text-2xl font-bold">好みの分析</h1>
-        <p className="text-muted-foreground mt-1.5 text-xs">星 4 以上の記録から、好みの傾向を出します。</p>
+        <p className="text-muted-foreground mt-1.5 text-xs">
+          星 4 つ以上を付けた記録から、よく選んでいる生産国や精製、味の形を見ます。
+        </p>
       </div>
       <FilterChips chips={PERIOD_CHIPS} value={period} onChange={setPeriod} />
 
