@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  blendShare,
   filterByPeriod,
   formatShare,
   monthly,
@@ -151,5 +152,25 @@ describe('speciesShare', () => {
     expect(speciesShare([{ logged_on: '2026-09-01', rating: 5, shop_id: null, bean: bean('a') }])).toEqual(
       [],
     );
+  });
+});
+
+describe('blendShare', () => {
+  it('星 4 以上の豆の種類（シングルオリジン / ブレンド）を豆ごとに数え、未設定は除く', () => {
+    const r = (id: string, blend: string | null, rating: number): StatsRow => ({
+      logged_on: '2026-09-01',
+      rating,
+      shop_id: null,
+      bean: bean(id, { blend }),
+    });
+    const items = blendShare([
+      r('a', 'single_origin', 5),
+      r('b', 'single_origin', 4),
+      r('c', 'blend', 4.5),
+      r('d', 'blend', 2),
+      r('e', null, 5),
+    ]);
+    expect(formatShare(items)).toBe('シングルオリジン 67% · ブレンド 33%');
+    expect(blendShare([r('e', null, 5)])).toEqual([]);
   });
 });

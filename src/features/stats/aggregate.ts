@@ -1,6 +1,7 @@
 // 好みの分析（S8、F-STAT-1〜4）の集計。全部純粋関数で、画面は結果を描くだけ。
 // 「高評価」= 星 4 以上（REQUIREMENTS.md UC5）。
 import { SPECIES_LABELS, speciesOf, type Species } from '@/lib/vocab';
+import { BEAN_BLEND_LABELS, type BeanBlend } from '@/lib/schemas/bean';
 
 export interface StatsRow {
   logged_on: string;
@@ -12,6 +13,8 @@ export interface StatsRow {
     process: string | null;
     /** 品種（種の推定に使う。F-BEAN-18） */
     variety?: string | null;
+    /** single_origin / blend / null（F-BEAN-19） */
+    blend?: string | null;
     /** light / medium / dark。表示名は BEAN_ROAST_LEVEL_LABELS */
     roast_level: string | null;
     flavor_notes: string[];
@@ -163,6 +166,18 @@ const SPECIES_ORDER: readonly Species[] = ['arabica', 'robusta', 'liberica', 'mi
 /** 星 4 以上の豆の種（品種から推定）の内訳（F-BEAN-18）。「アラビカ 95% · ロブスタ 5%」の 1 行 */
 export function speciesShare(rows: readonly StatsRow[]): ShareItem[] {
   return highRatedShare(rows, (b) => speciesOf(b.variety), SPECIES_ORDER, SPECIES_LABELS);
+}
+
+const BLEND_ORDER: readonly BeanBlend[] = ['single_origin', 'blend'];
+
+/** 星 4 以上の豆の種類（シングルオリジン / ブレンド）の内訳（F-BEAN-19）。未設定の豆は除く */
+export function blendShare(rows: readonly StatsRow[]): ShareItem[] {
+  return highRatedShare(
+    rows,
+    (b) => (b.blend === 'single_origin' || b.blend === 'blend' ? b.blend : null),
+    BLEND_ORDER,
+    BEAN_BLEND_LABELS,
+  );
 }
 
 /** 「アラビカ 95% · ロブスタ 5%」のように結ぶ */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { beanFormSchema, beanInsertSchema, flavorNotesSchema } from '@/lib/schemas/bean';
+import { beanFormSchema, beanInsertSchema, flavorNotesSchema, looksLikeBlendName } from '@/lib/schemas/bean';
 
 const ROASTER = '11111111-1111-4111-8111-111111111111';
 const UID = '00000000-0000-4000-8000-000000000000';
@@ -72,5 +72,21 @@ describe('beanFormSchema', () => {
 describe('flavorNotesSchema', () => {
   it('未指定は空配列', () => {
     expect(flavorNotesSchema.parse(undefined)).toEqual([]);
+  });
+});
+
+describe('blend（種類）', () => {
+  it('single_origin / blend か空（null）だけを通す', () => {
+    const minimal = { name: 'A', source: 'purchased' };
+    expect(beanFormSchema.parse({ ...minimal, blend: '' }).blend).toBeNull();
+    expect(beanFormSchema.parse({ ...minimal, blend: 'blend' }).blend).toBe('blend');
+    expect(beanFormSchema.parse(minimal).blend).toBeNull();
+    expect(beanFormSchema.safeParse({ ...minimal, blend: 'mixed' }).success).toBe(false);
+  });
+  it('looksLikeBlendName は豆名の「ブレンド」「Blend」を見る', () => {
+    expect(looksLikeBlendName('朝のブレンド')).toBe(true);
+    expect(looksLikeBlendName('House Blend')).toBe(true);
+    expect(looksLikeBlendName('Lusitania Lime Geisha')).toBe(false);
+    expect(looksLikeBlendName(null)).toBe(false);
   });
 });

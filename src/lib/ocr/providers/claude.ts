@@ -35,6 +35,9 @@ const nullableScore = {
 const nullableRoastLevel = {
   anyOf: [{ type: 'string', enum: ['light', 'medium', 'dark'] }, { type: 'null' }],
 } as const;
+const nullableBlend = {
+  anyOf: [{ type: 'string', enum: ['single_origin', 'blend'] }, { type: 'null' }],
+} as const;
 const confidenceNumber = { type: 'number' } as const;
 
 /** 値を持つ項目名（confidence オブジェクトのキーと一致させる） */
@@ -54,6 +57,7 @@ export const BEAN_CARD_FIELDS = [
   'priceJpy',
   'priceGrams',
   'roastLevel',
+  'blend',
   'referenceUrl',
 ] as const;
 type BeanCardField = (typeof BEAN_CARD_FIELDS)[number];
@@ -116,6 +120,10 @@ export const BEAN_CARD_TOOL: Anthropic.Tool = {
         nullableRoastLevel,
         '焙煎度。浅煎り・ライト・Light → light、中煎り・ミディアム・Medium → medium、中深煎り・深煎り・ダーク・シティ・フレンチ・Dark → dark',
       ),
+      blend: withDesc(
+        nullableBlend,
+        '種類。「BLEND」「ブレンド」「○○ブレンド」と書いてあれば blend、「SINGLE ORIGIN」「シングルオリジン」なら single_origin。どちらも書いていなければ null（産地が 1 つだからと推測しない）',
+      ),
       referenceUrl: withDesc(
         nullableString,
         'カードに印字された URL（QR の下の文字列など）。https:// が無ければ補う。無ければ null',
@@ -142,6 +150,7 @@ const SYSTEM_PROMPT = `あなたはスペシャルティコーヒーのテイス
 - 日本語のカードもそのまま読む。「農園」「生産地」「収穫年度」「品種」「精製」「焙煎」の欄はそれぞれ farm / country・region / harvestYear / variety / process / roastLevel に入れる。
 - 「生産地 パナマ / セロ プンタ」のように国と地域が併記なら、country は国だけ（パナマ）、region は地域だけ（セロ プンタ）。
 - 焙煎度が「ミディアム」「中煎り」「Medium」のように書いてあれば roastLevel は medium（浅煎り・ライトは light、中深煎り・深煎り・ダーク・シティ・フレンチは dark）。これは翻訳であって推測ではないので null にしない。
+- 「BLEND」「ブレンド」「○○ブレンド」と書いてあれば blend は blend、「SINGLE ORIGIN」「シングルオリジン」なら single_origin。どちらも書いていなければ null（産地が 1 つだからと推測しない）。
 - 価格は円の整数、標高はメートルの整数。単位や記号は数値に含めない。
 - confidence は 1 が「はっきり読めた」、0.5 が「かすれ・傾きで自信がない」、0 が「無い・読めない」。`;
 
@@ -228,6 +237,8 @@ export function sanitizeExtraction(input: unknown): unknown {
   const roast = pick(i, 'roastLevel');
   const roastValue =
     roast.value === 'light' || roast.value === 'medium' || roast.value === 'dark' ? roast.value : null;
+  const blend = pick(i, 'blend');
+  const blendValue = blend.value === 'single_origin' || blend.value === 'blend' ? blend.value : null;
   const ref = pick(i, 'referenceUrl');
   const refValue = urlOrNull(ref.value);
   const grams = int('priceGrams', 1);
@@ -249,6 +260,7 @@ export function sanitizeExtraction(input: unknown): unknown {
     priceJpy: int('priceJpy'),
     priceGrams: grams,
     roastLevel: { value: roastValue, confidence: roastValue ? roast.confidence : 0 },
+    blend: { value: blendValue, confidence: blendValue ? blend.confidence : 0 },
     referenceUrl: { value: refValue, confidence: refValue ? ref.confidence : 0 },
   };
 }

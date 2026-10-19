@@ -32,6 +32,7 @@ describe('beans presenters', () => {
       price_jpy: 3800,
       price_grams: 100,
       roast_level: 'light',
+      blend: 'blend',
       roasted_on: null,
       taste_flavor: 5,
       taste_sweetness: null,
@@ -45,6 +46,9 @@ describe('beans presenters', () => {
     // 種は品種から推定し、推定であることを補足に添える（F-BEAN-18）。品種が空なら出ない（値 null はグリッドが省く）
     expect(items.find((i) => i.label === '種')).toMatchObject({ value: 'アラビカ', note: '品種から' });
     expect(beanSpecItems({ ...bean, variety: null }).find((i) => i.label === '種')?.value).toBeNull();
+    // 種類（シングルオリジン / ブレンド）。未設定は出ない（F-BEAN-19）
+    expect(items.find((i) => i.label === '種類')?.value).toBe('ブレンド');
+    expect(beanSpecItems({ ...bean, blend: null }).find((i) => i.label === '種類')?.value).toBeNull();
     expect(beanTaste(bean)).toEqual({ ...EMPTY_TASTE, flavor: 5 });
     expect(hasAnyTaste(beanTaste(bean))).toBe(true);
     expect(hasAnyTaste(EMPTY_TASTE)).toBe(false);

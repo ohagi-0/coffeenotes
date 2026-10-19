@@ -115,6 +115,7 @@ describe('sanitizeExtraction', () => {
       priceGrams: { value: 0, confidence: 0.9 },
       flavorNotes: { value: ['Lime', ' ', 3, 'Bergamot'], confidence: 0.9 },
       roastLevel: { value: 'burnt', confidence: 0.9 },
+      blend: { value: 'mixed', confidence: 0.9 },
       harvestYear: { value: 20255, confidence: 0.9 },
       farm: { value: ' Finca Los Senisos ', confidence: 0.8 },
     }) as Record<string, { value: unknown; confidence: number }>;
@@ -133,7 +134,20 @@ describe('sanitizeExtraction', () => {
     expect(out.priceGrams).toEqual({ value: null, confidence: 0 });
     expect(out.flavorNotes).toEqual({ value: ['Lime', 'Bergamot'], confidence: 0.9 });
     expect(out.roastLevel).toEqual({ value: null, confidence: 0 });
+    expect(out.blend).toEqual({ value: null, confidence: 0 });
     expect(out.roaster).toEqual({ value: null, confidence: 0 });
+  });
+  it('種類は single_origin / blend だけ通し、無ければ null（F-BEAN-19）', () => {
+    const out = sanitizeExtraction({ blend: 'blend', confidence: { blend: 0.95 } }) as Record<
+      string,
+      { value: unknown; confidence: number }
+    >;
+    expect(out.blend).toEqual({ value: 'blend', confidence: 0.95 });
+    const none = sanitizeExtraction({ name: 'x', confidence: { name: 1 } }) as Record<
+      string,
+      { value: unknown; confidence: number }
+    >;
+    expect(none.blend).toEqual({ value: null, confidence: 0 });
   });
   it('本来の形（フラットな値 + confidence オブジェクト）を項目ごとの { value, confidence } に戻す', () => {
     const out = sanitizeExtraction({

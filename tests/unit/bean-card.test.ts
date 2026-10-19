@@ -19,6 +19,7 @@ const sample = {
   priceJpy: ok(3800),
   priceGrams: ok(100),
   roastLevel: ok(null, 0),
+  blend: ok('single_origin'),
   referenceUrl: ok(null, 0),
 };
 

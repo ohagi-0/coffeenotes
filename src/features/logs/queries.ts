@@ -5,6 +5,7 @@ import type { QueryData } from '@supabase/supabase-js';
 import { format, startOfMonth } from 'date-fns';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import type { LogKind, LogPlace } from '@/lib/schemas/log';
+import type { BeanBlend } from '@/lib/schemas/bean';
 import { aggregateRatings, lastLogByShop } from './aggregate';
 
 /**
@@ -12,7 +13,7 @@ import { aggregateRatings, lastLogByShop } from './aggregate';
  * 店・焙煎バッチは NULL 可なので通常の埋め込み。
  */
 export const LOG_SELECT =
-  '*, bean:beans!inner(id, name, source, country, process, variety, roaster_id, price_jpy, flavor_notes, taste_flavor, taste_sweetness, taste_acidity, taste_aftertaste, taste_body, roaster:roasters(id, name), bean_images(side, storage_path)), shop:shops(id, name, kind, address, place_provider, external_place_id), roast:roasts(id, roasted_on, roast_level), log_tags(tag:tags(id, name))';
+  '*, bean:beans!inner(id, name, source, country, process, variety, blend, roaster_id, price_jpy, flavor_notes, taste_flavor, taste_sweetness, taste_acidity, taste_aftertaste, taste_body, roaster:roasters(id, name), bean_images(side, storage_path)), shop:shops(id, name, kind, address, place_provider, external_place_id), roast:roasts(id, roasted_on, roast_level), log_tags(tag:tags(id, name))';
 
 function logQuery() {
   return getSupabaseBrowserClient().from('logs').select(LOG_SELECT);
@@ -28,6 +29,8 @@ export interface LogFilters {
   processes?: readonly string[];
   process?: string;
   variety?: string;
+  /** 種類（single_origin / blend）で絞る（F-BEAN-19） */
+  blend?: BeanBlend;
   /** 品種の表記をまとめて絞る（「ロブスタ入り」= 種がロブスタか混合と判定した品種の値を並べる）。空配列は 0 件 */
   varieties?: readonly string[];
   roasterId?: string;
@@ -78,6 +81,7 @@ export function useLogs(filters: LogFilters = {}, sort: LogSort = 'date') {
       if (filters.process) q = q.eq('bean.process', filters.process);
       if (filters.variety) q = q.eq('bean.variety', filters.variety);
       if (filters.varieties) q = q.in('bean.variety', [...filters.varieties]);
+      if (filters.blend) q = q.eq('bean.blend', filters.blend);
       if (filters.roasterId) q = q.eq('bean.roaster_id', filters.roasterId);
       if (filters.shopId) q = q.eq('shop_id', filters.shopId);
       if (filters.place) q = q.eq('place', filters.place);

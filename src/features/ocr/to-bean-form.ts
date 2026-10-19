@@ -49,6 +49,7 @@ export function extractionToBeanForm(e: BeanCardExtraction): BeanFormPrefill {
   put('price_jpy', e.priceJpy.value, e.priceJpy.confidence);
   put('price_grams', e.priceGrams.value, e.priceGrams.confidence);
   put('roast_level', e.roastLevel.value, e.roastLevel.confidence);
+  put('blend', e.blend.value, e.blend.confidence);
   put('reference_url', e.referenceUrl.value, e.referenceUrl.confidence);
 
   return { values, confidence };

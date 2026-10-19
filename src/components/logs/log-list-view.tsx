@@ -33,8 +33,8 @@ import { cn } from '@/lib/utils';
 
 // S2 入力記録一覧（F-LIST-1 / F-LIST-2）。/logs（id なし）で描く。絞り込みは URL の ?f= に持ち、共有・戻るに対応する。
 // 2026-09-24 にホーム（/）は豆のコレクション（S10）になり、一覧はここへ移った。
-// チップの値: all / rating4 / home / shop / robusta / country:<国のキー> / process:<精製のキー>（語彙で表記ゆれをまとめる）
-// 「ロブスタ入り」は品種から種を推定して絞る（F-BEAN-18）。該当する豆が無ければチップ自体を出さない
+// チップの値: all / rating4 / home / shop / robusta / blend / country:<国のキー> / process:<精製のキー>（語彙で表記ゆれをまとめる）
+// 「ロブスタ入り」は品種から種を推定して絞る（F-BEAN-18）、「ブレンド」は豆の種類（F-BEAN-19）。該当する豆が無ければチップ自体を出さない
 // 「選択」で一括削除の選択モード（F-LOG-7）。行がチェックボックスになり、下のバーから確認ダイアログ → 削除。
 
 const FIXED_CHIPS: FilterChip[] = [
@@ -144,7 +144,10 @@ export function LogListView() {
     const robusta: FilterChip[] = (options.data?.varieties ?? []).some((v) => hasRobusta(v))
       ? [{ value: 'robusta', label: 'ロブスタ入り' }]
       : [];
-    return [...FIXED_CHIPS, ...robusta, ...countries, ...processes];
+    const blend: FilterChip[] = (options.data?.blends ?? []).includes('blend')
+      ? [{ value: 'blend', label: 'ブレンド' }]
+      : [];
+    return [...FIXED_CHIPS, ...robusta, ...blend, ...countries, ...processes];
   }, [options.data]);
 
   function replaceQuery(next: { f?: string; q?: string }) {

@@ -2,6 +2,7 @@ import type { SpecItem } from '@/components/beans/bean-spec-grid';
 import type { TasteValues } from '@/components/beans/taste-dots';
 import type { Tables } from '@/types/database';
 import { speciesLabel, speciesOf } from '@/lib/vocab';
+import { BEAN_BLEND_LABELS, type BeanBlend } from '@/lib/schemas/bean';
 
 // 豆の行を表示用に変換する純関数（S4 豆詳細、S5 の豆サマリ）。
 
@@ -12,6 +13,7 @@ type BeanLike = Pick<
   | 'farm'
   | 'harvest_year'
   | 'variety'
+  | 'blend'
   | 'process'
   | 'altitude_m'
   | 'price_jpy'
@@ -38,6 +40,11 @@ export function roastLevelLabel(v: string | null): string | null {
   return v ? (ROAST_LABELS[v] ?? v) : null;
 }
 
+/** 種類（シングルオリジン / ブレンド）の表示名。未設定は null */
+export function blendLabel(v: string | null | undefined): string | null {
+  return v && v in BEAN_BLEND_LABELS ? BEAN_BLEND_LABELS[v as BeanBlend] : null;
+}
+
 export function sourceLabel(v: string): string {
   return SOURCE_LABELS[v] ?? v;
 }
@@ -48,6 +55,7 @@ export function sourceLabel(v: string): string {
  */
 export function beanSpecItems(bean: BeanLike): SpecItem[] {
   return [
+    { label: '種類', value: blendLabel(bean.blend), ja: true },
     { label: '生産国', value: bean.country },
     { label: '地域', value: bean.region },
     { label: '農園', value: bean.farm },

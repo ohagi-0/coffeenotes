@@ -77,6 +77,7 @@ export type Database = {
       beans: {
         Row: {
           altitude_m: number | null
+          blend: string | null
           country: string | null
           created_at: string
           description: string | null
@@ -106,6 +107,7 @@ export type Database = {
         }
         Insert: {
           altitude_m?: number | null
+          blend?: string | null
           country?: string | null
           created_at?: string
           description?: string | null
@@ -135,6 +137,7 @@ export type Database = {
         }
         Update: {
           altitude_m?: number | null
+          blend?: string | null
           country?: string | null
           created_at?: string
           description?: string | null

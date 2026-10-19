@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -14,7 +14,10 @@ import type { BeanFormFieldName } from '@/features/ocr/to-bean-form';
 import {
   beanFormSchema,
   type BeanFormInput,
+  BEAN_BLEND_LABELS,
   BEAN_ROAST_LEVEL_LABELS,
+  looksLikeBlendName,
+  type BeanBlend,
   type BeanRoastLevel,
 } from '@/lib/schemas/bean';
 import type { DraftBeanForm, DraftRoaster } from '@/features/logs/new-log-draft';
@@ -113,6 +116,15 @@ export function BeanForm({
   const roasterId = useWatch({ control, name: 'roaster_id' }) ?? null;
   const roastLevelRaw = useWatch({ control, name: 'roast_level' });
   const roastLevel = typeof roastLevelRaw === 'string' && roastLevelRaw !== '' ? roastLevelRaw : null;
+  const blendRaw = useWatch({ control, name: 'blend' });
+  const blend = typeof blendRaw === 'string' && blendRaw !== '' ? (blendRaw as BeanBlend) : null;
+  const nameValue = String(useWatch({ control, name: 'name' }) ?? '');
+  // 豆名に「ブレンド」「Blend」が入っていて種類が未設定なら「ブレンド」を選んでおく（F-BEAN-19）。
+  // 本人が一度触った（外した・選んだ）あとは何もしない
+  useEffect(() => {
+    if (blend !== null || dirtyFields.blend) return;
+    if (looksLikeBlendName(nameValue)) setValue('blend', 'blend', { shouldValidate: true });
+  }, [nameValue, blend, dirtyFields.blend, setValue]);
   const tasteRaw = useWatch({ control, name: TASTE_KEYS });
   const taste: TasteValues = {
     flavor: numOrNull(tasteRaw[0]),
@@ -519,6 +531,33 @@ export function BeanForm({
           </Select>
         </F>
       </div>
+
+      <F name="blend" ocr={ocr} label="種類" htmlFor={id('blend')} error={errors.blend?.message}>
+        <div id={id('blend')} role="radiogroup" aria-label="種類" className="flex flex-wrap gap-2">
+          {(Object.keys(BEAN_BLEND_LABELS) as BeanBlend[]).map((v) => {
+            const active = blend === v;
+            return (
+              <button
+                key={v}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() =>
+                  setValue('blend', active ? null : v, { shouldDirty: true, shouldValidate: true })
+                }
+                className={cn(
+                  'focus-visible:outline-primary inline-flex h-[34px] items-center rounded-full border px-3.5 text-xs font-medium transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2',
+                  active
+                    ? 'bg-foreground text-background border-foreground'
+                    : 'border-border text-foreground',
+                )}
+              >
+                {BEAN_BLEND_LABELS[v]}
+              </button>
+            );
+          })}
+        </div>
+      </F>
 
       <F
         name="roast_level"

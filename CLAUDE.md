@@ -302,7 +302,8 @@ E2E_TEST_PASSWORD=
 - [x] Google Maps 移行の本番切り替え（#40、2026-10-19）: Vercel の `GEO_PROVIDER` / `NEXT_PUBLIC_MAP_PROVIDER` を `google` にし、`SUPABASE_SERVICE_ROLE_KEY` を Production / Preview に追加して再デプロイ。本番で近くの店・店名検索（フグレン → FUGLEN TOKYO）・選択・Google マップの表示を確認。戻すときは環境変数を `nominatim` / `osm` に戻して再デプロイ、完全に戻すなら git タグ `before-google-maps-cutover`
 - [x] UI の見直し（2026-10-20、すべて本番反映済み）: 豆の袋を窓付きのチャック袋に（筆記体 Kaushan Script、DESIGN v2.3）、棚を木の棚板 + 横スクロール（PC は「<」「>」、v2.4）、読み込み中をコーヒーの所作の動き（ハンドドリップは「の」の字、手網、手挽きミルをランダム。v2.5）、店まわりの文言を自然に、入力例を架空の店に、1 文字の打ち損じを候補から除外。比較ページは `docs/design/alt.html`（UI 別案。据え置き）/ `bags.html`（袋と棚）/ `loading.html`（読み込み）
 - [ ] 読み込み中の動きの実機確認と微調整（Issue #47）
-- [ ] 種（アラビカ / ロブスタ）の推定（F-BEAN-18、Issue #45）、シングルオリジン / ブレンド（F-BEAN-19、Issue #46。スキーマ変更あり）— 未着手
+- [x] 種（アラビカ / ロブスタ）の推定（F-BEAN-18、#45）: `src/lib/vocab/species.ts`。豆詳細「種 アラビカ（品種から）」、入力記録一覧「ロブスタ入り」、好みの分析の 1 行（2026-10-20）
+- [x] シングルオリジン / ブレンド（F-BEAN-19、#46）: DB 0006 `beans.blend`（本番適用済み）。豆フォームの「種類」チップ（豆名に「ブレンド」があれば既定で選ぶ）、OCR の `blend`（ツールの項目が増えたのでウォームアップを打ち直す）、豆詳細、コレクションの「ブレンド」の棚、袋の「BLEND」、一覧の「ブレンド」チップ、分析の 1 行、書き出しの `blend` 列（2026-10-20）
 - [ ] Google Maps 移行の後始末（#40 の残り）: 切り替えから 2 週間問題が無ければ Leaflet / OSM 候補検索のコードを削除（ユーザーの OK を取る）。1 週間後に `google-places-refresh.yml` の結果と Cloud の請求（0 円のはず）を確認
 - [ ] Phase 6 ネイティブ化（Capacitor）— 未着手。前提の制約（§2.2）は守られている
 
@@ -327,7 +328,7 @@ E2E_TEST_PASSWORD=
 - マジックリンクの戻り先は要求元の `NEXT_PUBLIC_API_BASE_URL` で決まる。ローカルで要求したリンクをスマホで開いても `localhost` には繋がらない。スマホで試すときは本番 URL から要求する。
 - メール送信は Resend の SMTP 経由。Resend の API キーは Supabase の SMTP パスワードとして保存されているので、**Resend 側でそのキーを削除するとログインメールが止まる**。差し替えるときは新キーを作ってから Supabase の SMTP 設定を更新する。Cloudflare の DNS レコード（`resend._domainkey`、`send`、`rsend`）も消さない。
 - Supabase Free では、カスタム SMTP を設定して初めてメール文面を変更できる（内蔵メールのままだと Management API が 400 を返す）。
-- マイグレーションは `pnpm exec supabase db query --linked --project-ref gayhfwmvlxwyuzrvmkoy -f supabase/migrations/NNNN.sql` で本番に適用できる（CLI のトークンを使うのでキーチェーン不要）。0001〜0004 はこの方法か SQL Editor で適用済みで、`supabase_migrations` には記録が無い。次は 0005（Google Maps 移行、Issue #35）。
+- マイグレーションは `pnpm exec supabase db query --linked --project-ref gayhfwmvlxwyuzrvmkoy -f supabase/migrations/NNNN.sql` で本番に適用できる（CLI のトークンを使うのでキーチェーン不要）。0001〜0006 はこの方法か SQL Editor で適用済みで、`supabase_migrations` には記録が無い（0006 = 豆の `blend`、2026-10-20）。
 - 記録作成ウィザードの段階間の受け渡しは sessionStorage。撮影画像は data URL（`src/features/ocr/capture-draft.ts`）、豆の下書きは `new-log-draft.ts`。Blob は JSON にできないため。保存時に `dataUrlToBlob` で戻して Storage に上げる。
 - **PWA / オフライン**: `src/app/sw.ts`（serwist）。Supabase REST の GET は NetworkFirst、署名付き画像と地図タイルは StaleWhileRevalidate。書き込みと `/api/*` はキャッシュしない。ログアウトと退会で `clearOfflineCaches()` がデータのキャッシュを消す。開発中は SW 無効。`public/sw.js` は生成物（.gitignore 済み）。
 - **生産国・品種・精製の語彙**（2026-09-24、ADR 0009。精製は 2026-09-25）: `src/lib/vocab/` の `COUNTRY_SHELVES`（生産量順、FAO 2023）/ `VARIETY_SHELVES`（店で見る頻度順）/ `PROCESSES` が別名表と棚・候補の順を兼ねる。`countryDisplayName` / `varietyDisplayName` で日本語の呼び名に寄せ、コレクションの棚・入力記録一覧の生産国チップ・好みの分析・豆フォームの候補（`suggestCountries` / `suggestVarieties`）・OCR の流し込みが全部これを使う。値は入力どおり保存し、寄せるのは表示と絞り込みだけ。順や別名を変えるときは配列を直すだけでよい。

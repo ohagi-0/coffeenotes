@@ -42,8 +42,9 @@ function CupMark() {
 
 export function BeanBag({ item, className }: BeanBagProps) {
   const date = format(parseISO(item.lastLoggedOn), 'yyyy.MM.dd');
-  // ラベルの産地は英字の大文字で（白いラベルの作法）。英名が分からない国は打ったまま
-  const origin = [countryEnglishName(item.country) ?? item.country, item.process].filter(Boolean).join(' · ');
+  // ラベルの産地は英字の大文字で（白いラベルの作法）。英名が分からない国は打ったまま。産地が空のブレンドは「BLEND」と印字（F-BEAN-19）
+  const place = countryEnglishName(item.country) ?? item.country ?? (item.blend === 'blend' ? 'BLEND' : null);
+  const origin = [place, item.process].filter(Boolean).join(' · ');
   const long = item.name.length > LONG_NAME;
   return (
     <Link

@@ -182,6 +182,7 @@ function BeanPageInner() {
             price_jpy: b.price_jpy ?? '',
             price_grams: b.price_grams ?? '',
             roast_level: (b.roast_level as 'light' | 'medium' | 'dark' | null) ?? '',
+            blend: (b.blend as 'single_origin' | 'blend' | null) ?? '',
             roasted_on: b.roasted_on ?? '',
             reference_url: b.reference_url ?? '',
           }}

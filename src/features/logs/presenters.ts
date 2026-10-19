@@ -78,6 +78,7 @@ export function chipToFilters(
   if (value === 'rating4') return { minRating: 4 };
   // 種は品種からの推定なので DB に列が無い。自分の豆の品種のうちロブスタ入りと判定した値で絞る（F-BEAN-18）
   if (value === 'robusta') return { varieties: knownVarieties.filter((v) => hasRobusta(v)) };
+  if (value === 'blend') return { blend: 'blend' };
   if (value === 'home') return { place: 'home' };
   if (value === 'shop') return { place: 'shop' };
   if (value.startsWith('country:')) {

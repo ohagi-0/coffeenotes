@@ -12,6 +12,8 @@ export type CollectionSourceLog = {
     country: string | null;
     process?: string | null;
     variety?: string | null;
+    /** single_origin / blend / null（F-BEAN-19） */
+    blend?: string | null;
     roaster?: { name: string } | null;
     bean_images?: { side: string; storage_path: string }[] | null;
   };
@@ -25,6 +27,7 @@ export interface CollectionItem {
   country: string | null;
   process: string | null;
   variety: string | null;
+  blend: string | null;
   /** 表面のカード画像（Storage のパス）。無ければ印刷物風のプレースホルダ */
   imagePath: string | null;
   /** 飲んだ回数 */
@@ -77,6 +80,7 @@ export function buildCollection(logs: readonly CollectionSourceLog[]): Collectio
           country: l.bean.country,
           process: l.bean.process ?? null,
           variety: l.bean.variety ?? null,
+          blend: l.bean.blend ?? null,
           imagePath: front,
           count: 1,
           avgRating: null,
@@ -151,14 +155,18 @@ export interface ShelfGroups {
   total: number;
 }
 
-/** 生産国ごとの棚。主要国は地域順に固定で（空でも）並べ、そのあとにその他の国と「生産国なし」を続ける */
+/**
+ * 生産国ごとの棚。主要国は地域順に固定で（空でも）並べ、そのあとにその他の国、「ブレンド」、「生産国なし」を続ける。
+ * 生産国が空のブレンドは「生産国なし」ではなく「ブレンド」の棚（F-BEAN-19）。国が書いてあるブレンドはその国の棚
+ */
 export function groupByCountry(items: readonly CollectionItem[]): ShelfGroups {
   const buckets = new Map<string, CollectionItem[]>();
+  const blends: CollectionItem[] = [];
   const unknown: CollectionItem[] = [];
   for (const it of items) {
     const k = countryKeyOf(it.country);
     if (k === null) {
-      unknown.push(it);
+      (it.blend === 'blend' ? blends : unknown).push(it);
       continue;
     }
     const arr = buckets.get(k) ?? [];
@@ -178,6 +186,8 @@ export function groupByCountry(items: readonly CollectionItem[]): ShelfGroups {
     .sort((a, b) => a[0].localeCompare(b[0]))
     .map(([k, arr]) => ({ key: k, title: arr[0]!.country ?? k.slice(6), sub: null, note: null, items: arr }));
   const out = [...shelves, ...others];
+  if (blends.length > 0)
+    out.push({ key: 'blend', title: 'ブレンド', sub: 'Blend', note: null, items: blends });
   if (unknown.length > 0)
     out.push({ key: 'unknown', title: '生産国なし', sub: null, note: null, items: unknown });
   return { shelves: out, visited, total: COUNTRY_SHELVES.length };

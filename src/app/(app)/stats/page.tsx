@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   MIN_ROWS_FOR_TRENDS,
   PERIOD_CHIPS,
+  blendShare,
   filterByPeriod,
   formatShare,
   monthly,
@@ -112,6 +113,7 @@ function StatsInner() {
     [filtered],
   );
   const species = useMemo(() => speciesShare(filtered), [filtered]);
+  const blends = useMemo(() => blendShare(filtered), [filtered]);
   const flavors = useMemo(() => topFlavors(filtered), [filtered]);
   const tasteHigh = useMemo(() => tasteAverages(filtered, true), [filtered]);
   const tasteAll = useMemo(() => tasteAverages(filtered, false), [filtered]);
@@ -189,6 +191,7 @@ function StatsInner() {
               {species.length > 0 && (
                 <ShareLine title="星 4 以上の豆の種" text={formatShare(species)} note="品種から" />
               )}
+              {blends.length > 0 && <ShareLine title="星 4 以上の豆の種類" text={formatShare(blends)} />}
 
               <section className="mt-6" aria-label="よく出るフレーバー">
                 <h2 className="mb-2 text-[13px] font-bold">よく出るフレーバー</h2>

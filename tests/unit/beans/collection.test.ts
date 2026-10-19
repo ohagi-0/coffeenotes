@@ -99,6 +99,23 @@ describe('groupByCountry', () => {
     expect(tail.map((s) => s.title)).toEqual(['Timor-Leste', '生産国なし']);
     expect(tail[1]?.items.map((i) => i.beanId)).toEqual(['d']);
   });
+  it('生産国が空のブレンドは「ブレンド」の棚（その他の国の後、生産国なしの前）。国のあるブレンドはその国の棚', () => {
+    const items = buildCollection([
+      log({ id: '1', bean: { id: 'a', name: '朝のブレンド', country: null, blend: 'blend' } }),
+      log({ id: '2', bean: { id: 'b', name: 'B', country: 'Ethiopia', blend: 'blend' } }),
+      log({ id: '3', bean: { id: 'c', name: 'C', country: null, blend: null } }),
+      log({ id: '4', bean: { id: 'd', name: 'D', country: 'Timor-Leste' } }),
+    ]);
+    const tail = groupByCountry(items).shelves.slice(COUNTRY_SHELVES.length);
+    expect(tail.map((s) => s.title)).toEqual(['Timor-Leste', 'ブレンド', '生産国なし']);
+    expect(tail[1]?.items.map((i) => i.beanId)).toEqual(['a']);
+    expect(tail[2]?.items.map((i) => i.beanId)).toEqual(['c']);
+    expect(
+      groupByCountry(items)
+        .shelves.find((s) => s.key === 'ethiopia')
+        ?.items.map((i) => i.beanId),
+    ).toEqual(['b']);
+  });
 });
 
 describe('groupByVariety', () => {

@@ -23,6 +23,18 @@ export const BEAN_ROAST_LEVEL_LABELS: Record<BeanRoastLevel, string> = {
   dark: '深煎り',
 };
 
+/** 種類（シングルオリジン / ブレンド）。F-BEAN-19。未設定（null）は「分からない・書いていない」 */
+export const beanBlendSchema = z.enum(['single_origin', 'blend']);
+export type BeanBlend = z.infer<typeof beanBlendSchema>;
+export const BEAN_BLEND_LABELS: Record<BeanBlend, string> = {
+  single_origin: 'シングルオリジン',
+  blend: 'ブレンド',
+};
+/** 豆名に「ブレンド」「Blend」が入っていれば、未設定のフォームでは「ブレンド」を既定で選んでおく（本人が外せる） */
+export function looksLikeBlendName(name: string | null | undefined): boolean {
+  return !!name && /ブレンド|blend/i.test(name);
+}
+
 /** 味覚チャートの 1 軸。1〜5 の整数、未入力は null（F-BEAN-10）。 */
 export const tasteAxisSchema = numberOrNull(z.number().int('整数で入力してください').min(1).max(5));
 
@@ -62,6 +74,7 @@ export const beanFormSchema = z.object({
   price_jpy: numberOrNull(z.number().int('整数で入力してください').min(0, '価格は 0 以上です')),
   price_grams: numberOrNull(z.number().int('整数で入力してください').min(1, 'グラム数は 1 以上です')),
   roast_level: enumOrNull(beanRoastLevelSchema),
+  blend: enumOrNull(beanBlendSchema),
   roasted_on: z.preprocess(emptyToNull, dateStringSchema.nullable()).default(null),
   reference_url: z.preprocess(emptyToNull, z.url('URL の形式が正しくありません').nullable()).default(null),
 });

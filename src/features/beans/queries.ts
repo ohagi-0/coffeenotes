@@ -67,6 +67,8 @@ export interface BeanFilterOptions {
   countries: string[];
   processes: string[];
   varieties: string[];
+  /** 自分の豆に出てくる種類（single_origin / blend） */
+  blends: string[];
 }
 
 function distinctSorted(values: (string | null)[]): string[] {
@@ -80,12 +82,13 @@ export function useBeanFilterOptions() {
     queryFn: async (): Promise<BeanFilterOptions> => {
       const { data, error } = await getSupabaseBrowserClient()
         .from('beans')
-        .select('country, process, variety');
+        .select('country, process, variety, blend');
       if (error) throw error;
       return {
         countries: distinctSorted(data.map((r) => r.country)),
         processes: distinctSorted(data.map((r) => r.process)),
         varieties: distinctSorted(data.map((r) => r.variety)),
+        blends: distinctSorted(data.map((r) => r.blend)),
       };
     },
   });

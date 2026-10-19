@@ -29,6 +29,15 @@ describe('extractionToBeanForm', () => {
     expect(confidence.taste_body).toBeCloseTo(recorded.taste);
     expect(confidence.description).toBeUndefined();
   });
+  it('「BLEND」と読めたカードは種類がブレンドで入り、読めなければ入らない（F-BEAN-19）', () => {
+    expect('blend' in extractionToBeanForm(extraction).values).toBe(false);
+    const withBlend = beanCardExtractionSchema.parse(
+      sanitizeExtraction({ name: '朝のブレンド', blend: 'blend', confidence: { name: 1, blend: 0.9 } }),
+    );
+    const { values, confidence } = extractionToBeanForm(withBlend);
+    expect(values.blend).toBe('blend');
+    expect(confidence.blend).toBeCloseTo(0.9);
+  });
   it('初期値は豆フォームのスキーマに（ロースター ID を足せば）通る', () => {
     const { values } = extractionToBeanForm(extraction);
     const r = beanFormSchema.safeParse({

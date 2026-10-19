@@ -35,6 +35,8 @@ export const beanCardExtractionSchema = z.object({
   priceJpy: extracted(z.number().int().nonnegative()),
   priceGrams: extracted(z.number().int().positive()),
   roastLevel: extracted(z.enum(['light', 'medium', 'dark'])),
+  /** 種類。「BLEND」「ブレンド」→ blend、「SINGLE ORIGIN」→ single_origin。どちらも無ければ null（推測しない） */
+  blend: extracted(z.enum(['single_origin', 'blend'])),
   referenceUrl: extracted(z.url()),
 });
 
