@@ -151,6 +151,27 @@ export function googleMapsUrl(shop: {
 }
 
 /**
+ * 記録のある店と無い店に分ける（F-SHOP-1/5、#43）。記録の有無は byShop（店 ID → 件数）で判定する。
+ * byShop がまだ無い（読み込み中・失敗）ときは全部「ある」にして、一覧が消えないようにする。
+ * 生豆販売店は焙煎バッチから参照されるので、keepGreenBeanShops のとき（「生豆」チップ）は記録が無くても「ある」側に置く。
+ */
+export function splitShopsByActivity<T extends { id: string; kind: string | null }>(
+  shops: readonly T[],
+  byShop: ReadonlyMap<string, { count: number }> | undefined,
+  opts: { keepGreenBeanShops?: boolean } = {},
+): { active: T[]; inactive: T[] } {
+  if (!byShop) return { active: [...shops], inactive: [] };
+  const active: T[] = [];
+  const inactive: T[] = [];
+  for (const s of shops) {
+    const has = (byShop.get(s.id)?.count ?? 0) > 0;
+    const keep = has || (!!opts.keepGreenBeanShops && s.kind === 'green_bean_shop');
+    (keep ? active : inactive).push(s);
+  }
+  return { active, inactive };
+}
+
+/**
  * 店の一覧の 2 行目（F-SHOP-8）。記録のある店は「3 回 · 前回 10/19 豆名」（狭いので種別と区は省く）、
  * 記録の無い店は従来どおり「種別 · 距離か市区」。現在地が分かっていれば距離を先頭に足す
  */

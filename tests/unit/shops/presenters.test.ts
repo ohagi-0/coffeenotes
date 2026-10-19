@@ -5,6 +5,7 @@ import {
   googleMapsUrl,
   shortArea,
   sortShopRows,
+  splitShopsByActivity,
   toShopRow,
   withDistance,
   type ShopRow,
@@ -133,5 +134,25 @@ describe('shops presenters', () => {
     expect(filterShopRows(rows, { query: 'kielo' }).map((r) => r.id)).toEqual(['a']);
     expect(filterShopRows(rows, { query: '目黒' }).map((r) => r.id)).toEqual(['b']);
     expect(filterShopRows(rows, { kind: 'cafe', query: '目黒' })).toEqual([]);
+  });
+
+  it('splitShopsByActivity は記録のある店と無い店に分ける（#43）', () => {
+    const shops = [
+      { id: 'a', kind: 'cafe' },
+      { id: 'b', kind: 'cafe' },
+      { id: 'g', kind: 'green_bean_shop' },
+    ];
+    const byShop = new Map([['a', { count: 2 }]]);
+    const r = splitShopsByActivity(shops, byShop);
+    expect(r.active.map((s) => s.id)).toEqual(['a']);
+    expect(r.inactive.map((s) => s.id)).toEqual(['b', 'g']);
+    // 「生豆」チップでは、記録が無い生豆販売店も一覧に出す（カフェは出さない）
+    const green = splitShopsByActivity(shops, byShop, { keepGreenBeanShops: true });
+    expect(green.active.map((s) => s.id)).toEqual(['a', 'g']);
+    expect(green.inactive.map((s) => s.id)).toEqual(['b']);
+    // 件数 0 は「無い」。集計が未取得なら全部「ある」（一覧が消えない）
+    expect(splitShopsByActivity(shops, new Map([['a', { count: 0 }]])).active).toEqual([]);
+    expect(splitShopsByActivity(shops, undefined)).toEqual({ active: shops, inactive: [] });
+    expect(splitShopsByActivity([], byShop)).toEqual({ active: [], inactive: [] });
   });
 });

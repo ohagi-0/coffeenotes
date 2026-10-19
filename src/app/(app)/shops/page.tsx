@@ -12,6 +12,7 @@ import { FilterChips, type FilterChip } from '@/components/filter-chips';
 import { FullScreenLoading } from '@/components/full-screen-loading';
 import { RatingStars } from '@/components/logs/rating-stars';
 import { PinLegend } from '@/components/map/pin-legend';
+import { InactiveShops } from '@/components/shops/inactive-shops';
 import { ShopForm } from '@/components/shops/shop-form';
 import { ShopList } from '@/components/shops/shop-list';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -25,6 +26,7 @@ import {
   filterShopRows,
   googleMapsUrl,
   sortShopRows,
+  splitShopsByActivity,
   toShopRow,
   withDistance,
   type ShopRow,
@@ -103,21 +105,34 @@ function ShopsInner() {
       ),
     [shops.data, stats.data, lastLogs.data, userPos],
   );
-  const rows = useMemo(
-    () => sortShopRows(filterShopRows(allRows, { kind, query: search }), sort),
-    [allRows, kind, search, sort],
+  // 記録のある店だけを一覧・地図・件数に出し、記録の無い店は最下部の折りたたみへ（#43）。
+  // 生豆販売店は「生豆」チップのときだけ、記録が無くても一覧に出す（焙煎バッチから参照されるため）
+  const { active: activeRows, inactive: inactiveRows } = useMemo(
+    () =>
+      splitShopsByActivity(filterShopRows(allRows, { kind, query: search }), stats.data?.byShop, {
+        keepGreenBeanShops: kind === 'green_bean_shop',
+      }),
+    [allRows, kind, search, stats.data],
+  );
+  const rows = useMemo(() => sortShopRows(activeRows, sort), [activeRows, sort]);
+  // 見出しの件数も記録のある店だけ数える（全件・絞り込み前）
+  const activeAll = useMemo(
+    () => splitShopsByActivity(allRows, stats.data?.byShop).active,
+    [allRows, stats.data],
   );
   const mapShops = useMemo(
     () =>
       toMapShops(
-        rows.map((r) => ({
-          id: r.id,
-          name: r.name,
-          kind: r.kind,
-          address: r.address,
-          lat: r.lat,
-          lng: r.lng,
-        })),
+        rows
+          .filter((r) => !stats.data || r.count > 0) // 生豆販売店（記録なし）は地図に出さない。集計が取れるまでは絞らない
+          .map((r) => ({
+            id: r.id,
+            name: r.name,
+            kind: r.kind,
+            address: r.address,
+            lat: r.lat,
+            lng: r.lng,
+          })),
         stats.data?.byShop,
       ),
     [rows, stats.data],
@@ -135,7 +150,7 @@ function ShopsInner() {
         : initialCenter(mapShops),
     [selected, mapShops],
   );
-  const noCoords = allRows.filter((r) => !r.hasCoordinates).length;
+  const noCoords = activeAll.filter((r) => !r.hasCoordinates).length;
 
   const searchTerm = search.trim();
   const needFocus = searchTerm.length >= 2 && mapShops.length === 0 && !shops.isPending;
@@ -247,7 +262,7 @@ function ShopsInner() {
           <h1 className="text-2xl font-bold">記録したお店</h1>
           <p className="text-muted-foreground font-num mt-1.5 text-xs">
             {shops.data
-              ? `${shops.data.length} 店 · 地図に ${allRows.length - noCoords}${noCoords ? ` · 座標なし ${noCoords}` : ''}`
+              ? `${activeAll.length} 店 · 地図に ${activeAll.length - noCoords}${noCoords ? ` · 座標なし ${noCoords}` : ''}`
               : ' '}
           </p>
         </div>
@@ -398,6 +413,7 @@ function ShopsInner() {
               onSelect={select}
             />
           </section>
+          <InactiveShops shops={inactiveRows} />
         </>
       )}
     </div>
