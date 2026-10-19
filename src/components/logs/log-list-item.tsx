@@ -22,6 +22,8 @@ export type LogListItemProps = {
   shopName?: string | null;
   /** 店名や「自宅」の右に添える短い補足（飲み方、レシピの要約など） */
   detail?: string | null;
+  /** メモの冒頭（店詳細の訪問の記録で出す）。1 行に切り詰めて表示 */
+  memo?: string | null;
   flavorNotes?: string[];
   imageSrc?: string | null;
   /** Storage 上のカード画像パス。imageSrc が無いとき署名付き URL に解決して表示する */
@@ -46,6 +48,7 @@ export function LogListItem({
   place,
   shopName,
   detail,
+  memo,
   flavorNotes = [],
   imageSrc,
   imagePath,
@@ -80,6 +83,7 @@ export function LogListItem({
           )}
           {detail && <span className="truncate">{detail}</span>}
         </div>
+        {memo && <p className="text-muted-foreground mt-1.5 truncate text-[12px]">{memo}</p>}
         {flavors.length > 0 && (
           <ul className="mt-2 flex flex-wrap gap-1.5">
             {flavors.map((f) => (

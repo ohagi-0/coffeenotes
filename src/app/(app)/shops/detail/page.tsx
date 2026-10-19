@@ -10,7 +10,8 @@ import { AppButton } from '@/components/app-button';
 import { BeanSpecGrid } from '@/components/beans/bean-spec-grid';
 import { ErrorCallout } from '@/components/error-callout';
 import { FullScreenLoading } from '@/components/full-screen-loading';
-import { LogTimeline } from '@/components/logs/log-timeline';
+import { EmptyState } from '@/components/empty-state';
+import { ShopBeansList, ShopBestCard, ShopTrendCard, ShopVisits } from '@/components/shops/shop-recap';
 import { RatingStars } from '@/components/logs/rating-stars';
 import { ADD_LOG_HREF } from '@/components/nav';
 import { ShopForm } from '@/components/shops/shop-form';
@@ -20,6 +21,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toTimelineItem } from '@/features/logs/presenters';
 import { useLogsByShop, useRatingStats } from '@/features/logs/queries';
 import { googleMapsUrl, shopKindLabel } from '@/features/shops/presenters';
+import { recapHeadline, shopRecap } from '@/features/shops/recap';
 import { useShop } from '@/features/shops/queries';
 import { useLazyRefreshGoogleShop } from '@/features/shops/use-lazy-refresh';
 import { idFromSearchParams, routes } from '@/lib/routes';
@@ -38,7 +40,16 @@ function ShopDetailInner() {
   const logs = useLogsByShop(id);
   const stats = useRatingStats();
   const stat = id ? stats.data?.byShop.get(id) : undefined;
-  const items = useMemo(() => (logs.data ?? []).map(toTimelineItem), [logs.data]);
+  // 訪問の記録の行: メモの冒頭を足す（一覧の他の画面には出さない）
+  const items = useMemo(
+    () =>
+      (logs.data ?? []).map((l) => ({
+        ...toTimelineItem(l),
+        memo: l.memo ? l.memo.replace(/\s+/g, ' ').trim().slice(0, 40) : null,
+      })),
+    [logs.data],
+  );
+  const recap = useMemo(() => shopRecap(logs.data ?? []), [logs.data]);
 
   const crumb = (
     <div className="text-muted-foreground flex items-center justify-between pt-3 pb-2.5 text-xs">
@@ -158,7 +169,7 @@ function ShopDetailInner() {
             </span>
           </span>
         ) : null}
-        {stat?.count ? <span className="font-num">{stat.count} 回</span> : null}
+        {recapHeadline(recap) ? <span className="font-num">{recapHeadline(recap)}</span> : null}
       </div>
       <BeanSpecGrid
         className="mt-4"
@@ -187,13 +198,33 @@ function ShopDetailInner() {
           地図には出ていません。「編集」で住所を入れて「店名で検索」を押すと位置が付きます。
         </p>
       )}
-      <h2 className="mt-6 mb-1 text-[13px] font-bold">この店の記録</h2>
-      <LogTimeline
-        items={items}
-        isPending={logs.isPending}
-        error={logs.error}
-        onRetry={() => void logs.refetch()}
-      />
+      {logs.isPending ? (
+        <div role="status" aria-busy="true" aria-label="読み込み中" className="mt-6 flex flex-col gap-3">
+          <Skeleton className="bg-secondary h-20 w-full rounded-[14px]" />
+          <Skeleton className="bg-secondary h-14 w-full rounded-[14px]" />
+          <Skeleton className="bg-secondary h-14 w-full rounded-[14px]" />
+        </div>
+      ) : logs.error ? (
+        <ErrorCallout
+          title="記録を読み込めませんでした"
+          what={logs.error.message}
+          next="通信状態を確認して、もう一度読み込んでください。"
+          onRetry={() => void logs.refetch()}
+          className="mt-6"
+        />
+      ) : recap.count === 0 ? (
+        <EmptyState
+          title="まだ記録がありません"
+          description="この店で飲んだ一杯を記録すると、ここに振り返りが貯まります。"
+        />
+      ) : (
+        <>
+          {recap.best && <ShopBestCard best={recap.best} />}
+          <ShopBeansList beans={recap.beans} />
+          <ShopVisits items={items} />
+          {recap.trend && <ShopTrendCard trend={recap.trend} />}
+        </>
+      )}
       <div className="mt-6">
         <AppButton href={ADD_LOG_HREF}>この店で記録する</AppButton>
       </div>
