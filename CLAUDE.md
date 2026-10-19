@@ -73,6 +73,7 @@ REQUIREMENTS.md §13.2 の N-1〜N-5。要点:
 │   │   ├── (legal)/           # /privacy /terms（ログイン不要。Google 同意画面・App Store 申請の参照先）
 │   │   ├── (app)/             # ログイン後。layout に認証ガード + ナビ（Web はサイトヘッダー + ドロワー、PC はサイドバー、下タブは iOS 版のみ）
 │   │   │   ├── page.tsx       # ホーム = 豆のコレクション（棚。S10。2026-09-24 にホームへ）
+│   │   │   ├── collection/    # 旧ホーム。`/` へ転送するだけ
 │   │   │   ├── logs/new/      # 記録作成ウィザード
 │   │   │   ├── logs/              # id なしは入力記録一覧 `/logs?f=…&q=…`、id ありは記録詳細・編集 `/logs?id=…`（ADR 0008。[id] は使わない）
 │   │   │   ├── beans/             # 豆詳細 `/beans?id=…`
@@ -85,6 +86,7 @@ REQUIREMENTS.md §13.2 の N-1〜N-5。要点:
 │   │   ├── sw.ts              # Service Worker（serwist）。public/sw.js に生成される
 │   │   └── api/               # Route Handler。ocr/route.ts（Claude Haiku）、geo/route.ts（店候補）。静的出力からは除外される
 │   │       ├── ocr/route.ts   # OCR 実行（API キーはここでのみ使う）
+│   │       ├── ocr/warm/route.ts  # 文法キャッシュのウォームアップ（CRON_SECRET。§5.2）
 │   │       └── geo/route.ts   # 店候補・ジオコーディング
 │   ├── components/
 │   │   ├── ui/                # shadcn/ui 生成物（手で編集しない）
@@ -194,7 +196,7 @@ export interface OcrProvider {
 ### 5.4 テスト
 
 - `src/lib/` 配下の純粋ロジック（Zod スキーマ、OCR 出力の正規化、統計集計）は Vitest で単体テスト必須。
-- E2E は「ログイン → 手入力で記録作成 → 入力記録一覧に表示」の 1 本を最低限維持する（`tests/e2e/create-log.spec.ts`）。
+- E2E は「ログイン → 手入力で記録作成 → 入力記録一覧に表示」の 1 本を最低限維持する（`tests/e2e/create-log.spec.ts`）。ログインはマジックリンクを自動化できないので、開発ビルドだけが載せる `src/components/dev-test-hooks.tsx` の `window.__coffeenotes.supabase` で `signInWithPassword` を呼ぶ（本番ビルドでは何もしない）。テストが作ったデータは同じクライアントで `afterEach` に消す。
 - OCR プロバイダのテストは実 API を叩かず、`tests/fixtures/cards/` のサンプル画像と録画済みレスポンスを使う。
 - Supabase を触るロジックは、`SupabaseClient` を引数に取る純粋な関数（`features/logs/create-log.ts`、`delete-log.ts`、`features/account/` など）に切り出し、`tests/unit/features/fake-client.ts` の偽クライアント（insert / select / update / delete の結果を順に消費し、呼び出し順を記録する）で検証する。React Query のフック（`useXxx`）は薄い包み紙にして直接テストしない。
 
@@ -203,8 +205,8 @@ export interface OcrProvider {
 ```bash
 pnpm install
 pnpm dev                 # http://localhost:3100（ポートは 3100 に固定。3000 は他プロジェクトが使用）
-pnpm lint && pnpm typecheck
-pnpm test                                   # Vitest 全部
+pnpm lint && pnpm typecheck      # pnpm lint:fix / pnpm format:check もある
+pnpm test                                   # Vitest 全部（pnpm test:watch で監視）
 pnpm vitest run tests/unit/rating.test.ts   # ファイル 1 つ
 pnpm vitest run -t '0.5 刻み'               # テスト名で絞る
 # 単体テストの既定環境は jsdom。Node 専用のテストは先頭に `// @vitest-environment node` を書く（env.test.ts が例）
@@ -315,7 +317,7 @@ E2E_TEST_PASSWORD=
 - マジックリンクの戻り先は要求元の `NEXT_PUBLIC_API_BASE_URL` で決まる。ローカルで要求したリンクをスマホで開いても `localhost` には繋がらない。スマホで試すときは本番 URL から要求する。
 - メール送信は Resend の SMTP 経由。Resend の API キーは Supabase の SMTP パスワードとして保存されているので、**Resend 側でそのキーを削除するとログインメールが止まる**。差し替えるときは新キーを作ってから Supabase の SMTP 設定を更新する。Cloudflare の DNS レコード（`resend._domainkey`、`send`、`rsend`）も消さない。
 - Supabase Free では、カスタム SMTP を設定して初めてメール文面を変更できる（内蔵メールのままだと Management API が 400 を返す）。
-- マイグレーションは `pnpm exec supabase db query --linked --project-ref gayhfwmvlxwyuzrvmkoy -f supabase/migrations/NNNN.sql` で本番に適用できる（CLI のトークンを使うのでキーチェーン不要）。0001 / 0002 はこの方法か SQL Editor で適用済みで、`supabase_migrations` には記録が無い。
+- マイグレーションは `pnpm exec supabase db query --linked --project-ref gayhfwmvlxwyuzrvmkoy -f supabase/migrations/NNNN.sql` で本番に適用できる（CLI のトークンを使うのでキーチェーン不要）。0001〜0004 はこの方法か SQL Editor で適用済みで、`supabase_migrations` には記録が無い。次は 0005（Google Maps 移行、Issue #35）。
 - 記録作成ウィザードの段階間の受け渡しは sessionStorage。撮影画像は data URL（`src/features/ocr/capture-draft.ts`）、豆の下書きは `new-log-draft.ts`。Blob は JSON にできないため。保存時に `dataUrlToBlob` で戻して Storage に上げる。
 - **PWA / オフライン**: `src/app/sw.ts`（serwist）。Supabase REST の GET は NetworkFirst、署名付き画像と地図タイルは StaleWhileRevalidate。書き込みと `/api/*` はキャッシュしない。ログアウトと退会で `clearOfflineCaches()` がデータのキャッシュを消す。開発中は SW 無効。`public/sw.js` は生成物（.gitignore 済み）。
 - **生産国・品種・精製の語彙**（2026-09-24、ADR 0009。精製は 2026-09-25）: `src/lib/vocab/` の `COUNTRY_SHELVES`（生産量順、FAO 2023）/ `VARIETY_SHELVES`（店で見る頻度順）/ `PROCESSES` が別名表と棚・候補の順を兼ねる。`countryDisplayName` / `varietyDisplayName` で日本語の呼び名に寄せ、コレクションの棚・入力記録一覧の生産国チップ・好みの分析・豆フォームの候補（`suggestCountries` / `suggestVarieties`）・OCR の流し込みが全部これを使う。値は入力どおり保存し、寄せるのは表示と絞り込みだけ。順や別名を変えるときは配列を直すだけでよい。

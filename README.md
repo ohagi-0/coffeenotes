@@ -18,7 +18,7 @@
 
 ## 技術スタック
 
-Next.js 15 (App Router) + TypeScript / Tailwind CSS + shadcn/ui / Supabase / Claude Haiku 4.5 Vision (OCR) / react-leaflet + OpenStreetMap / Vercel
+Next.js 15 (App Router) + TypeScript / Tailwind CSS + shadcn/ui / Supabase / Claude Haiku 4.5 Vision (OCR) / react-leaflet + OpenStreetMap（Google Maps Platform へ移行中、ADR 0011） / Vercel
 
 ## 開発
 
@@ -46,4 +46,5 @@ pnpm seed:dev -- --email you@example.com --reset   # --reset は自分の既存�
 
 ## 現在のフェーズ
 
-Phase 1（手入力 MVP）。Phase 0（基盤）は 2026-09-21 に完了。進捗は CLAUDE.md §8 のチェックリストで管理する。
+Phase 0〜5（基盤・手入力・カード読み取り・地図・自宅抽出/焙煎・分析/PWA）は 2026-09-24 までに完了し、本番で動いている。
+いまは店の検索と地図を Google Maps Platform に移行中（ADR 0011、Issue #41）。Phase 6（Capacitor でのネイティブ化）は未着手。進捗は CLAUDE.md §8 のチェックリストで管理する。
