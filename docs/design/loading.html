@@ -26,36 +26,32 @@
 .thin{stroke-width:1.4}
 .self{transform-box:fill-box;transform-origin:center}
 
-/* ---- A ハンドドリップ（8 秒で一巡） ---- */
-.a-spout{animation:a-spout 8s cubic-bezier(.45,0,.2,1) infinite}
-@keyframes a-spout{0%,6%{transform:translate(26px,-22px) rotate(-6deg);opacity:0}16%,70%{transform:translate(0,0) rotate(0);opacity:1}80%,100%{transform:translate(26px,-22px) rotate(-6deg);opacity:0}}
+/* ---- A ハンドドリップ（V60 系の円すい + ガラスサーバー + Stagg 系のケトル。8 秒で一巡） ---- */
+.a-kettle{transform-origin:120px 50px;animation:a-kettle 8s cubic-bezier(.45,0,.2,1) infinite}
+@keyframes a-kettle{0%,6%{transform:translate(10px,-8px) rotate(6deg);opacity:0}16%,70%{transform:translate(0,0) rotate(0);opacity:1}80%,100%{transform:translate(10px,-8px) rotate(6deg);opacity:0}}
 .a-stream{stroke-dasharray:60;stroke-dashoffset:60;animation:a-stream 8s ease-in-out infinite}
 @keyframes a-stream{0%,15%{stroke-dashoffset:60;opacity:0}20%{stroke-dashoffset:0;opacity:1}68%{stroke-dashoffset:0;opacity:1}74%,100%{stroke-dashoffset:-60;opacity:0}}
 .a-sway{animation:a-sway 1.7s ease-in-out infinite alternate}
 @keyframes a-sway{from{transform:translateX(-.6px)}to{transform:translateX(.6px)}}
 .a-drop{opacity:0;animation:a-drop 1.1s cubic-bezier(.5,0,.9,.4) infinite}
-.a-drop.d2{animation-delay:.37s;transform:scale(.8)}.a-drop.d3{animation-delay:.74s}
-@keyframes a-drop{0%{transform:translateY(0) scaleY(1);opacity:0}12%{opacity:.9}85%{transform:translateY(24px) scaleY(1.25);opacity:.9}100%{transform:translateY(26px) scaleY(.6);opacity:0}}
+.a-drop.d2{animation-delay:.37s}.a-drop.d3{animation-delay:.74s}
+@keyframes a-drop{0%{transform:translateY(0) scaleY(1);opacity:0}12%{opacity:.9}85%{transform:translateY(20px) scaleY(1.25);opacity:.9}100%{transform:translateY(22px) scaleY(.6);opacity:0}}
 .a-dropwrap{animation:a-dropgate 8s linear infinite}
 @keyframes a-dropgate{0%,22%{opacity:0}26%,78%{opacity:1}84%,100%{opacity:0}}
 .a-level{transform-box:fill-box;transform-origin:50% 100%;animation:a-level 8s cubic-bezier(.3,.2,.2,1) infinite}
 @keyframes a-level{0%,20%{transform:scaleY(.08);opacity:1}76%{transform:scaleY(1);opacity:1}94%{transform:scaleY(1);opacity:1}100%{transform:scaleY(.08);opacity:0}}
 .a-meniscus{animation:a-men 8s cubic-bezier(.3,.2,.2,1) infinite}
-@keyframes a-men{0%,20%{transform:translateY(0);opacity:0}24%{opacity:1}76%{transform:translateY(-26px);opacity:1}94%{transform:translateY(-26px);opacity:1}100%{transform:translateY(0);opacity:0}}
-.a-knob{animation:a-breathe 4s ease-in-out infinite}
-@keyframes a-breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-.4px)}}
+@keyframes a-men{0%,20%{transform:translateY(0);opacity:0}24%{opacity:1}76%{transform:translateY(-22px);opacity:1}94%{transform:translateY(-22px);opacity:1}100%{transform:translateY(0);opacity:0}}
 
-/* ---- B 焙煎（ドラム。9 秒で一巡） ---- */
-.b-drum{transform-origin:80px 78px;animation:b-spin 10s linear infinite}
-@keyframes b-spin{to{transform:rotate(360deg)}}
-.b-body{transform-origin:80px 78px;animation:b-rock 1.3s ease-in-out infinite}
-@keyframes b-rock{0%,100%{transform:rotate(-.6deg)}50%{transform:rotate(.6deg)}}
-.b-bean{transform-box:fill-box;transform-origin:center;animation:b-tumble 1.3s cubic-bezier(.4,0,.3,1) infinite,b-color 9s linear infinite}
-.b-bean.n2{animation-delay:.22s,0s}.b-bean.n3{animation-delay:.44s,0s}.b-bean.n4{animation-delay:.66s,0s}.b-bean.n5{animation-delay:.88s,0s}.b-bean.n6{animation-delay:1.1s,0s}
-@keyframes b-tumble{0%{transform:translate(0,0) rotate(0)}35%{transform:translate(7px,-11px) rotate(70deg)}55%{transform:translate(-2px,-13px) rotate(140deg)}80%{transform:translate(-7px,-3px) rotate(200deg)}100%{transform:translate(0,0) rotate(360deg)}}
+/* ---- B 焙煎（手網。9 秒で一巡） ---- */
+.b-net{transform-origin:70px 78px;animation:b-shake .9s cubic-bezier(.45,0,.55,1) infinite}
+@keyframes b-shake{0%,100%{transform:translateX(-6px) rotate(-1deg)}50%{transform:translateX(6px) rotate(1deg)}}
+.b-bean{transform-box:fill-box;transform-origin:center;animation:b-jump .9s cubic-bezier(.3,0,.4,1) infinite,b-color 9s linear infinite}
+.b-bean.n2{animation-delay:.12s,0s}.b-bean.n3{animation-delay:.25s,0s}.b-bean.n4{animation-delay:.38s,0s}.b-bean.n5{animation-delay:.5s,0s}.b-bean.n6{animation-delay:.62s,0s}.b-bean.n7{animation-delay:.75s,0s}
+@keyframes b-jump{0%,100%{transform:translateY(0) rotate(0)}45%{transform:translateY(-12px) rotate(120deg)}60%{transform:translateY(-9px) rotate(180deg)}}
 @keyframes b-color{0%{fill:#9DB47A}30%{fill:#D1B870}55%{fill:#B07E48}80%{fill:#6B4324}100%{fill:#4A2A15}}
 .b-flame{transform-box:fill-box;transform-origin:50% 100%;animation:b-flame .55s ease-in-out infinite alternate}
-.b-flame.f2{animation-delay:.18s}.b-flame.f3{animation-delay:.33s}
+.b-flame.f2{animation-delay:.18s}.b-flame.f3{animation-delay:.33s}.b-flame.f4{animation-delay:.45s}
 @keyframes b-flame{from{transform:scaleY(.85) scaleX(1.04)}to{transform:scaleY(1.12) scaleX(.96)}}
 .b-smoke{opacity:0;animation:b-smoke 9s ease-in-out infinite}
 .b-smoke.s2{animation-delay:1.2s}
@@ -64,19 +60,16 @@
 .b-chaff.c2{animation-delay:1.3s}
 @keyframes b-chaff{0%{transform:translate(0,0) rotate(0);opacity:0}15%{opacity:.7}100%{transform:translate(-14px,-30px) rotate(160deg);opacity:0}}
 
-/* ---- C 手挽きミル（ハンドルは上から見た楕円の軌道） ---- */
-.c-crank{transform-origin:80px 62px;animation:c-turn 1.9s cubic-bezier(.5,.1,.5,.9) infinite}
+/* ---- C 手挽きミル（Comandante 系の筒 + ガラスの受け） ---- */
+.c-crank{transform-origin:80px 30px;animation:c-turn 1.9s cubic-bezier(.5,.1,.5,.9) infinite}
 @keyframes c-turn{to{transform:rotate(360deg)}}
-.c-mill{transform-origin:80px 110px;animation:c-wobble 1.9s ease-in-out infinite}
+.c-mill{transform-origin:80px 92px;animation:c-wobble 1.9s ease-in-out infinite}
 @keyframes c-wobble{0%,100%{transform:rotate(-.5deg)}50%{transform:rotate(.5deg)}}
 .c-grain{opacity:0;animation:c-fall 1.3s cubic-bezier(.5,0,.9,.4) infinite}
 .c-grain.g2{animation-delay:.32s}.c-grain.g3{animation-delay:.64s}.c-grain.g4{animation-delay:.96s}
-@keyframes c-fall{0%{transform:translateY(0);opacity:0}15%{opacity:.9}90%{transform:translateY(16px);opacity:.9}100%{transform:translateY(17px);opacity:0}}
+@keyframes c-fall{0%{transform:translateY(0);opacity:0}15%{opacity:.9}90%{transform:translateY(20px);opacity:.9}100%{transform:translateY(21px);opacity:0}}
 .c-pile{transform-box:fill-box;transform-origin:50% 100%;animation:c-pile 9s cubic-bezier(.3,.2,.2,1) infinite}
 @keyframes c-pile{0%{transform:scaleY(.06);opacity:1}88%{transform:scaleY(1);opacity:1}96%{opacity:1}100%{transform:scaleY(.06);opacity:0}}
-.c-bean{opacity:0;animation:c-beanin 3.8s cubic-bezier(.5,0,.9,.4) infinite}
-.c-bean.b2{animation-delay:1.9s}
-@keyframes c-beanin{0%{transform:translateY(-26px) rotate(-20deg);opacity:0}10%{opacity:1}40%{transform:translateY(0) rotate(30deg);opacity:1}46%,100%{transform:translateY(3px) rotate(30deg);opacity:0}}
 </style>
 </head>
 <body>
@@ -111,100 +104,105 @@
       <div class="ph"><div class="a-status"></div><div class="a-body nopad"><div class="ld" role="status">
         <svg viewBox="0 0 160 160" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <defs>
-            <clipPath id="a-server"><path d="M63 106v5c-10 4-17 12-17 20v7a4 4 0 0 0 4 4h40a4 4 0 0 0 4-4v-7c0-8-7-16-17-20v-5z"/></clipPath>
+            <clipPath id="a-server"><path d="M61 116c-10 4-19 12-19 22v8a4 4 0 0 0 4 4h48a4 4 0 0 0 4-4v-8c0-10-9-18-19-22z"/></clipPath>
           </defs>
-          <!-- サーバー（ガラス） -->
+          <!-- ガラスサーバー（丸い胴、首に黒い帯、横に取っ手） -->
           <g class="ink thin">
-            <path d="M63 106v5c-10 4-17 12-17 20v7a4 4 0 0 0 4 4h40a4 4 0 0 0 4-4v-7c0-8-7-16-17-20v-5"/>
-            <path d="M60 106h20"/>
-            <path d="M94 120c7 1 7 13 0 14"/>
+            <path d="M61 116c-10 4-19 12-19 22v8a4 4 0 0 0 4 4h48a4 4 0 0 0 4-4v-8c0-10-9-18-19-22"/>
+            <path d="M98 124c8 1 8 13 0 14"/>
           </g>
+          <path d="M60 113h20" stroke="#F1E8DA" stroke-width="3.2"/>
           <g clip-path="url(#a-server)">
-            <rect class="a-level" x="44" y="112" width="52" height="30" fill="#A8683A" opacity=".85"/>
+            <rect class="a-level" x="40" y="120" width="60" height="30" fill="#A8683A" opacity=".85"/>
           </g>
-          <ellipse class="a-meniscus self" cx="70" cy="138" rx="19" ry="2.2" stroke="#D48C4E" stroke-width="1.2" opacity=".9"/>
-          <!-- ドリッパー（円すい、リブ、紙の縁） -->
+          <ellipse class="a-meniscus self" cx="70" cy="146" rx="22" ry="2.2" stroke="#D48C4E" stroke-width="1.2" opacity=".9"/>
+          <!-- 円すい型ドリッパー（らせんのリブ、太い縁、底のリング） -->
           <g class="ink">
-            <path d="M46 70h48"/>
-            <path d="M50 70l16 30h8l16-30"/>
-            <path d="M58 104h24" class="thin"/>
+            <path d="M44 72h52" stroke-width="2.6"/>
+            <path d="M48 74l18 30h8l18-30"/>
+            <path d="M62 106h16" class="thin"/>
+            <path d="M66 108h8" class="thin"/>
           </g>
           <g class="mute thin">
-            <path d="M60 78l6 12M70 76v14M80 78l-6 12"/>
-            <path d="M52 72c10 3 26 3 36 0" stroke="#F1E8DA" opacity=".5"/>
+            <path d="M58 78c4 6 6 12 7 18M70 77v20M82 78c-4 6-6 12-7 18"/>
           </g>
           <!-- 滴 -->
           <g class="a-dropwrap" fill="#A8683A">
-            <ellipse class="a-drop self" cx="70" cy="103" rx="1.6" ry="2.1"/>
-            <ellipse class="a-drop d2 self" cx="70" cy="103" rx="1.6" ry="2.1"/>
-            <ellipse class="a-drop d3 self" cx="70" cy="103" rx="1.6" ry="2.1"/>
+            <ellipse class="a-drop self" cx="70" cy="110" rx="1.5" ry="2"/>
+            <ellipse class="a-drop d2 self" cx="70" cy="110" rx="1.5" ry="2"/>
+            <ellipse class="a-drop d3 self" cx="70" cy="110" rx="1.5" ry="2"/>
           </g>
-          <!-- 湯の筋（注ぎ口の先から円すいの中へ） -->
+          <!-- 湯の筋 -->
           <g class="a-sway">
-            <path class="a-stream cu" d="M76 40c-2 10-4 20-5 32"/>
-            <path class="a-stream" d="M76 40c-2 10-4 20-5 32" stroke="#F1E8DA" stroke-width=".7" opacity=".6"/>
+            <path class="a-stream cu" d="M76 56c-2 10-4 18-5 30"/>
+            <path class="a-stream" d="M76 56c-2 10-4 18-5 30" stroke="#F1E8DA" stroke-width=".7" opacity=".6"/>
           </g>
-          <!-- 注ぎ口（ケトルの本体は画面の外。右上から入ってくる） -->
-          <g class="a-spout cu">
-            <path d="M150 16c-22-2-46 2-62 14-5 4-9 7-12 10" stroke-width="2.4"/>
-            <path d="M150 12v8" class="thin"/>
+          <!-- 電気ケトル（逆台形の胴、長く細い注ぎ口、後ろに張り出した握り） -->
+          <g class="a-kettle cu">
+            <path d="M104 36l28-6 8 32-32 8z"/>
+            <path d="M104 36l28-6" stroke-width="2.6"/>
+            <path d="M117 33l-1-5" class="thin"/>
+            <circle cx="115.5" cy="27" r="1.6" fill="#D48C4E"/>
+            <path d="M132 30c12 2 20 14 12 26" stroke-width="2.6"/>
+            <path d="M106 62c-12-2-24-4-30-6" stroke-width="2.6"/>
+            <path d="M76 56c-2 0-3 .4-4 1" class="thin"/>
           </g>
         </svg>
         <span class="t">お湯を注いでいます…</span>
       </div></div></div>
-      <p class="cmp-note">ケトルは画面の外。注ぎ口だけが右上から入ってきて、細い湯の筋が揺れながら円すいへ。滴は重力の緩急で落ち、サーバーの中で水面（メニスカス）が上がる。注ぎ終えるとケトルが戻り、一呼吸おいて最初から。8 秒で一巡。文言は「お湯を注いでいます…」。</p>
+      <p class="cmp-note">形は定番の道具に寄せた（ロゴは付けない）: 円すい型ドリッパーはらせんのリブと底のリング、ガラスサーバーは丸い胴と首の黒い帯、ケトルは逆台形の胴に長く細い注ぎ口と後ろに張り出した握り（電気ケトルの定番の形）。ケトルが右上から寄ってきて、細い湯の筋が揺れながら円すいへ。滴は重力の緩急で落ち、サーバーの水面が上がる。注ぎ終えるとケトルが引き、一呼吸おいて最初から。8 秒で一巡。文言は「お湯を注いでいます…」。</p>
     </div>
 
     <div class="cmp-col">
-      <div class="cmp-lab">B · 焙煎</div>
+      <div class="cmp-lab">B · 焙煎（手網）</div>
       <div class="ph"><div class="a-status"></div><div class="a-body nopad"><div class="ld" role="status">
         <svg viewBox="0 0 160 160" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <defs>
-            <clipPath id="b-in"><circle cx="80" cy="78" r="31"/></clipPath>
+            <clipPath id="b-in"><rect x="38" y="60" width="64" height="30" rx="4"/></clipPath>
+            <pattern id="b-mesh" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <path d="M0 3h6M3 0v6" stroke="#6E5A4A" stroke-width=".6"/>
+            </pattern>
           </defs>
-          <g class="b-body">
-            <!-- ドラムの胴 -->
-            <circle class="ink" cx="80" cy="78" r="34"/>
-            <circle class="mute thin" cx="80" cy="78" r="31"/>
-            <!-- 回る穴あき板 -->
-            <g class="b-drum" fill="#6E5A4A" stroke="none">
-              <circle cx="80" cy="50" r="1.3"/><circle cx="94" cy="54" r="1.3"/><circle cx="104" cy="64" r="1.3"/><circle cx="108" cy="78" r="1.3"/><circle cx="104" cy="92" r="1.3"/><circle cx="94" cy="102" r="1.3"/>
-              <circle cx="80" cy="106" r="1.3"/><circle cx="66" cy="102" r="1.3"/><circle cx="56" cy="92" r="1.3"/><circle cx="52" cy="78" r="1.3"/><circle cx="56" cy="64" r="1.3"/><circle cx="66" cy="54" r="1.3"/>
-            </g>
-            <!-- 豆（ドラムの中、下側で転がる） -->
+          <g class="b-net">
+            <!-- 手網（金網のかご + 長い柄） -->
+            <rect x="38" y="60" width="64" height="30" rx="4" fill="url(#b-mesh)"/>
+            <rect class="ink" x="38" y="60" width="64" height="30" rx="4"/>
+            <path class="ink" d="M102 66l40 8M102 84l40-8" class="thin"/>
+            <path class="ink" d="M140 70v8" stroke-width="3"/>
+            <!-- 豆（網の中で跳ねる） -->
             <g clip-path="url(#b-in)" stroke="#2A150A" stroke-width="1">
-              <ellipse class="b-bean n1" cx="66" cy="92" rx="6.5" ry="4.2"/>
-              <ellipse class="b-bean n2" cx="78" cy="96" rx="6.5" ry="4.2"/>
-              <ellipse class="b-bean n3" cx="90" cy="92" rx="6.5" ry="4.2"/>
-              <ellipse class="b-bean n4" cx="72" cy="86" rx="6.5" ry="4.2"/>
-              <ellipse class="b-bean n5" cx="84" cy="86" rx="6.5" ry="4.2"/>
-              <ellipse class="b-bean n6" cx="96" cy="84" rx="6.5" ry="4.2"/>
+              <ellipse class="b-bean n1" cx="48" cy="84" rx="5.5" ry="3.6"/>
+              <ellipse class="b-bean n2" cx="58" cy="86" rx="5.5" ry="3.6"/>
+              <ellipse class="b-bean n3" cx="68" cy="84" rx="5.5" ry="3.6"/>
+              <ellipse class="b-bean n4" cx="78" cy="86" rx="5.5" ry="3.6"/>
+              <ellipse class="b-bean n5" cx="88" cy="84" rx="5.5" ry="3.6"/>
+              <ellipse class="b-bean n6" cx="63" cy="79" rx="5.5" ry="3.6"/>
+              <ellipse class="b-bean n7" cx="83" cy="79" rx="5.5" ry="3.6"/>
             </g>
-            <!-- 軸 -->
-            <circle class="ink thin" cx="80" cy="78" r="3"/>
-            <path class="ink thin" d="M114 78h14M46 78H32"/>
             <!-- チャフ -->
             <g fill="#C9B16A" stroke="none">
-              <path class="b-chaff self" d="M100 52l3 1-2 2z"/>
-              <path class="b-chaff c2 self" d="M60 50l3 1-2 2z"/>
+              <path class="b-chaff self" d="M60 58l3 1-2 2z"/>
+              <path class="b-chaff c2 self" d="M84 58l3 1-2 2z"/>
             </g>
           </g>
-          <!-- 火 -->
+          <!-- ガスの火（五徳と炎） -->
           <g class="cu" stroke-width="1.8">
-            <path class="b-flame" d="M64 126c-4-6 0-10 2-14 2 4 6 8 2 14"/>
-            <path class="b-flame f2" d="M80 128c-5-7 0-12 2-16 2 5 7 9 2 16"/>
-            <path class="b-flame f3" d="M96 126c-4-6 0-10 2-14 2 4 6 8 2 14"/>
-            <path d="M50 130h60" class="thin"/>
+            <path class="b-flame" d="M52 122c-4-6 0-10 2-14 2 4 6 8 2 14"/>
+            <path class="b-flame f2" d="M64 124c-5-7 0-12 2-16 2 5 7 9 2 16"/>
+            <path class="b-flame f3" d="M78 124c-5-7 0-12 2-16 2 5 7 9 2 16"/>
+            <path class="b-flame f4" d="M92 122c-4-6 0-10 2-14 2 4 6 8 2 14"/>
+            <path d="M40 126h64" class="thin"/>
+            <path d="M46 102h52" class="thin" stroke="#6E5A4A"/>
           </g>
           <!-- 煙（深煎りに入ってから） -->
           <g class="mute thin">
-            <path class="b-smoke" d="M74 44c-3-4 3-7 0-11"/>
-            <path class="b-smoke s2" d="M88 42c-3-4 3-7 0-11"/>
+            <path class="b-smoke" d="M62 52c-3-4 3-7 0-11"/>
+            <path class="b-smoke s2" d="M80 50c-3-4 3-7 0-11"/>
           </g>
         </svg>
         <span class="t">豆を煎っています…</span>
       </div></div></div>
-      <p class="cmp-note">ドラムの穴あき板がゆっくり回り、中の豆がかき上げられては落ちる（6 粒を少しずつずらした転がり）。色は生豆の緑 → 黄 → シナモン → 茶 → 深煎りへ 9 秒で。深煎りに入ると薄い煙、ときどきチャフが舞う。火は下で揺れる。文言は「豆を煎っています…」。</p>
+      <p class="cmp-note">自家焙煎の定番、手網。金網のかご（網目の柄）と長い柄を、五徳の上で左右に振る。中の豆が 7 粒、少しずつずれて跳ね、色は生豆の緑 → 黄 → シナモン → 茶 → 深煎りへ 9 秒で。深煎りに入ると薄い煙、ときどきチャフが舞う。文言は「豆を煎っています…」。</p>
     </div>
 
     <div class="cmp-col">
@@ -212,48 +210,40 @@
       <div class="ph"><div class="a-status"></div><div class="a-body nopad"><div class="ld" role="status">
         <svg viewBox="0 0 160 160" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <defs>
-            <clipPath id="c-drawer"><rect x="54" y="112" width="52" height="14"/></clipPath>
+            <clipPath id="c-jar"><path d="M64 96h32v24a8 8 0 0 1-8 8H72a8 8 0 0 1-8-8z"/></clipPath>
           </defs>
-          <!-- 上から落ちてくる豆 -->
-          <g stroke="#2A150A" stroke-width="1" fill="#5E3A1E">
-            <ellipse class="c-bean self" cx="78" cy="66" rx="5" ry="3.2"/>
-            <ellipse class="c-bean b2 self" cx="84" cy="66" rx="5" ry="3.2"/>
-          </g>
           <g class="c-mill">
-            <!-- ホッパー（鋳物の椀） -->
-            <path class="ink" d="M58 84c0-12 10-20 22-20s22 8 22 20"/>
-            <path class="ink thin" d="M62 74c6-4 30-4 36 0"/>
-            <!-- 胴（木の箱） -->
-            <g class="ink">
-              <path d="M52 84h56v44a4 4 0 0 1-4 4H56a4 4 0 0 1-4-4z"/>
-              <path d="M52 110h56" class="thin"/>
-            </g>
-            <g class="mute thin"><path d="M58 90v14M102 90v14"/></g>
-            <!-- 引き出しの取っ手 -->
-            <path class="cu" d="M76 120h8" stroke-width="2.4"/>
-            <!-- 落ちる粉と、引き出しに溜まる粉 -->
+            <!-- 筒（木目の胴、上に金属の蓋、下に金属のリング） -->
+            <path class="ink" d="M64 40h32v50H64z"/>
+            <ellipse class="ink" cx="80" cy="40" rx="16" ry="4"/>
+            <path class="mute thin" d="M70 46v40M90 46v40"/>
+            <path class="ink thin" d="M64 86h32"/>
+            <!-- ガラスの受け -->
+            <path class="ink thin" d="M64 96h32v24a8 8 0 0 1-8 8H72a8 8 0 0 1-8-8z"/>
+            <path class="ink" d="M62 94h36" stroke-width="2.6"/>
+            <!-- 落ちる粉と、溜まる粉 -->
             <g fill="#A8683A" stroke="none">
-              <circle class="c-grain self" cx="76" cy="92" r="1.3"/>
-              <circle class="c-grain g2 self" cx="81" cy="92" r="1.3"/>
-              <circle class="c-grain g3 self" cx="85" cy="92" r="1.3"/>
-              <circle class="c-grain g4 self" cx="79" cy="92" r="1.3"/>
+              <circle class="c-grain self" cx="77" cy="98" r="1.3"/>
+              <circle class="c-grain g2 self" cx="81" cy="98" r="1.3"/>
+              <circle class="c-grain g3 self" cx="84" cy="98" r="1.3"/>
+              <circle class="c-grain g4 self" cx="79" cy="98" r="1.3"/>
             </g>
-            <g clip-path="url(#c-drawer)">
-              <path class="c-pile" d="M56 126c6-9 14-12 24-12s18 3 24 12z" fill="#A8683A" opacity=".9"/>
+            <g clip-path="url(#c-jar)">
+              <path class="c-pile" d="M64 128c4-9 9-13 16-13s12 4 16 13z" fill="#A8683A" opacity=".9"/>
             </g>
           </g>
-          <!-- クランク（上から見た楕円の軌道。奥では細く、手前では太く見える） -->
-          <circle class="cu" cx="80" cy="62" r="2.6" fill="#17120F"/>
-          <g transform="translate(80 62) scale(1 .38) translate(-80 -62)">
+          <!-- クランク（蓋の中心から。上から見た楕円の軌道。先に木の握り） -->
+          <path class="cu" d="M80 36v-6" stroke-width="2.4"/>
+          <g transform="translate(80 30) scale(1 .38) translate(-80 -30)">
             <g class="c-crank cu">
-              <path d="M80 62h34" stroke-width="2.2"/>
-              <circle cx="116" cy="62" r="4.5" fill="#17120F"/>
+              <path d="M80 30h40" stroke-width="2.4"/>
+              <ellipse cx="124" cy="30" rx="4" ry="6" fill="#6B4A30" stroke="#D48C4E"/>
             </g>
           </g>
         </svg>
         <span class="t">豆を挽いています…</span>
       </div></div></div>
-      <p class="cmp-note">鋳物の椀と木の箱の手挽きミル。ハンドルは上から見た楕円の軌道で回り（奥で細く、手前で太く見える）、胴がわずかに揺れる。数秒おきに豆が椀へ落ち、引き出しに粉が溜まっていく。9 秒で一杯。文言は「豆を挽いています…」。</p>
+      <p class="cmp-note">縦長の筒に木目、上に金属の蓋、下にガラスの受け、という手挽きミルの定番の形。蓋の中心から出たクランクが上から見た楕円の軌道で回り、先の木の握りが手前で大きく奥で小さく見える。筒がわずかに揺れ、受けに粉が溜まっていく。9 秒で一杯。文言は「豆を挽いています…」。</p>
     </div>
 
   </div>
