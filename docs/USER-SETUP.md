@@ -106,17 +106,44 @@ iPhone の Safari（または Android の Chrome）で https://coffee-notes.app 
 
 ---
 
-## 4. Vercel と GitHub の連携（任意、5 分）
+## 4. Vercel と GitHub の連携 — 済み（2026-09-24 確認）
 
-いまは Claude Code が `vercel deploy --prod` で手動デプロイしている。連携すると `main` への push だけで自動デプロイになる。
+初回の `vercel deploy` のときに CLI がプロジェクトと `ohagi-0/coffeenotes` を自動で紐づけていた。`main` への push で本番デプロイが走ることも確認済み。やることは無い。
 
-1. https://vercel.com/account/login-connections → **GitHub** の **Connect** → GitHub（ohagi-0）で認可。
-2. https://vercel.com/kotas-projects-66f79ae1/coffeenotes/settings/git → **Connect Git Repository** → GitHub → `ohagi-0/coffeenotes` を選ぶ。
-   Vercel の GitHub App のインストールを求められたら、対象を **Only select repositories → coffeenotes** にして Install。
-3. Production Branch が `main` になっていることを確認して保存。直後に 1 回自動デプロイが走ることがある（問題ない）。
+---
 
-**Claude Code に伝えること**: 「Vercel と GitHub をつないだ」
-→ CLAUDE.md の運用メモを「push で自動デプロイ」に書き換える。
+## 5. Google Maps Platform（店の検索と地図を Google に移す）— 30 分
+
+決定の理由は `docs/decisions/0011-google-maps-platform.md`。ここでの設定が済むまで、アプリの挙動は変わらない（今の OpenStreetMap のまま）。無料枠の範囲に収まる見込みだが、請求先（クレジットカード）の登録は必須。
+
+1. https://console.cloud.google.com/ で既存のプロジェクト `coffeenotes` を選ぶ。
+2. **お支払い** → 請求先アカウントをこのプロジェクトに紐づける（カード登録）。
+3. **API とサービス → ライブラリ** で次の 2 つだけ **有効にする**。
+   - Maps JavaScript API
+   - Places API (New)（「Places API」の旧版や Geocoding API は有効にしない）
+4. **API とサービス → 認証情報 → 認証情報を作成 → API キー** で鍵を 2 つ作る。
+   - **サーバー用**（名前: `coffeenotes-server`）: API の制限 = 「キーを制限」→ **Places API (New)** のみ。アプリケーションの制限は **なし**（Vercel の送信元 IP は固定できないため）。
+   - **ブラウザ用**（名前: `coffeenotes-browser`）: API の制限 = **Maps JavaScript API** のみ。アプリケーションの制限 = **ウェブサイト（HTTP リファラー）** で次の 6 つを追加。
+     - `https://coffee-notes.app/*`
+     - `https://*.vercel.app/*`
+     - `http://localhost:3100/*`
+     - `http://127.0.0.1:3100/*`
+     - `capacitor://localhost/*`
+     - `https://localhost/*`
+5. **地図 ID** を作る: **Google マップ プラットフォーム → 地図の管理 → 地図 ID → 地図 ID を作成**。名前 `coffeenotes`、地図の種類 **JavaScript**、**ベクター**。続けて **地図のスタイル** を作り（ダーク系。DESIGN.md の配色に近い暗い色）、この地図 ID に紐づける。
+6. **お支払い → 予算とアラート → 予算を作成** で、月額 **500 円** の予算にしてアラートのメールが届くようにする。
+7. 鍵は会話に貼らず、ターミナルで次のとおりファイルに置く（`pbpaste` はコピーした内容を書き出す。コピー → コマンド、を 3 回繰り返す）。
+
+   ```
+   mkdir -p ~/.coffeenotes-secrets
+   pbpaste > ~/.coffeenotes-secrets/google-maps-server.txt
+   pbpaste > ~/.coffeenotes-secrets/google-maps-browser.txt
+   pbpaste > ~/.coffeenotes-secrets/google-map-id.txt
+   ```
+
+   サーバー鍵 → ブラウザ鍵 → 地図 ID の順にコピーして、1 行ずつ実行する。
+
+**Claude Code に伝えること**: 「Google の設定をした。鍵を置いた」→ Vercel（Production / Preview）と `.env.local` に設定し、ファイルを消す。切り替え（`GEO_PROVIDER=google` など）はまだしない。
 
 ---
 

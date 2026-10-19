@@ -2,12 +2,25 @@
 // ビルド時のプリレンダーで落ちないよう、読み出しは遅延（関数呼び出し時）にする。
 import { z } from 'zod';
 
-const publicEnvSchema = z.object({
-  NEXT_PUBLIC_SUPABASE_URL: z.url({ message: 'NEXT_PUBLIC_SUPABASE_URL が不正です' }),
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1, 'NEXT_PUBLIC_SUPABASE_ANON_KEY が未設定です'),
-  // /api/* とログインのリダイレクト先はこの絶対 URL を基点にする（ネイティブ化制約 N-2）
-  NEXT_PUBLIC_API_BASE_URL: z.url({ message: 'NEXT_PUBLIC_API_BASE_URL が不正です' }),
-});
+const publicEnvSchema = z
+  .object({
+    NEXT_PUBLIC_SUPABASE_URL: z.url({ message: 'NEXT_PUBLIC_SUPABASE_URL が不正です' }),
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1, 'NEXT_PUBLIC_SUPABASE_ANON_KEY が未設定です'),
+    // /api/* とログインのリダイレクト先はこの絶対 URL を基点にする（ネイティブ化制約 N-2）
+    NEXT_PUBLIC_API_BASE_URL: z.url({ message: 'NEXT_PUBLIC_API_BASE_URL が不正です' }),
+    // 地図の描画元。google への切り替えは ADR 0011（既定は osm のまま）
+    NEXT_PUBLIC_MAP_PROVIDER: z.enum(['google', 'osm']).default('osm'),
+    NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY: z.string().min(1).optional(),
+    NEXT_PUBLIC_GOOGLE_MAP_ID: z.string().min(1).optional(),
+  })
+  .refine((v) => v.NEXT_PUBLIC_MAP_PROVIDER !== 'google' || !!v.NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY, {
+    message: 'NEXT_PUBLIC_MAP_PROVIDER=google のときは NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY が必要です',
+    path: ['NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY'],
+  })
+  .refine((v) => v.NEXT_PUBLIC_MAP_PROVIDER !== 'google' || !!v.NEXT_PUBLIC_GOOGLE_MAP_ID, {
+    message: 'NEXT_PUBLIC_MAP_PROVIDER=google のときは NEXT_PUBLIC_GOOGLE_MAP_ID が必要です',
+    path: ['NEXT_PUBLIC_GOOGLE_MAP_ID'],
+  });
 
 const serverEnvSchema = z
   .object({
@@ -40,6 +53,9 @@ export function getPublicEnv(): PublicEnv {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
+    NEXT_PUBLIC_MAP_PROVIDER: process.env.NEXT_PUBLIC_MAP_PROVIDER || undefined,
+    NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY: process.env.NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY || undefined,
+    NEXT_PUBLIC_GOOGLE_MAP_ID: process.env.NEXT_PUBLIC_GOOGLE_MAP_ID || undefined,
   });
   return publicEnvCache;
 }

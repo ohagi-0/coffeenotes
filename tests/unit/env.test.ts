@@ -38,4 +38,20 @@ describe('env', () => {
     expect(env.OCR_PROVIDER).toBe('none');
     expect(env.GEO_PROVIDER).toBe('nominatim');
   });
+
+  it('地図の既定は osm で、Google の鍵は無くてよい', () => {
+    delete process.env.NEXT_PUBLIC_MAP_PROVIDER;
+    expect(getPublicEnv().NEXT_PUBLIC_MAP_PROVIDER).toBe('osm');
+  });
+
+  it('NEXT_PUBLIC_MAP_PROVIDER=google は鍵と Map ID が揃わないと例外', () => {
+    process.env.NEXT_PUBLIC_MAP_PROVIDER = 'google';
+    expect(() => getPublicEnv()).toThrow();
+    process.env.NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY = 'k';
+    resetEnvCacheForTest();
+    expect(() => getPublicEnv()).toThrow();
+    process.env.NEXT_PUBLIC_GOOGLE_MAP_ID = 'm';
+    resetEnvCacheForTest();
+    expect(getPublicEnv().NEXT_PUBLIC_MAP_PROVIDER).toBe('google');
+  });
 });
