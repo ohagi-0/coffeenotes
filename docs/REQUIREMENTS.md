@@ -473,7 +473,7 @@ roasts 1 ─── * logs        （logs.roast_id は NULL 可。どのバッチ
 | # | 論点 | 選択肢 | 期限 |
 |---|---|---|---|
 | ~~Q1~~ | OCR 方式 | **決定: A. Claude Haiku Vision**（2026-09-21） | — |
-| ~~Q2~~ | 店候補の取得元 | **決定: まず Nominatim、手入力 + 地図タップを Must（F-SHOP-6/7）。Google Places は精度不満時に差し替え**。2026-10-19 追記: 店名検索の外れが多いという指摘を受け、OSM のまま照合を作り直した（周辺の店を別名つきで一括取得して端末であいまい照合、店名検索は Photon）。Google Places は規約上 OSM の地図と併用できないため見送り（ADR 0010） | — |
+| ~~Q2~~ | 店候補の取得元 | **決定: まず Nominatim、手入力 + 地図タップを Must（F-SHOP-6/7）。Google Places は精度不満時に差し替え**。2026-10-19 追記: 店名検索の外れが多いという指摘を受け、OSM のまま照合を作り直した（周辺の店を別名つきで一括取得して端末であいまい照合、店名検索は Photon）。Google Places は規約上 OSM の地図と併用できないため見送り（ADR 0010）。**2026-10-19 の追記（2）: Kota の決定で Google Maps Platform（地図ごと）に移行する（ADR 0011）。Google の店は place_id だけ永続し、名前・住所・座標は 30 日以内に更新** | — |
 | ~~Q3~~ | ログイン方式 | **決定: メールリンク + Google の両方** | — |
 | ~~Q4~~ | 星評価の刻み | **決定: 0.5 刻み** | — |
 | ~~Q5~~ | ロースター名の名寄せ | **決定: 全ユーザー共通マスタ**（読み取り全員可、書き込み認証ユーザー可。表記ゆれ統合は将来） | — |
@@ -587,7 +587,7 @@ roasts 1 ─── * logs        （logs.roast_id は NULL 可。どのバッチ
 | N-1 | フロントは静的出力（`output: 'export'`）できる構成にする。サーバーコンポーネントに依存する画面を作らない | Capacitor は静的な Web 資産を包む。Next.js のサーバー機能はアプリ内に入らない |
 | N-2 | `/api/ocr` `/api/geo` などのサーバー処理は、環境変数 `NEXT_PUBLIC_API_BASE_URL` の絶対 URL で呼ぶ | アプリ内からは Vercel 上の API を叩くため、相対パスでは届かない |
 | N-3 | 認証のリダイレクト URL をカスタムスキーム（`coffeelog://`）でも受けられるようにしておく | ストア版のマジックリンク・OAuth 戻り先 |
-| N-4 | ブラウザ固有 API（`navigator.share`、Geolocation、カメラ）は `src/lib/platform/` の薄いラッパー経由で呼ぶ | Capacitor プラグインへの差し替えを 1 箇所で済ませる |
+| N-4 | ブラウザ固有 API（`navigator.share`、Geolocation、カメラ）は `src/lib/platform/` の薄いラッパー経由で呼ぶ | Capacitor プラグインへの差し替えを 1 箇所で済ませる。地図（Google Maps JavaScript API）は WebView の参照元（`capacitor://localhost`、`https://localhost`）をブラウザ用キーのリファラー許可に入れておく（ADR 0011） |
 | N-5 | 画像は Blob として扱い、`File` 入力に依存する処理を UI 層に閉じ込める | ネイティブカメラプラグインは Blob/base64 で返す |
 
 ### 13.3 ネイティブ化時に必要になるもの

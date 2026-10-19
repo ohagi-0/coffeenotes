@@ -51,3 +51,7 @@ C を採る（ADR 0003 の「まず OSM」を維持）。
 - Google Maps Platform Service Specific Terms（2025-05-01 版）5.3「No use with a non-Google map」、5.4（Places の緯度経度は 30 日まで）: https://cloud.google.com/archive/maps-platform/terms/maps-service-terms-20250501
 - Foursquare の料金（Pro エンドポイントは月 500 回まで無料、その後 1,000 回あたり 15 ドル）: https://foursquare.com/products/pricing/
 - Photon（komoot が公開している OSM の検索サーバー。公平な利用を求め、過度な利用は制限される）: https://photon.komoot.io
+
+## 追記（2026-10-19）
+
+Kota の決定で Google Maps Platform に移行する（ADR 0011）。この ADR の OSM（Overpass / Photon / Nominatim）による検索は、`GEO_PROVIDER=nominatim` のときの挙動として履歴に残す。

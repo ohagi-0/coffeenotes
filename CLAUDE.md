@@ -26,7 +26,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | BaaS | Supabase（Postgres / Auth / Storage） | RLS 必須。`supabase/migrations` で管理 |
 | データ取得 | Supabase JS v2 + TanStack Query | 画面はブラウザから直接叩く。`@supabase/ssr` は Route Handler 用の `src/lib/supabase/server.ts` でのみ使う |
 | バリデーション | Zod | フォーム・API・OCR 出力すべてに適用 |
-| 地図 | react-leaflet + OpenStreetMap タイル | API キー不要 |
+| 地図 | `@vis.gl/react-google-maps`（Google マップ、Map ID）/ react-leaflet + OSM タイル（戻し用） | `NEXT_PUBLIC_MAP_PROVIDER=google\|osm`（既定 osm）で出し分け（`components/map/shop-map-switch.tsx`）。ADR 0011。切り替え後の OSM 版の削除は #40 の後始末 |
 | QR | @zxing/browser | ブラウザ内で完結 |
 | テスト | Vitest（単体）+ Playwright（E2E、主要フローのみ） | |
 | Lint / Format | ESLint（next/core-web-vitals）+ Prettier | コミット前に `pnpm lint && pnpm typecheck` |
@@ -38,7 +38,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 項目 | 決定 | 実装上の扱い |
 |---|---|---|
 | OCR エンジン | Claude Haiku 4.5 Vision | `OcrProvider` 抽象化は維持（§5.2） |
-| 店候補・ジオコーディング | まず Nominatim。**店名・住所の手入力と地図タップでの位置指定は Must**。**2026-10-19 に Google Maps Platform への移行を決定**（ADR 0011、Issue #41（まとめ）と #33〜#40。地図も Google マップに替える。切り替えまでは `GEO_PROVIDER=nominatim` / `NEXT_PUBLIC_MAP_PROVIDER=osm` のまま） | `GeoProvider` 抽象化。候補検索は入力補助であり、失敗しても手入力で店を作れること。Google 由来の店は place_id だけ永続、名前・住所・座標は 30 日以内に更新 |
+| 店候補・ジオコーディング | まず Nominatim。**店名・住所の手入力と地図タップでの位置指定は Must**。**2026-10-19 に Google Maps Platform への移行を決定**（ADR 0011、Issue #41（まとめ）と #33〜#40。地図も Google マップに替える。**コードは #33〜#39 で実装済み（2026-10-19）。本番の切り替えは Vercel の `GEO_PROVIDER=google` / `NEXT_PUBLIC_MAP_PROVIDER=google`、戻すなら `nominatim` / `osm` に戻して再デプロイ。完全に戻すなら git タグ `before-google-maps-cutover`**） | `GeoProvider` 抽象化。候補検索は入力補助であり、失敗しても手入力で店を作れること。Google 由来の店は place_id だけ永続、名前・住所・座標は 30 日以内に更新 |
 | ログイン方式 | メールリンク + Google の両方 | Supabase Auth で両プロバイダ有効化。同一メールは同一アカウント |
 | 星の刻み | 0.5 刻み（1.0〜5.0） | DB `numeric(2,1)`。UI は星の左右半分タップ |
 | ロースター名 | 全ユーザー共通マスタ | `roasters` は RLS で読み取り全員可・INSERT は認証ユーザー可・UPDATE/DELETE は作成者のみ |
@@ -131,6 +131,7 @@ REQUIREMENTS.md §13.2 の N-1〜N-5。要点:
 - **静的出力との関係**（2026-09-22 検証）: 現状のコードは `output: 'export'` でビルドが通る。`/api/*` は自動で除外される（Vercel 側が配信し、アプリは本番 URL 経由で呼ぶ）。動的ルート `[id]` は落ちるので使わない（ADR 0008。URL は `src/lib/routes.ts` で組み立てる）。
 - **Prettier の対象外**: Markdown と `docs/design/` は整形しない。`pnpm format` を打っても要件書やモックは変わらない。
 - **カード読み取りの流れ**（Phase 2）: `/logs/new?step=capture` で OS カメラ→`compressImage`→data URL を sessionStorage（`features/ocr/capture-draft.ts`）→`?step=ocr` が `/api/ocr` を Bearer 付き絶対 URL で呼ぶ→`extractionToBeanForm` で `BeanForm` の `defaultValues` と `confidence`→③保存で豆を作ってから Storage へ画像と `bean_images` 行、`ocr_raw`。上限は DB 関数 `consume_ocr_quota()`（50 回/日、日本時間）。`OCR_PROVIDER=none` なら 503 で手入力へ。
+- **店候補（Google 版。ADR 0011）**: `GEO_PROVIDER=google` では `lib/geo/providers/google.ts`（Places API (New)）が周辺（Nearby Search、20 件）・入力中の予測（Autocomplete、座標なし）・選択時の座標（Place Details）を返し、`geocode` だけ Nominatim に委譲する合成プロバイダ（`lib/geo/factory.ts`）。`/api/geo` は `op=search` で予測（`suggestions`）、`op=details&id=` で座標を返す。検索シート（`shop-picker.tsx`）は予測を Google の順のまま出し、選んだら details で座標を取り、一覧の下に公式ロゴ（`public/google-maps-logo.svg`）を出す。Autocomplete のセッションは開いたときに作り、選ぶか閉じたら捨てる。Google の店は `shops.place_provider='google'` と place_id だけ永続し、名前・住所・座標は `place_synced_at` から 30 日以内に更新する（下の「Google の店の 30 日更新」）。エクスポートは Google の店の住所・座標を出さずリンクだけ、Service Worker は Google の地図・API をキャッシュしない。以下の OSM の記述は `GEO_PROVIDER=nominatim` のときの挙動。
 - **店候補**（Phase 3、2026-10-19 に作り直し。ADR 0010）: `/api/geo`（認証必須）→ `GeoProvider`。`nearby` は Overpass（cafe / coffee、別名つき、最大 400 件。サーバーで 10 分使い回す）で、落ちていれば Photon の周辺検索に切り替える。`search`（店名）は Photon（部分一致・近い順。かなだけの語はローマ字でも引く）、だめなら Nominatim。`geocode`（住所 → 座標）は Nominatim。検索シートは開いたら現在地を取り、近くの店をまとめて読み込んで `src/lib/geo/match.ts` で端末側であいまい照合する（カタカナ ⇄ 英字）。店の欄は共通部品 `components/shops/shop-field.tsx`（記録作成・記録の編集・豆の編集の「飲んだ店」）、店の作成は `features/shops/find-or-create-shop.ts`（同じ OSM の ID の店は使い回す）、記録の店の付け替えは `features/logs/change-log-shop.ts`（0 件になった元の店は消す）。公開サーバーなので User-Agent を付ける。この作り直しの前に戻すなら git タグ `before-shop-search-rework`（2026-10-19）。
 - **Google の店の 30 日更新**（ADR 0011、#38）: `/api/places/refresh`（`CRON_SECRET` の Bearer）が `createServiceClient()` で全ユーザーの `place_provider='google'` の店を読み、`place_synced_at` が 20 日より古いものを Place Details で取り直す（最大 200 件/回。`features/shops/refresh-google-shops.ts`）。移転は新 place_id に付け替え、消滅は手入力の店に落とす（名前だけ残す）。service role を使うのはアカウント削除以外ではここだけで、Vercel に `SUPABASE_SERVICE_ROLE_KEY` が要る。`.github/workflows/google-places-refresh.yml` が週 1 回（月曜 03:00 JST）叩き、`failed` が 0 でなければジョブを失敗にして通知する。店詳細を開いたときにも 30 日超なら取り直す（`use-lazy-refresh.ts`）。
 - **アカウント削除**（F-AUTH-3）: service role は使わない。クライアントが Storage の自分のプレフィックスを消してから DB 関数 `delete_my_account()`（SECURITY DEFINER）を呼び、ローカルの signOut。
@@ -235,7 +236,10 @@ SUPABASE_SERVICE_ROLE_KEY=        # サーバーのみ
 OCR_PROVIDER=claude|none          # none はOCRを無効化（開発時の費用節約）
 ANTHROPIC_API_KEY=                # サーバーのみ
 GEO_PROVIDER=nominatim|google
-GOOGLE_MAPS_API_KEY=              # GEO_PROVIDER=google のとき
+GOOGLE_MAPS_API_KEY=              # サーバー鍵（Places API (New) のみ）。GEO_PROVIDER=google と 30 日更新ジョブで必要
+NEXT_PUBLIC_MAP_PROVIDER=osm|google   # 地図の描画元（既定 osm）。google のとき下の 2 つが必須
+NEXT_PUBLIC_GOOGLE_MAPS_BROWSER_KEY=  # ブラウザ鍵（Maps JavaScript API のみ・HTTP リファラー制限）
+NEXT_PUBLIC_GOOGLE_MAP_ID=            # ベクター Map ID（ダーク配色のスタイルを紐づける）
 SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID=   # ローカル Supabase の config.toml から env() で参照
 SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET=
 CRON_SECRET=                      # サーバーのみ。/api/ocr/warm を叩く GitHub Actions の Secrets と同じ値
@@ -294,7 +298,8 @@ E2E_TEST_PASSWORD=
 - [x] Phase 4 自宅抽出・焙煎: レシピの折りたたみ、比率の自動計算、前回のレシピを複製、焙煎バッチ（一覧・登録・記録への紐づけ・バッチ別平均星）（2026-09-22）
 - [x] Phase 5 分析・仕上げ: /stats（4 タイル、高評価の生産国・精製、フレーバー、味覚レーダー、月別）、PWA（serwist、オフライン閲覧、アイコン）、CSV / JSON エクスポート、カードの QR → 参照 URL（2026-09-22）
 - [x] Phase 5 の実機確認: ホーム画面に追加 → 機内モードで一覧・豆詳細が開く、エクスポートのダウンロード（2026-09-24）
-- [ ] Google Maps 移行（ADR 0011、Issue #41（まとめ）と #33〜#40。2026-10-19 にチケット化、別ウィンドウで実施）
+- [x] Google Maps 移行のコード（#33〜#39、2026-10-19）: 鍵・Map ID、Places API (New) の GeoProvider、DB 0005（place_provider / place_synced_at）、検索シート、Google マップ、30 日更新ジョブ、エクスポート・SW・帰属
+- [ ] Google Maps 移行の本番切り替え（#40）: Vercel の環境変数を google にして再デプロイ（`SUPABASE_SERVICE_ROLE_KEY` も Production に要る）、スマホで確認、2 週間後に Leaflet / OSM 候補検索の後始末
 - [ ] Phase 6 ネイティブ化（Capacitor）— 未着手。前提の制約（§2.2）は守られている
 
 進捗はこのチェックリストを更新して管理する。

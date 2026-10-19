@@ -147,6 +147,14 @@ iPhone の Safari（または Android の Chrome）で https://coffee-notes.app 
 
 ---
 
+## 6. Google Maps から OSM に戻す（切り替え後に不具合が出たとき）
+
+- **即時**: Vercel の Production / Preview の環境変数を `GEO_PROVIDER=nominatim`、`NEXT_PUBLIC_MAP_PROVIDER=osm` に戻して再デプロイ（コードは両方入っている）。
+- **完全**: git タグ `before-google-maps-cutover`（切り替え直前の `main`）に戻す。
+- Google の店（`place_provider='google'`）は OSM の地図にも出せるが、座標は 30 日以内に消す決まり。戻したままにするなら、Claude Code に「Google の店の住所・座標を NULL にして」と伝える（`address / lat / lng` を NULL にして `place_provider` も NULL にする SQL を流す）。
+
+---
+
 ## 詰まったとき
 
 - コマンドはコメント（`#` 以降）を付けずにそのまま貼る（zsh は `#` をコメントにしない）。
