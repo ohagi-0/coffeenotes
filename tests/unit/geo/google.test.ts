@@ -82,8 +82,10 @@ describe('createGoogleProvider', () => {
       input: 'フグレン',
       origin: { latitude: 1, longitude: 2 },
       sessionToken: 'tok',
-      includedPrimaryTypes: ['cafe', 'coffee_shop'],
+      includedRegionCodes: ['JP'],
     });
+    // 種類では絞らない（主な種類が food_store の焙煎所などが落ちるため。2026-10-19）
+    expect(body.includedPrimaryTypes).toBeUndefined();
     expect(list).toHaveLength(2);
   });
   it('placeDetails は GET で FieldMask とセッションを付ける', async () => {

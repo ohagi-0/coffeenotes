@@ -199,7 +199,10 @@ export function createGoogleProvider(
         method: 'POST',
         body: {
           input: query,
-          includedPrimaryTypes: CAFE_TYPES,
+          // 種類では絞らない。includedPrimaryTypes は「主な種類」だけを見るので、焙煎所や豆売りが主の店
+          // （例: TAOCA COFFEE 南青山店は primaryType=food_store、types に cafe を含む）が落ちる（2026-10-19 本番で確認）。
+          // 店名を打つ人はその店を探しているので、国内に限るだけにして住所で見分けてもらう
+          includedRegionCodes: ['JP'],
           languageCode: 'ja',
           regionCode: 'JP',
           ...(near
