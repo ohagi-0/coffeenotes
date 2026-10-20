@@ -15,7 +15,7 @@ import { CaptureStep, type CapturedImages } from '@/components/logs/capture-step
 import { EntryOption } from '@/components/logs/entry-option';
 import { LogForm } from '@/components/logs/log-form';
 import { Row } from '@/components/row';
-import { Skeleton } from '@/components/ui/skeleton';
+import { LoadingScene, pickLoadingScene, type LoadingSceneKind } from '@/components/loading-scene';
 import { PHASE1_STEPS, WIZARD_STEPS, WizardStepper } from '@/components/wizard-stepper';
 import { requireUserId } from '@/features/auth/require-user-id';
 import { saveBeanImages } from '@/features/beans/images';
@@ -262,6 +262,11 @@ function OcrStepPage() {
   const started = useRef(false);
   const controller = useRef<AbortController | null>(null);
   const [slow, setSlow] = useState(false);
+  // 読み取り中はコーヒーの所作の動き（ホームの読み込みと同じ 3 つからランダム）。画面に載ってから選ぶ
+  const [scene, setScene] = useState<LoadingSceneKind | null>(null);
+  useEffect(() => {
+    setScene(pickLoadingScene());
+  }, []);
 
   useEffect(() => {
     if (!capture || started.current) return;
@@ -374,27 +379,16 @@ function OcrStepPage() {
       {images}
 
       {phase === 'running' && (
-        <div aria-busy className="flex flex-col gap-3">
-          <div className="bg-secondary h-1.5 overflow-hidden rounded-full">
-            <div className="bg-primary h-full w-1/3 animate-[ocr-progress_1.6s_ease-in-out_infinite] rounded-full motion-reduce:animate-none" />
-          </div>
-          <p className="text-muted-foreground text-[12px]" role="status">
+        <div aria-busy className="flex flex-col items-center gap-3 py-4">
+          <div className="grid size-[168px] place-items-center">{scene && <LoadingScene kind={scene} />}</div>
+          <p className="text-muted-foreground max-w-[300px] text-center text-[12px]" role="status">
             {slow
               ? '少し時間がかかっています。混み合うときは 30 秒ほどかかります。待たずに手で入力することもできます。'
-              : '読み取っています。通常 3〜8 秒かかります。'}
+              : 'カードを読み取っています。通常 3〜8 秒かかります。'}
           </p>
-          <div className="flex flex-col gap-3" aria-hidden>
-            {[0, 1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex flex-col gap-1.5">
-                <Skeleton className="h-3 w-16" />
-                <Skeleton className="h-11 w-full rounded-xl" />
-              </div>
-            ))}
-          </div>
           <AppButton variant="ghost" onClick={skipToManual}>
             スキップして手入力する
           </AppButton>
-          <style>{`@keyframes ocr-progress{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}`}</style>
         </div>
       )}
 
