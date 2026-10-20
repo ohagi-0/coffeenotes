@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Coffeenotes 飲んだ産地の地図 — 試作</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Manrope:wght@400..800&display=swap">
+<link rel="stylesheet" href="design.css">
+<style>
+.cmp-cols{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(375px,100%),1fr));gap:40px 32px;justify-items:center;margin-top:24px}
+.cmp-col{width:100%;max-width:375px}
+.cmp-lab{font:600 12px/1 var(--f-num),sans-serif;letter-spacing:.1em;color:var(--ink2);text-align:center}
+.cmp-note{font-size:12px;color:var(--ink2);margin:10px 0 0;line-height:1.7}
+.sw{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 0;justify-content:center}
+.sw button{font:600 12px var(--f-num),sans-serif;padding:7px 11px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink2);cursor:pointer}
+.sw button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.ph .a-body{padding-top:0}
+.a-h1{font-size:24px;font-weight:700;padding:20px 0 4px}
+.a-sub{font-size:12px;color:#A39181;margin:0 0 14px}
+.facts div dd{font-family:var(--f-ui);font-weight:400}
+/* 地図（SVG のパスは world-data.js。Natural Earth 1 図法、110m、南極なし） */
+.wmap{display:block;width:calc(100% + 40px);margin:0 -20px;background:#120E0B}
+.wmap .land{fill:#241C16;stroke:#3B2F26;stroke-width:.6;vector-effect:non-scaling-stroke}
+.wmap .belt{fill:none;stroke:rgba(212,140,78,.3);stroke-width:1;stroke-dasharray:3 4;vector-effect:non-scaling-stroke}
+.wmap .land.v1{fill:#6E4A2E} .wmap .land.v2{fill:#A5683A} .wmap .land.v3{fill:#D48C4E}
+.ph[data-style="dots"] .wmap .land.v1,.ph[data-style="dots"] .wmap .land.v2,.ph[data-style="dots"] .wmap .land.v3{fill:#2E241D;stroke:#5A4636}
+.wmap .dot{display:none;fill:#D48C4E;stroke:#17120F;stroke-width:1.2}
+.ph[data-style="dots"] .wmap .dot{display:block}
+.wmap .dot.v1{r:3.5} .wmap .dot.v2{r:5} .wmap .dot.v3{r:6.5}
+.wmap .hi{stroke:#F0B57A;stroke-width:1.4;fill:#F0B57A}
+.wsum{display:flex;align-items:baseline;gap:8px;margin:14px 0 2px}
+.wsum .big{font:800 30px/1 var(--f-num),sans-serif;color:#F1E8DA} .wsum .of{font:600 13px var(--f-num),sans-serif;color:#A39181}
+.wsum .r{margin-left:auto;font-size:11px;color:#A39181}
+.wlist{list-style:none;margin:10px 0 0;padding:0}
+.wlist li{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--a-line);font-size:14px}
+.wlist .c{width:10px;height:10px;border-radius:50%;background:var(--a-cu)}
+.wlist .r{margin-left:auto;font:600 12px var(--f-num),sans-serif;color:#A39181}
+.legend{display:flex;gap:12px;margin-top:8px;font:500 10px var(--f-num),sans-serif;color:#A39181}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.ph[data-style="dots"] .legend{visibility:hidden}
+.sheet{position:absolute;left:0;right:0;bottom:0;margin:0;padding:14px 20px 26px;background:var(--a-sf);border-radius:22px 22px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.5)}
+.sheet::before{display:none}
+.sheet .g{width:40px;height:4px;border-radius:2px;background:#3B2F26;margin:0 auto 12px}
+.sheet h3{margin:0;font-size:16px} .sheet p{margin:2px 0 12px;font-size:12px;color:#A39181}
+.btn{display:flex;align-items:center;justify-content:center;height:52px;border-radius:14px;font-weight:700;font-size:15px;margin-top:8px;text-decoration:none}
+.btn.cu{background:var(--a-cu);color:var(--a-oncu)} .btn.sec{background:var(--a-sf2);color:var(--a-text)}
+</style>
+</head>
+<body>
+<nav class="nav"><div class="wrap">
+  <a class="wm" href="index.html">Coffeenotes</a>
+  <ul>
+    <li><a href="index.html#direction">方向性</a></li>
+    <li><a href="index.html#tokens">色と書体</a></li>
+    <li><a href="index.html#components">部品</a></li>
+    <li class="sep"></li>
+    <li><a href="mobile.html">Web スマホ</a></li>
+    <li><a href="desktop.html">Web PC</a></li>
+    <li><a href="ios.html">iOS アプリ</a></li>
+    <li><a href="alt.html">別案の比較</a></li>
+    <li><a href="bags.html">豆の袋 4 案</a></li>
+    <li><a href="loading.html">読み込みの動き</a></li>
+    <li><a href="shelves.html">棚の増え方</a></li>
+    <li><a href="world.html" class="on">産地の地図</a></li>
+    <li><a href="room.html">棚の周り</a></li>
+  </ul>
+</div></nav>
+<header class="phead wrap">
+  <div class="secno">COLLECTION · WORLD MAP · 2026-10-20 · 試作</div>
+  <h1>飲んだ産地の地図</h1>
+  <p class="lead">コレクションの「生産国の棚」を世界地図で見る。飲んだ国を銅で塗り、杯数で濃くする。コーヒーベルト（北緯 25 度〜南緯 25 度）を点線で示し、「この帯の中を集めていく」ことが一目で分かるようにする。左は全体、中央はベルトに寄った表示（既定にしたい）、右は塗られていない国を押したときの出口（空き棚と同じシート）。国の形はパブリックドメインの Natural Earth（110m）。</p>
+  <dl class="facts">
+    <div><dt>置き場所</dt><dd>ホームの見せ方チップに「産地の地図」を足す（生産国の棚 / 品種の棚 / すべての豆 / 産地の地図）</dd></div>
+    <div><dt>塗りの濃さ</dt><dd>1 杯 / 2〜4 杯 / 5 杯以上の 3 段。細かくしない</dd></div>
+    <div><dt>押したとき</dt><dd>塗られた国 → その国の棚へ。塗られていない国 → 飲める店を探す / 豆を買う のシート</dd></div>
+    <div><dt>解放</dt><dd>最初から見せる。空の地図にベルトの点線だけ見えている状態も、これから集める地図として悪くない</dd></div>
+  </dl>
+</header>
+
+<section id="map"><div class="wrap">
+  <div class="secno">3 VIEWS</div>
+  <h2>全体 · ベルトに寄る · 塗られていない国を押した</h2>
+  <div class="cmp-cols">
+    <div class="cmp-col">
+      <div class="cmp-lab">全体</div>
+      <div class="ph ph1" data-style="fill" data-zoom="all"><div class="a-status"></div><div class="a-body"><div class="a-h1">飲んだ産地の地図</div><p class="a-sub">8 か国 · 21 杯 · 点線の帯（コーヒーベルト）の中を集めていく</p>
+        <svg class="wmap" data-map></svg>
+        <div class="legend"><span><i style="background:#6E4A2E"></i>1 杯</span><span><i style="background:#A5683A"></i>2〜4 杯</span><span><i style="background:#D48C4E"></i>5 杯〜</span></div>
+        <div class="wsum"><span class="big">8</span><span class="of">/ 28 か国</span><span class="r">杯数の多い順</span></div>
+        <ul class="wlist"><li><span class="c"></span><span class="n">コロンビア</span><span class="r">6 杯</span></li><li><span class="c"></span><span class="n">エチオピア</span><span class="r">5 杯</span></li><li><span class="c"></span><span class="n">ケニア</span><span class="r">3 杯</span></li><li><span class="c"></span><span class="n">ブラジル</span><span class="r">2 杯</span></li><li><span class="c"></span><span class="n">インドネシア</span><span class="r">2 杯</span></li><li><span class="c"></span><span class="n">グアテマラ</span><span class="r">1 杯</span></li><li><span class="c"></span><span class="n">ペルー</span><span class="r">1 杯</span></li><li><span class="c"></span><span class="n">ジャマイカ</span><span class="r">1 杯</span></li></ul></div></div>
+      <div class="sw" data-for="ph1" data-attr="data-style"><button aria-pressed="true" data-v="fill">塗る</button><button data-v="dots">豆の点</button></div>
+      <p class="cmp-note">全体だと南北の空白が多く、スマホでは中米や東アフリカが小さい。塗りと点は切り替えて比べる。</p>
+    </div>
+    <div class="cmp-col">
+      <div class="cmp-lab">ベルトに寄る（既定にしたい）</div>
+      <div class="ph ph2" data-style="fill" data-zoom="belt"><div class="a-status"></div><div class="a-body"><div class="a-h1">飲んだ産地の地図</div><p class="a-sub">8 か国 · 21 杯 · 点線の帯（コーヒーベルト）の中を集めていく</p>
+        <svg class="wmap" data-map></svg>
+        <div class="legend"><span><i style="background:#6E4A2E"></i>1 杯</span><span><i style="background:#A5683A"></i>2〜4 杯</span><span><i style="background:#D48C4E"></i>5 杯〜</span></div>
+        <div class="wsum"><span class="big">8</span><span class="of">/ 28 か国</span><span class="r">杯数の多い順</span></div>
+        <ul class="wlist"><li><span class="c"></span><span class="n">コロンビア</span><span class="r">6 杯</span></li><li><span class="c"></span><span class="n">エチオピア</span><span class="r">5 杯</span></li><li><span class="c"></span><span class="n">ケニア</span><span class="r">3 杯</span></li><li><span class="c"></span><span class="n">ブラジル</span><span class="r">2 杯</span></li><li><span class="c"></span><span class="n">インドネシア</span><span class="r">2 杯</span></li><li><span class="c"></span><span class="n">グアテマラ</span><span class="r">1 杯</span></li><li><span class="c"></span><span class="n">ペルー</span><span class="r">1 杯</span></li><li><span class="c"></span><span class="n">ジャマイカ</span><span class="r">1 杯</span></li></ul></div></div>
+      <div class="sw" data-for="ph2" data-attr="data-style"><button aria-pressed="true" data-v="fill">塗る</button><button data-v="dots">豆の点</button></div>
+      <p class="cmp-note">北緯 40 度〜南緯 40 度あたりに寄せ、横は地球一周のまま。中米・東アフリカ・東南アジアが読める大きさになる。</p>
+    </div>
+    <div class="cmp-col">
+      <div class="cmp-lab">塗られていない国を押した</div>
+      <div class="ph ph3" data-style="fill" data-zoom="belt"><div class="a-status"></div><div class="a-body"><div class="a-h1">飲んだ産地の地図</div><p class="a-sub">8 か国 · 21 杯</p>
+        <svg class="wmap" data-map data-hi="honduras"></svg>
+        <div class="sheet"><div class="g"></div><h3>ホンジュラス</h3><p>まだ飲んでいません。隣のグアテマラは 1 杯。</p>
+          <a class="btn cu" href="#map">ホンジュラスの豆を飲める店を近くで探す</a>
+          <a class="btn sec" href="#map">ホンジュラスの豆を買う</a>
+          <p style="margin:12px 0 0;text-align:center">飲んだら、ここが塗られます</p>
+        </div></div></div>
+      <p class="cmp-note">空き棚の袋を押したときと同じシート。地図なら「隣の国は飲んだ」のような一言を添えられる。</p>
+    </div>
+  </div>
+</div></section>
+
+<section id="notes"><div class="wrap">
+  <div class="secno">NOTES</div>
+  <h2>決めること</h2>
+  <ul style="color:var(--ink2);line-height:1.9;font-size:14px">
+    <li><b>既定の表示</b>: ベルトに寄る。ピンチで全体に広げられればよいが、まずは寄った固定の 1 枚で十分。</li>
+    <li><b>ハワイ</b>: 米国の一部なので国の塗りにならない。点で出す。ジャマイカも小さいので、塗りの案でも点を重ねる。</li>
+    <li><b>語彙に無い国</b>: 「東ティモール」のように <code>COUNTRY_SHELVES</code> に無い国名は国コードが引けないので塗れない。地図の下の一覧に「その他 1 か国」として出す。</li>
+    <li><b>データ</b>: 国の形は Natural Earth 110m（パブリックドメイン、world-atlas 経由、約 120KB）。本番では <code>public/</code> に置き、ISO 3166 の数値コードを <code>countries.ts</code> に 1 列足して対応させる。</li>
+  </ul>
+</div></section>
+
+<script src="design.js"></script>
+<script src="world-data.js"></script>
+<script>
+(function(){
+  var V={"colombia": 6, "ethiopia": 5, "brazil": 2, "kenya": 3, "guatemala": 1, "peru": 1, "jamaica": 1, "indonesia": 2};
+  var lvl=function(n){return n>=5?'v3':n>=2?'v2':'v1'};
+  document.querySelectorAll('svg[data-map]').forEach(function(svg){
+    var W=window.WORLD, ph=svg.closest('.ph'), zoom=ph.getAttribute('data-zoom');
+    svg.setAttribute('viewBox', zoom==='belt' ? '0 100 960 280' : '0 0 960 480');
+    var hi=svg.getAttribute('data-hi'), h='';
+    W.countries.forEach(function(c){
+      var cls='land'+(c.key&&V[c.key]?' '+lvl(V[c.key]):'')+(hi&&c.key===hi?' hi':'');
+      h+='<path class="'+cls+'" d="'+c.d+'"/>';
+    });
+    h+='<path class="belt" d="'+W.belt[0]+'"/><path class="belt" d="'+W.belt[1]+'"/>';
+    Object.keys(V).forEach(function(k){ var c=W.centers[k]; if(c) h+='<circle class="dot '+lvl(V[k])+'" cx="'+c[0]+'" cy="'+c[1]+'"/>'; });
+    var c=W.centers.jamaica; if(V.jamaica) h+='<circle cx="'+c[0]+'" cy="'+c[1]+'" r="3" fill="#D48C4E"/>';
+    svg.innerHTML=h;
+  });
+  document.querySelectorAll('.sw').forEach(function(sw){
+    var ph=document.querySelector('.'+sw.getAttribute('data-for')), attr=sw.getAttribute('data-attr');
+    sw.querySelectorAll('button').forEach(function(b){ b.addEventListener('click',function(){
+      sw.querySelectorAll('button').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});
+      ph.setAttribute(attr,b.getAttribute('data-v'));
+    }); });
+  });
+})();
+</script>
+</body>
+</html>
