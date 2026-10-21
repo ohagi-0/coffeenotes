@@ -151,6 +151,7 @@ REQUIREMENTS.md §13.2 の N-1〜N-5。要点:
 - 画像は Supabase Storage のバケット `bean-images`、パスは `{user_id}/{bean_id}/{front|back}.jpg`。Storage ポリシーもプレフィックスで制限。
 - 星は `numeric(2,1)`、0.5 刻み（決定）。CHECK 制約で `rating * 2` が整数かつ 1.0〜5.0 を保証。
 - スキーマ変更は必ず `supabase/migrations/` に SQL を追加し、`pnpm db:types` で `src/types/database.ts` を再生成する。ダッシュボードから直接いじらない。
+- **新しいテーブルには同じマイグレーションで GRANT を書く**（Supabase は 2026-10-30 以降、`public` の新規テーブルに Data API の権限を自動で付けない。既存の 9 テーブルは影響なし。2026-10-21 のメールで確認）。RLS があっても GRANT が無いと PostgREST が permission denied を返す。雛形: `grant select, insert, update, delete on public.<table> to authenticated, service_role;`（anon に読ませる表だけ `grant select on public.<table> to anon;`）。識別子のシーケンスを使うなら `grant usage, select on sequence … to authenticated;` も。
 
 ## 5. コーディング規約
 
