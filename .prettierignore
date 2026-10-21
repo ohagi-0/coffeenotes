@@ -13,3 +13,6 @@ test-results
 
 # 画面設計モック（手書きの HTML）は整形しない
 docs/design/
+
+# 生成物（世界地図の輪郭）
+src/components/beans/world-map-data.ts

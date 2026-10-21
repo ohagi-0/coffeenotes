@@ -2,10 +2,13 @@
 
 import { Suspense, useMemo } from 'react';
 import type { Route } from 'next';
+import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Package } from 'lucide-react';
 import { AppButton } from '@/components/app-button';
 import { BeanBag, BeanBagEmpty } from '@/components/beans/bean-bag';
+import { CoffeeFarm } from '@/components/beans/coffee-farm';
+import { MAP_LEGEND, WorldMap } from '@/components/beans/world-map';
 import { ShelfRow, WoodPlank } from '@/components/beans/shelf-row';
 import { EmptyState } from '@/components/empty-state';
 import { ErrorCallout } from '@/components/error-callout';
@@ -17,6 +20,7 @@ import {
   COLLECTION_SORT_CHIPS,
   COLLECTION_VIEW_CHIPS,
   buildCollection,
+  cupsByCountry,
   groupByCountry,
   groupByVariety,
   isCollectionSort,
@@ -25,10 +29,13 @@ import {
   type CollectionSort,
   type CollectionView,
 } from '@/features/beans/collection';
+import { buildFarm } from '@/features/beans/farm';
 import { useLogs } from '@/features/logs/queries';
+import { COUNTRY_SHELVES } from '@/lib/vocab';
 
 // ホーム = S10 豆のコレクション（棚）。飲んだ豆を 1 袋ずつ棚に並べる。
-// 見せ方は ?s=（生産国の棚 / 品種の棚 / すべての豆）、「すべての豆」のときだけ並び順 ?o=（最近 / 星 / 回数）を出す。
+// 見せ方は ?s=（生産国の棚 / 品種の棚 / すべての豆 / 産地の地図）、「すべての豆」のときだけ並び順 ?o=（最近 / 星 / 回数）を出す。
+// 杯数の下にコーヒーの木（産地ごとに 1 本、杯数で育つ。features/beans/farm.ts）。「産地の地図」は飲んだ国を銅で塗る（2026-10-21、ADR 0012）。
 // 一覧（S2、/logs）とは別の見せ方で、袋を押すと豆の詳細（S4）へ。記録は S2 と同じ useLogs から集計する。
 
 /** 「すべての豆」のスマホ用: 2 袋ずつの段（横スクロールはしない）。下に木の棚板 */
@@ -36,6 +43,109 @@ function Shelf({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative">
       <div className="relative z-10 grid grid-cols-2 gap-x-4 px-1">{children}</div>
+    </div>
+  );
+}
+
+/** 産地の地図（S10「産地の地図」）: 地図 + 凡例 + 押した国の案内 + 飲んだ国の一覧 */
+function WorldMapView({
+  cups,
+  selected,
+  onSelect,
+}: {
+  cups: ReadonlyMap<string, number>;
+  selected: string | null;
+  onSelect: (key: string | null) => void;
+}) {
+  const visited = COUNTRY_SHELVES.filter((c) => (cups.get(c.key) ?? 0) > 0).sort(
+    (a, b) => (cups.get(b.key) ?? 0) - (cups.get(a.key) ?? 0),
+  );
+  const others = Array.from(cups.keys()).filter((k) => k.startsWith('other:')).length;
+  const sel = selected ? COUNTRY_SHELVES.find((c) => c.key === selected) : undefined;
+  const selCups = sel ? (cups.get(sel.key) ?? 0) : 0;
+  const q = (s: string) => encodeURIComponent(s);
+  return (
+    <div>
+      <div className="-mx-5 md:-mx-8">
+        <WorldMap cups={cups} selected={selected} onSelect={onSelect} className="md:rounded-[14px]" />
+      </div>
+      <div className="font-num text-muted-foreground mt-2 flex gap-3 text-[10px]">
+        {MAP_LEGEND.map((l) => (
+          <span key={l.label} className="flex items-center gap-1">
+            <span
+              className="inline-block size-2.5 rounded-[2px]"
+              style={{ background: l.color }}
+              aria-hidden
+            />
+            {l.label}
+          </span>
+        ))}
+        <span className="ml-auto">点線はコーヒーベルト</span>
+      </div>
+      {sel && (
+        <div className="bg-card border-border mt-3 rounded-[14px] border px-4 py-3" role="status">
+          <div className="flex items-baseline justify-between gap-2">
+            <h2 className="font-display text-[17px]">{sel.ja}</h2>
+            <button type="button" className="text-muted-foreground text-xs" onClick={() => onSelect(null)}>
+              閉じる
+            </button>
+          </div>
+          {selCups > 0 ? (
+            <p className="text-muted-foreground mt-1 text-xs">
+              {selCups} 杯。
+              <Link href={'/' as Route} className="text-primary ml-1 underline-offset-2 hover:underline">
+                生産国の棚で見る
+              </Link>
+            </p>
+          ) : (
+            <>
+              <p className="text-muted-foreground mt-1 text-xs">
+                まだ飲んでいません。飲んだら、ここが塗られます。
+              </p>
+              <div className="mt-2.5 flex flex-col gap-2">
+                <AppButton
+                  width="auto"
+                  size="md"
+                  href={`https://www.google.com/maps/search/?api=1&query=${q(`${sel.ja} コーヒー`)}` as Route}
+                  target="_blank"
+                  rel="noopener"
+                >
+                  {sel.ja}の豆を飲める店を近くで探す
+                </AppButton>
+                <AppButton
+                  width="auto"
+                  size="md"
+                  variant="secondary"
+                  href={`https://www.google.com/search?q=${q(`${sel.ja} コーヒー豆 通販`)}` as Route}
+                  target="_blank"
+                  rel="noopener"
+                >
+                  {sel.ja}の豆を買う
+                </AppButton>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+      <div className="mt-4 flex items-baseline gap-2">
+        <span className="font-num text-[30px] leading-none font-extrabold">{visited.length}</span>
+        <span className="font-num text-muted-foreground text-[13px] font-semibold">
+          / {COUNTRY_SHELVES.length} か国
+        </span>
+        {others > 0 && <span className="text-muted-foreground text-xs">· 地図に無い産地 {others}</span>}
+        <span className="text-muted-foreground ml-auto text-[11px]">杯数の多い順</span>
+      </div>
+      <ul className="mt-2" aria-label="飲んだ産地">
+        {visited.map((c) => (
+          <li key={c.key} className="border-border flex items-center gap-2.5 border-b py-2 text-sm">
+            <span className="bg-primary inline-block size-2.5 rounded-full" aria-hidden />
+            <button type="button" className="text-left" onClick={() => onSelect(c.key)}>
+              {c.ja}
+            </button>
+            <span className="font-num text-muted-foreground ml-auto text-xs">{cups.get(c.key)} 杯</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -69,13 +179,19 @@ function CollectionInner() {
     () => (view === 'country' ? groupByCountry(items) : view === 'variety' ? groupByVariety(items) : null),
     [items, view],
   );
+  const farm = useMemo(() => buildFarm(logs.data ?? []), [logs.data]);
+  const cups = useMemo(() => cupsByCountry(logs.data ?? []), [logs.data]);
+  // 産地の地図で押した国（?c=）。塗られた国なら杯数、塗られていない国なら「飲める店を探す / 豆を買う」の出口
+  const selectedCountry = params.get('c');
 
-  function replaceQuery(next: { s?: CollectionView; o?: CollectionSort }) {
+  function replaceQuery(next: { s?: CollectionView; o?: CollectionSort; c?: string | null }) {
     const v = next.s ?? view;
     const o = next.o ?? sort;
+    const c = next.c === undefined ? selectedCountry : next.c;
     const sp = new URLSearchParams();
     if (v !== 'country') sp.set('s', v);
     if (v === 'all' && o !== 'recent') sp.set('o', o);
+    if (v === 'map' && c) sp.set('c', c);
     const qs = sp.toString();
     router.replace((qs ? `${pathname}?${qs}` : pathname) as Route, { scroll: false });
   }
@@ -131,6 +247,18 @@ function CollectionInner() {
             : ' '}
         </p>
       </div>
+
+      {/* コーヒーの木: 飲んだ産地ごとに 1 本。杯数で育ち、直近 30 日に飲んだ国には花（ADR 0012） */}
+      {logs.data && items.length > 0 && (
+        <section aria-label="コーヒーの木" className="-mx-5 mb-5 md:-mx-8">
+          <CoffeeFarm farm={farm} className="md:rounded-[14px]" />
+          <p className="text-muted-foreground font-num mt-2 px-5 text-[11px] md:px-8">
+            {`木 ${farm.trees.length} 本 = 飲んだ産地`}
+            {farm.flowering > 0 ? ` · 花はこの 30 日に飲んだ国（${farm.flowering} 本）` : ''}
+            {farm.trees.some((t) => t.cherries > 0) ? ' · 実はその国の杯数' : ''}
+          </p>
+        </section>
+      )}
 
       {logs.isPending && (
         <div role="status" aria-busy="true" aria-label="読み込み中" className="grid grid-cols-2 gap-4">
@@ -201,7 +329,14 @@ function CollectionInner() {
         </>
       )}
 
-      {logs.data && items.length > 0 && !byCountry && (
+      {logs.data && items.length > 0 && view === 'map' && (
+        <>
+          {chips}
+          <WorldMapView cups={cups} selected={selectedCountry} onSelect={(c) => replaceQuery({ c })} />
+        </>
+      )}
+
+      {logs.data && items.length > 0 && !byCountry && view !== 'map' && (
         <>
           {chips}
           {/* 画面幅で 1 段の袋数が変わるため、板は md 未満の 2 袋ずつの段に合わせて描く（md 以上は板を各袋の下に） */}

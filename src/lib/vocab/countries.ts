@@ -7,15 +7,25 @@ export interface CountryShelfDef {
   ja: string;
   en: string;
   region: string;
+  /** ISO 3166-1 の数値コード（産地の地図の塗りに使う。ハワイは米国の一部なので無し） */
+  iso?: number;
   aliases: readonly string[];
 }
 
 // 並び順 = 生産量順（FAO 2023 の生豆生産量。docs/decisions/0009）。よく見る国が上に来る。
 // FAO の表に無い（年 1 万トン未満の）ブルンジ・エクアドル・ジャマイカ・ハワイは末尾に生産量の目安の順。
 export const COUNTRY_SHELVES: readonly CountryShelfDef[] = [
-  { key: 'brazil', ja: 'ブラジル', en: 'Brazil', region: '南米', aliases: ['brazil', 'brasil', 'ブラジル'] },
+  {
+    key: 'brazil',
+    iso: 76,
+    ja: 'ブラジル',
+    en: 'Brazil',
+    region: '南米',
+    aliases: ['brazil', 'brasil', 'ブラジル'],
+  },
   {
     key: 'vietnam',
+    iso: 704,
     ja: 'ベトナム',
     en: 'Vietnam',
     region: 'アジア',
@@ -23,6 +33,7 @@ export const COUNTRY_SHELVES: readonly CountryShelfDef[] = [
   },
   {
     key: 'indonesia',
+    iso: 360,
     ja: 'インドネシア',
     en: 'Indonesia',
     region: 'アジア',
@@ -43,6 +54,7 @@ export const COUNTRY_SHELVES: readonly CountryShelfDef[] = [
   },
   {
     key: 'colombia',
+    iso: 170,
     ja: 'コロンビア',
     en: 'Colombia',
     region: '南米',
@@ -50,6 +62,7 @@ export const COUNTRY_SHELVES: readonly CountryShelfDef[] = [
   },
   {
     key: 'ethiopia',
+    iso: 231,
     ja: 'エチオピア',
     en: 'Ethiopia',
     region: 'アフリカ',
@@ -57,33 +70,58 @@ export const COUNTRY_SHELVES: readonly CountryShelfDef[] = [
   },
   {
     key: 'honduras',
+    iso: 340,
     ja: 'ホンジュラス',
     en: 'Honduras',
     region: '中米',
     aliases: ['honduras', 'ホンジュラス'],
   },
-  { key: 'uganda', ja: 'ウガンダ', en: 'Uganda', region: 'アフリカ', aliases: ['uganda', 'ウガンダ'] },
-  { key: 'peru', ja: 'ペルー', en: 'Peru', region: '南米', aliases: ['peru', 'perú', 'ペルー'] },
-  { key: 'india', ja: 'インド', en: 'India', region: 'アジア', aliases: ['india', 'インド'] },
+  {
+    key: 'uganda',
+    iso: 800,
+    ja: 'ウガンダ',
+    en: 'Uganda',
+    region: 'アフリカ',
+    aliases: ['uganda', 'ウガンダ'],
+  },
+  { key: 'peru', iso: 604, ja: 'ペルー', en: 'Peru', region: '南米', aliases: ['peru', 'perú', 'ペルー'] },
+  { key: 'india', iso: 356, ja: 'インド', en: 'India', region: 'アジア', aliases: ['india', 'インド'] },
   {
     key: 'guatemala',
+    iso: 320,
     ja: 'グアテマラ',
     en: 'Guatemala',
     region: '中米',
     aliases: ['guatemala', 'グアテマラ', 'ガテマラ'],
   },
-  { key: 'mexico', ja: 'メキシコ', en: 'Mexico', region: '中米', aliases: ['mexico', 'méxico', 'メキシコ'] },
-  { key: 'laos', ja: 'ラオス', en: 'Laos', region: 'アジア', aliases: ['laos', 'ラオス'] },
+  {
+    key: 'mexico',
+    iso: 484,
+    ja: 'メキシコ',
+    en: 'Mexico',
+    region: '中米',
+    aliases: ['mexico', 'méxico', 'メキシコ'],
+  },
+  { key: 'laos', iso: 418, ja: 'ラオス', en: 'Laos', region: 'アジア', aliases: ['laos', 'ラオス'] },
   {
     key: 'nicaragua',
+    iso: 558,
     ja: 'ニカラグア',
     en: 'Nicaragua',
     region: '中米',
     aliases: ['nicaragua', 'ニカラグア'],
   },
-  { key: 'china', ja: '中国', en: 'China', region: 'アジア', aliases: ['china', '中国', 'yunnan', '雲南'] },
+  {
+    key: 'china',
+    iso: 156,
+    ja: '中国',
+    en: 'China',
+    region: 'アジア',
+    aliases: ['china', '中国', 'yunnan', '雲南'],
+  },
   {
     key: 'costa-rica',
+    iso: 188,
     ja: 'コスタリカ',
     en: 'Costa Rica',
     region: '中米',
@@ -91,14 +129,16 @@ export const COUNTRY_SHELVES: readonly CountryShelfDef[] = [
   },
   {
     key: 'tanzania',
+    iso: 834,
     ja: 'タンザニア',
     en: 'Tanzania',
     region: 'アフリカ',
     aliases: ['tanzania', 'タンザニア', 'キリマンジャロ', 'kilimanjaro'],
   },
-  { key: 'kenya', ja: 'ケニア', en: 'Kenya', region: 'アフリカ', aliases: ['kenya', 'ケニア'] },
+  { key: 'kenya', iso: 404, ja: 'ケニア', en: 'Kenya', region: 'アフリカ', aliases: ['kenya', 'ケニア'] },
   {
     key: 'png',
+    iso: 598,
     ja: 'パプアニューギニア',
     en: 'Papua New Guinea',
     region: 'アジア',
@@ -106,6 +146,7 @@ export const COUNTRY_SHELVES: readonly CountryShelfDef[] = [
   },
   {
     key: 'el-salvador',
+    iso: 222,
     ja: 'エルサルバドル',
     en: 'El Salvador',
     region: '中米',
@@ -113,19 +154,49 @@ export const COUNTRY_SHELVES: readonly CountryShelfDef[] = [
   },
   {
     key: 'yemen',
+    iso: 887,
     ja: 'イエメン',
     en: 'Yemen',
     region: '中東',
     aliases: ['yemen', 'イエメン', 'モカ', 'mocha'],
   },
-  { key: 'rwanda', ja: 'ルワンダ', en: 'Rwanda', region: 'アフリカ', aliases: ['rwanda', 'ルワンダ'] },
-  { key: 'bolivia', ja: 'ボリビア', en: 'Bolivia', region: '南米', aliases: ['bolivia', 'ボリビア'] },
-  { key: 'thailand', ja: 'タイ', en: 'Thailand', region: 'アジア', aliases: ['thailand', 'タイ'] },
-  { key: 'panama', ja: 'パナマ', en: 'Panama', region: '中米', aliases: ['panama', 'パナマ'] },
-  { key: 'burundi', ja: 'ブルンジ', en: 'Burundi', region: 'アフリカ', aliases: ['burundi', 'ブルンジ'] },
-  { key: 'ecuador', ja: 'エクアドル', en: 'Ecuador', region: '南米', aliases: ['ecuador', 'エクアドル'] },
+  {
+    key: 'rwanda',
+    iso: 646,
+    ja: 'ルワンダ',
+    en: 'Rwanda',
+    region: 'アフリカ',
+    aliases: ['rwanda', 'ルワンダ'],
+  },
+  {
+    key: 'bolivia',
+    iso: 68,
+    ja: 'ボリビア',
+    en: 'Bolivia',
+    region: '南米',
+    aliases: ['bolivia', 'ボリビア'],
+  },
+  { key: 'thailand', iso: 764, ja: 'タイ', en: 'Thailand', region: 'アジア', aliases: ['thailand', 'タイ'] },
+  { key: 'panama', iso: 591, ja: 'パナマ', en: 'Panama', region: '中米', aliases: ['panama', 'パナマ'] },
+  {
+    key: 'burundi',
+    iso: 108,
+    ja: 'ブルンジ',
+    en: 'Burundi',
+    region: 'アフリカ',
+    aliases: ['burundi', 'ブルンジ'],
+  },
+  {
+    key: 'ecuador',
+    iso: 218,
+    ja: 'エクアドル',
+    en: 'Ecuador',
+    region: '南米',
+    aliases: ['ecuador', 'エクアドル'],
+  },
   {
     key: 'jamaica',
+    iso: 388,
     ja: 'ジャマイカ',
     en: 'Jamaica',
     region: 'カリブ',

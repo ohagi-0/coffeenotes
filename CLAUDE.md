@@ -302,6 +302,8 @@ E2E_TEST_PASSWORD=
 - [x] Google Maps 移行のコード（#33〜#39、2026-10-19）: 鍵・Map ID、Places API (New) の GeoProvider、DB 0005（place_provider / place_synced_at）、検索シート、Google マップ、30 日更新ジョブ、エクスポート・SW・帰属
 - [x] Google Maps 移行の本番切り替え（#40、2026-10-19）: Vercel の `GEO_PROVIDER` / `NEXT_PUBLIC_MAP_PROVIDER` を `google` にし、`SUPABASE_SERVICE_ROLE_KEY` を Production / Preview に追加して再デプロイ。本番で近くの店・店名検索（フグレン → FUGLEN TOKYO）・選択・Google マップの表示を確認。戻すときは環境変数を `nominatim` / `osm` に戻して再デプロイ、完全に戻すなら git タグ `before-google-maps-cutover`
 - [x] UI の見直し（2026-10-20、すべて本番反映済み）: 豆の袋を窓付きのチャック袋に（筆記体 Kaushan Script、DESIGN v2.3）、棚を木の棚板 + 横スクロール（PC は「<」「>」、v2.4）、読み込み中をコーヒーの所作の動き（ハンドドリップは「の」の字、手網、手挽きミルをランダム。v2.5）、店まわりの文言を自然に、入力例を架空の店に、1 文字の打ち損じを候補から除外。比較ページは `docs/design/alt.html`（UI 別案。据え置き）/ `bags.html`（袋と棚）/ `loading.html`（読み込み）
+- [x] コレクションに「コーヒーの木」（産地ごとに 1 本、杯数で育つ。`features/beans/farm.ts` + `components/beans/coffee-farm.tsx`）と「産地の地図」（`components/beans/world-map.tsx`、生成物 `world-map-data.ts`）を追加。ADR 0012（2026-10-21）
+- [ ] 棚の段階（よく見る 8 か国 → 5 か所で一段増える → 珍しい産地の演出）。見本 `docs/design/shelves.html`。Kota の決定待ち
 - [ ] 読み込み中の動きの実機確認と微調整（Issue #47）
 - [x] 種（アラビカ / ロブスタ）の推定（F-BEAN-18、#45）: `src/lib/vocab/species.ts`。豆詳細「種 アラビカ（品種から）」、入力記録一覧「ロブスタ入り」、好みの分析の 1 行（2026-10-20）
 - [x] シングルオリジン / ブレンド（F-BEAN-19、#46）: DB 0006 `beans.blend`（本番適用済み）。豆フォームの「種類」チップ（豆名に「ブレンド」があれば既定で選ぶ）、OCR の `blend`（ツールの項目が増えたのでウォームアップを打ち直す）、豆詳細、コレクションの「ブレンド」の棚、袋の「BLEND」、一覧の「ブレンド」チップ、分析の 1 行、書き出しの `blend` 列（2026-10-20）

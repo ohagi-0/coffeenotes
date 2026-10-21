@@ -1,0 +1,20 @@
+/* コーヒーの木の揺れ（DESIGN.md S10、2026-10-21）。6 秒で左右に 1 度ずつ。「動きを減らす」では止める */
+@keyframes sway {
+  0%,
+  100% {
+    transform: rotate(-1deg);
+  }
+  50% {
+    transform: rotate(1deg);
+  }
+}
+.tree {
+  transform-origin: 50% 100%;
+  transform-box: fill-box;
+  animation: sway 6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tree {
+    animation: none;
+  }
+}

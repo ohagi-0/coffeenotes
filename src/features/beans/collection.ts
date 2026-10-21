@@ -40,12 +40,13 @@ export interface CollectionItem {
   lastLogId: string;
 }
 
-/** 見せ方（?s=）。country / variety は棚に分け、all は全部の豆を 1 本に並べる */
-export type CollectionView = 'country' | 'variety' | 'all';
+/** 見せ方（?s=）。country / variety は棚に分け、all は全部の豆を 1 本に並べる。map は飲んだ産地の世界地図（2026-10-21） */
+export type CollectionView = 'country' | 'variety' | 'all' | 'map';
 export const COLLECTION_VIEW_CHIPS: { value: CollectionView; label: string }[] = [
   { value: 'country', label: '生産国の棚' },
   { value: 'variety', label: '品種の棚' },
   { value: 'all', label: 'すべての豆' },
+  { value: 'map', label: '産地の地図' },
 ];
 
 /** 「すべての豆」の並び順（?o=）。棚の中は常に最近飲んだ順 */
@@ -228,4 +229,17 @@ export function groupByVariety(items: readonly CollectionItem[]): ShelfGroups {
   if (unknown.length > 0)
     out.push({ key: 'unknown', title: '品種なし', sub: null, note: null, items: unknown });
   return { shelves: out, visited, total: VARIETY_SHELVES.length };
+}
+
+// ---- 産地ごとの杯数（産地の地図と木に使う） ----
+
+/** 国のキー（語彙に無い国は `other:<名前>`）ごとの杯数。記録ごとに数える。生産国が空の記録は数えない */
+export function cupsByCountry(logs: readonly CollectionSourceLog[]): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const l of logs) {
+    const k = countryKeyOf(l.bean.country);
+    if (k === null) continue;
+    out.set(k, (out.get(k) ?? 0) + 1);
+  }
+  return out;
 }
