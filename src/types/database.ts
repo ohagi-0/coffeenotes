@@ -175,6 +175,24 @@ export type Database = {
           },
         ]
       }
+      keepalive: {
+        Row: {
+          count: number
+          id: number
+          pinged_at: string
+        }
+        Insert: {
+          count?: number
+          id: number
+          pinged_at?: string
+        }
+        Update: {
+          count?: number
+          id?: number
+          pinged_at?: string
+        }
+        Relationships: []
+      }
       log_tags: {
         Row: {
           log_id: string
@@ -499,6 +517,7 @@ export type Database = {
         }[]
       }
       delete_my_account: { Args: never; Returns: undefined }
+      keepalive_ping: { Args: never; Returns: string }
       ocr_daily_limit: { Args: never; Returns: number }
       ocr_today: { Args: never; Returns: string }
     }

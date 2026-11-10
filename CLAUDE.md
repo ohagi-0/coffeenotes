@@ -331,13 +331,13 @@ E2E_TEST_PASSWORD=
 - マジックリンクの戻り先は要求元の `NEXT_PUBLIC_API_BASE_URL` で決まる。ローカルで要求したリンクをスマホで開いても `localhost` には繋がらない。スマホで試すときは本番 URL から要求する。
 - メール送信は Resend の SMTP 経由。Resend の API キーは Supabase の SMTP パスワードとして保存されているので、**Resend 側でそのキーを削除するとログインメールが止まる**。差し替えるときは新キーを作ってから Supabase の SMTP 設定を更新する。Cloudflare の DNS レコード（`resend._domainkey`、`send`、`rsend`）も消さない。
 - Supabase Free では、カスタム SMTP を設定して初めてメール文面を変更できる（内蔵メールのままだと Management API が 400 を返す）。
-- マイグレーションは `pnpm exec supabase db query --linked --project-ref gayhfwmvlxwyuzrvmkoy -f supabase/migrations/NNNN.sql` で本番に適用できる（CLI のトークンを使うのでキーチェーン不要）。0001〜0006 はこの方法か SQL Editor で適用済みで、`supabase_migrations` には記録が無い（0006 = 豆の `blend`、2026-10-20）。
+- マイグレーションは `pnpm exec supabase db query --linked --project-ref gayhfwmvlxwyuzrvmkoy -f supabase/migrations/NNNN.sql` で本番に適用できる（CLI のトークンを使うのでキーチェーン不要）。0001〜0007 はこの方法か SQL Editor で適用済みで、`supabase_migrations` には記録が無い（0006 = 豆の `blend`、2026-10-20。0007 = keepalive、2026-11-10）。
 - 記録作成ウィザードの段階間の受け渡しは sessionStorage。撮影画像は data URL（`src/features/ocr/capture-draft.ts`）、豆の下書きは `new-log-draft.ts`。Blob は JSON にできないため。保存時に `dataUrlToBlob` で戻して Storage に上げる。
 - **PWA / オフライン**: `src/app/sw.ts`（serwist）。Supabase REST の GET は NetworkFirst、署名付き画像と地図タイルは StaleWhileRevalidate。書き込みと `/api/*` はキャッシュしない。ログアウトと退会で `clearOfflineCaches()` がデータのキャッシュを消す。開発中は SW 無効。`public/sw.js` は生成物（.gitignore 済み）。
 - **生産国・品種・精製の語彙**（2026-09-24、ADR 0009。精製は 2026-09-25）: `src/lib/vocab/` の `COUNTRY_SHELVES`（生産量順、FAO 2023）/ `VARIETY_SHELVES`（店で見る頻度順）/ `PROCESSES` が別名表と棚・候補の順を兼ねる。`countryDisplayName` / `varietyDisplayName` で日本語の呼び名に寄せ、コレクションの棚・入力記録一覧の生産国チップ・好みの分析・豆フォームの候補（`suggestCountries` / `suggestVarieties`）・OCR の流し込みが全部これを使う。値は入力どおり保存し、寄せるのは表示と絞り込みだけ。順や別名を変えるときは配列を直すだけでよい。
 - **記録削除と店**（F-LOG-7、2026-09-24）: `features/logs/delete-log.ts` が記録を消したあと、その店の記録が 0 件なら店も消す。先に店だけ登録した場合は残る。
 - **統計**: `features/stats/aggregate.ts` の純粋関数で集計（高評価 = 星 4 以上、豆ごとに 1 回数える項目とレコードごとに数える項目がある）。データは `useStatsRows()` が必要な列だけ全件取る。
 - **エクスポート**: `features/export/build.ts`（CSV は BOM + CRLF、JSON は記録の配列）。ダウンロードは `lib/platform/download.ts`。
-- Supabase Free の一時停止対策として `.github/workflows/supabase-keepalive.yml` が週 2 回 REST を叩く（Secrets: `SUPABASE_URL` / `SUPABASE_ANON_KEY`）。
+- Supabase Free の一時停止対策として `.github/workflows/supabase-keepalive.yml` が**毎日** DB 関数 `keepalive_ping()`（0007、`keepalive` テーブルに 1 行 upsert）を叩く（Secrets: `SUPABASE_URL` / `SUPABASE_ANON_KEY`）。週 2 回の REST 読み取りだけだった 2026-11-07 に実際に止まった（復旧は Management API の `POST /v1/projects/<ref>/restore` かダッシュボードの Restore）。止まるとアプリは読み込み中のまま固まる。
 - OCR の初回遅延対策として `.github/workflows/ocr-warmup.yml` が 12 時間ごとに `POST https://coffee-notes.app/api/ocr/warm` を叩く（Secrets: `CRON_SECRET`。Vercel の同名変数と同じ値。差し替えるときは両方を更新する）。費用は 1 回 1 円未満。
 - 画面設計は `docs/DESIGN.md` を正とする（トークン、書体、部品仕様、画面ごとの要素・状態・遷移）。見た目の参照はモック `docs/design/`（index = 方針・色・書体・部品、mobile = Web スマホ、desktop = Web PC、ios = iOS アプリ。共通の design.css / design.js。GitHub Pages で https://ohagi-0.github.io/coffeenotes/design/ に公開、push で更新）。リポジトリは Pages のため public（2026-09-21）。画面や部品を変えるときはモックと DESIGN.md を同じ PR で更新する。
